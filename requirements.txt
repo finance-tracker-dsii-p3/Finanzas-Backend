@@ -59,7 +59,7 @@ xlsxwriter==3.1.9                 # Escritura archivos Excel
 xlrd==2.0.1                       # Lectura archivos XLS legacy
 
 # Cálculos financieros y decimales precisos  
-decimal==1.70                      # Precisión monetaria (NO usar float)
+# decimal - usando módulo estándar de Python (no requiere instalación)
 
 # Generación de reportes 
 reportlab==4.0.9                   # PDF generation
