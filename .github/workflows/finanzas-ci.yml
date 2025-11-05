@@ -1,9 +1,15 @@
 name: Finanzas Backend CI
+
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+
+env:
+  DJANGO_SETTINGS_MODULE: proyecto_financiero.settings.testing
+  SECRET_KEY: test-secret-key-for-ci-only-not-for-production
+  DEBUG: False
 
 jobs:
   test:
@@ -11,7 +17,7 @@ jobs:
     
     strategy:
       matrix:
-        python-version: [3.11]
+        python-version: ['3.11']
 
     steps:
       - name: Checkout código
@@ -44,31 +50,55 @@ jobs:
 
       - name: Crear directorios necesarios
         run: |
-          mkdir -p logs
-          mkdir -p media
-          mkdir -p staticfiles
+          mkdir -p logs media static staticfiles
+          touch logs/.gitkeep media/.gitkeep static/.gitkeep
 
-      - name: Copiar archivo .env
+      - name: Configurar archivo .env para CI
         run: |
           cp .env.example .env
+          echo "" >> .env
+          echo "# CI Configuration" >> .env
           echo "DJANGO_SETTINGS_MODULE=proyecto_financiero.settings.testing" >> .env
           echo "SECRET_KEY=test-secret-key-for-ci-only" >> .env
+          echo "DEBUG=False" >> .env
 
-      - name: Ejecutar migraciones
-        env:
-          DJANGO_SETTINGS_MODULE: proyecto_financiero.settings.testing
+      - name: Verificar configuración Django
         run: |
-          python manage.py makemigrations --dry-run --check
-          python manage.py migrate
+          python manage.py check --deploy --settings=proyecto_financiero.settings.testing
+
+      - name: Crear migraciones si es necesario
+        run: |
+          python manage.py makemigrations --settings=proyecto_financiero.settings.testing --dry-run --check
+
+      - name: Aplicar migraciones
+        run: |
+          python manage.py migrate --settings=proyecto_financiero.settings.testing --run-syncdb
+
+      - name: Ejecutar collectstatic
+        run: |
+          python manage.py collectstatic --noinput --settings=proyecto_financiero.settings.testing
 
       - name: Ejecutar tests
-        env:
-          DJANGO_SETTINGS_MODULE: proyecto_financiero.settings.testing
         run: |
-          python manage.py test --verbosity=2
+          python manage.py test --verbosity=2 --settings=proyecto_financiero.settings.testing
+
+      - name: Verificar imports críticos
+        run: |
+          python -c "
+          import django
+          django.setup()
+          print(f'✅ Django {django.get_version()} configurado correctamente')
+          
+          # Test imports críticos
+          from proyecto_financiero.settings.testing import *
+          print('✅ Settings de testing cargados')
+          
+          from django.contrib.auth.models import User
+          print('✅ Modelos de Django importados')
+          "
 
       - name: Verificar sintaxis con flake8 (opcional)
         continue-on-error: true
         run: |
           pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,migrations,__pycache__
