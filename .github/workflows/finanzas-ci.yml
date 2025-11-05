@@ -1,48 +1,71 @@
-name: Finanzas CI
+name: Finanzas Backend CI
 on:
   push:
+    branches: [ main, develop ]
   pull_request:
+    branches: [ main, develop ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    
+    strategy:
+      matrix:
+        python-version: [3.11]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-      - name: Setup PHP 8.2
-        uses: shivammathur/setup-php@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
-          php-version: '8.2'
-          extensions: mbstring, intl, bcmath, pdo_sqlite, dom, curl, fileinfo, json
-          coverage: none
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Copiar .env
-        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-
-      - name: Generar APP_KEY
-        run: php artisan key:generate
-
-      - name: Composer install (cached)
-        uses: ramsey/composer-install@v3
+      - name: Cache dependencias pip
+        uses: actions/cache@v3
         with:
-          composer-options: --no-progress --prefer-dist --optimize-autoloader
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Crear base SQLite
+      - name: Crear entorno virtual
         run: |
-          mkdir -p database
-          touch database/database.sqlite
+          python -m venv venv
+          source venv/bin/activate
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
 
-      - name: Migraciones
-        run: php artisan migrate --force
+      - name: Instalar dependencias
+        working-directory: ./proyecto_financiero
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Ejecutar pruebas
+      - name: Copiar archivo .env
+        working-directory: ./proyecto_financiero
+        run: |
+          cp .env.example .env
+          echo "DJANGO_SETTINGS_MODULE=proyecto_financiero.settings.testing" >> .env
+          echo "SECRET_KEY=test-secret-key-for-ci-only" >> .env
+
+      - name: Ejecutar migraciones
+        working-directory: ./proyecto_financiero
+        run: |
+          python manage.py makemigrations --dry-run --check
+          python manage.py migrate
+
+      - name: Ejecutar tests
+        working-directory: ./proyecto_financiero
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
-        run: php artisan test -q
+          DJANGO_SETTINGS_MODULE: proyecto_financiero.settings.testing
+        run: |
+          python manage.py test --verbosity=2
+
+      - name: Verificar sintaxis con flake8 (opcional)
+        working-directory: ./proyecto_financiero
+        continue-on-error: true
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: proyecto-financiero
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn proyecto_financiero.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: proyecto_financiero.settings.production
