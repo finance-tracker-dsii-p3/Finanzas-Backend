@@ -49,9 +49,35 @@ class DisableMigrations:
 
 MIGRATION_MODULES = DisableMigrations()
 
-# Logging mínimo en tests
-LOGGING['handlers']['console']['level'] = 'WARNING'
-LOGGING['loggers']['django']['level'] = 'WARNING'
+# Logging mínimo en tests - solo consola
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
 
 # Debug False en tests
 DEBUG = False
