@@ -15,7 +15,7 @@ class NotificationsApiTests(TestCase):
             username="notifuser",
             email="notif@example.com",
             password="pass12345",
-            role="monitor",
+            role="admin",
             is_verified=True,
         )
         # Autenticación por token para endpoints que requieren IsAuthenticated
@@ -30,9 +30,9 @@ class NotificationsApiTests(TestCase):
         # Create
         payload = {
             "user": self.user.id,
-            "notification_type": "room_entry",
+            "notification_type": "user_action",
             "title": "Entrada",
-            "message": "Usuario entró a sala",
+            "message": "Usuario realizó una acción",
         }
         create_resp = self.client.post("/api/notifications/notifications/", payload, format="json")
         self.assertEqual(create_resp.status_code, 201)
