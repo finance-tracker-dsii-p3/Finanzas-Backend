@@ -43,15 +43,15 @@ class RegistrationUpdatedTests(TestCase):
         self.assertIn("message", response_data)
         self.assertIn("user", response_data)
         
-        # Verificar mensaje específico para usuario
-        self.assertIn("Esperando verificación", response_data["message"])
+        # Verificar mensaje específico para usuario (ahora auto-verificado)
+        self.assertIn("Usuario registrado y verificado exitosamente", response_data["message"])
         
         # Verificar datos del usuario
         user_data = response_data["user"]
         self.assertEqual(user_data["username"], "newuser")
         self.assertEqual(user_data["email"], "newuser@example.com")
         self.assertEqual(user_data["role"], "user")
-        self.assertFalse(user_data["is_verified"])  # Usuario no verificado inicialmente
+        self.assertTrue(user_data["is_verified"])  # Usuario auto-verificado
 
     def test_admin_registration_returns_json_response(self):
         """Test que el registro de admin devuelve respuesta JSON"""
@@ -81,8 +81,8 @@ class RegistrationUpdatedTests(TestCase):
         self.assertEqual(user_data["role"], "admin")
         self.assertTrue(user_data["is_verified"])  # Admin verificado automáticamente
 
-    def test_user_registration_sends_email_to_admin(self):
-        """Test que el registro de usuario envía email al admin"""
+    def test_user_registration_no_email_to_admin(self):
+        """Test que el registro de usuario ya NO envía email al admin (auto-verificación)"""
         url = "/api/auth/register/"
         data = {
             "identification": "MO-002",
@@ -95,15 +95,15 @@ class RegistrationUpdatedTests(TestCase):
             "role": "user"
         }
         
+        # Limpiar outbox antes del test
+        mail.outbox.clear()
+        
         response = self.client.post(url, data)
         
         self.assertEqual(response.status_code, 201)
         
-        # Verificar que se envió email al admin
-        self.assertGreaterEqual(len(mail.outbox), 1)
-        email = mail.outbox[0]
-        self.assertIn("Nuevo usuario pendiente de verificación", email.subject)
-        self.assertIn("admin@example.com", email.recipients())
+        # Verificar que NO se envió email al admin (ahora es auto-verificación)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_admin_registration_no_email_sent(self):
         """Test que el registro de admin no envía email de verificación"""

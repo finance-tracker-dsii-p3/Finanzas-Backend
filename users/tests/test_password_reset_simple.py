@@ -5,6 +5,7 @@ from datetime import timedelta
 from users.models import PasswordReset
 from users.utils import generate_raw_token, hash_token
 from django.core import mail
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -12,6 +13,7 @@ User = get_user_model()
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class PasswordResetSimpleTests(TestCase):
     def setUp(self):
+        self.client = APIClient()
         self.user = User.objects.create_user(
             identification="PR-001",
             username="pr_user",

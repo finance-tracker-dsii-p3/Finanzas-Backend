@@ -37,16 +37,27 @@ class AdminUserManagementTestCase(TestCase):
             phone='1234567890'
         )
         
-        self.unverified_user = User.objects.create_user(
-            username='unverified_user',
-            email='unverified@test.com', 
-            password='testpass123',
-            identification='11223344',
-            role='user',
-            is_verified=False,
-            first_name='Unverified',
-            last_name='user'
-        )
+        # Crear usuario no verificado evitando señales
+        from django.db import transaction
+        with transaction.atomic():
+            # Desactivar señales temporalmente
+            from django.db.models.signals import post_save
+            from users.signals import auto_verify_new_users
+            post_save.disconnect(auto_verify_new_users, sender=User)
+            
+            self.unverified_user = User.objects.create_user(
+                username='unverified_user',
+                email='unverified@test.com', 
+                password='testpass123',
+                identification='11223344',
+                role='user',
+                is_verified=False,
+                first_name='Unverified',
+                last_name='user'
+            )
+            
+            # Reconectar señales
+            post_save.connect(auto_verify_new_users, sender=User)
         
         # Crear tokens
         self.admin_token = Token.objects.create(user=self.admin_user)

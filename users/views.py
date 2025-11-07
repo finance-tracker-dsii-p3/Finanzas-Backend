@@ -565,9 +565,6 @@ def admin_delete_user_view(request, user_id):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
-@permission_classes([])  # validación por token, no requiere login
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_request_view(request):
