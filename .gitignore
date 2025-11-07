@@ -1,0 +1,22 @@
+db.sqlite3
+__pycache__/
+*.pyc
+db.sqlite3
+__pycache__/
+*.pyc
+db.sqlite3
+__pycache__/
+*.pyc
+
+# Settings locales específicos
+finanzas_back/settings/local.py
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+.env.staging
+
+# Archivos de despliegue específicos del usuario
+render-local.yaml
+deployment-notes.md

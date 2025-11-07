@@ -1,0 +1,82 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python-version: [ "3.11" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          echo "Installing dependencies from requirements.txt..."
+          pip install --no-cache-dir -r requirements.txt
+          echo "Verifying installation..."
+          pip list
+          python -c "import django; print(f'Django version: {django.get_version()}')"
+
+      - name: Django checks
+        env:
+          DJANGO_ENV: testing
+          DJANGO_SETTINGS_MODULE: finanzas_back.settings
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        env:
+          DJANGO_ENV: testing
+          DJANGO_SETTINGS_MODULE: finanzas_back.settings
+        run: |
+          python manage.py test --verbosity 1 --keepdb
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-success: true
+          timeout: 600
+
+      - name: Notify deployment success
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🚀 Service deployed to: ${{ secrets.RENDER_SERVICE_URL }}"
+          echo "📅 Deployed at: $(date)"
+          echo "🔗 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"
