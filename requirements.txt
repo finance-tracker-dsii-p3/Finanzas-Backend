@@ -1,13 +1,12 @@
-# Django Backend - Sistema de Gestión de Salas y Turnos
-# Proyecto DS2 - Requirements
+# Django Backend 
+# Proyecto FINANZAS-BACKEND - Requirements
 
 # Core Django Framework
 Django==4.2.16
 djangorestframework==3.14.0
 
 # Database
-psycopg==3.2.3  # PostgreSQL adapter moderno (compatible Python 3.13)
-psycopg2-binary==2.9.9  # Fallback para compatibilidad
+psycopg2-binary==2.9.11  # PostgreSQL adapter estable (funciona en todas las versiones Python)
 dj-database-url==3.0.1  # Database URL parser para Render
 django-cors-headers==4.3.1  # CORS handling
 
