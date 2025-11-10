@@ -25,5 +25,11 @@ DEFAULT_FROM_EMAIL=Soporte DS2 <sado56hdgm@gmail.com>
 
 7) abre tu pgAdmin para crear la base de datos, los datos deberán de coindir con la configuración de PostgreSQL del paso anterior. Una vez hecho, con este comando sabrás si tu potgress esta en curso: "Get-Service | findstr postgre
 "
+8) Con la base de datos creada, ejecuta las migraciones para que Django genere las tablas necesarias dentro de ella.
+Usa los siguientes comandos:"
+python manage.py makemigrations
+python manage.py migrate
+"
+Esto asegura que la estructura de la base de datos coincida con los modelos del proyecto.
 
-8) Finalmente corre el servidor por medio del comando: "python manage.py runserver" y con ello todo el proyecto estaría inicializado.
+9) Finalmente corre el servidor por medio del comando: "python manage.py runserver" y con ello todo el proyecto estaría inicializado.
