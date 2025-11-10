@@ -1,5 +1,5 @@
-# Django Backend - Sistema de Gestión de Salas y Turnos
-# Proyecto DS2 - Requirements
+# Django Backend 
+# Proyecto FINANZAS-BACKEND - Requirements
 
 # Core Django Framework
 Django==4.2.16
