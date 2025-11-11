@@ -14,9 +14,18 @@ pip install -r requirements.txt
 echo "🔍 Verifying critical packages..."
 python -c "
 import django
-import psycopg
-print(f'✅ Django version: {django.VERSION}')
-print(f'✅ Psycopg version: {psycopg.__version__}')
+try:
+    import psycopg2
+    print(f'✅ Django version: {django.VERSION}')
+    print(f'✅ Psycopg2-binary version: {psycopg2.__version__}')
+except ImportError:
+    try:
+        import psycopg
+        print(f'✅ Django version: {django.VERSION}')
+        print(f'✅ Psycopg version: {psycopg.__version__}')
+    except ImportError:
+        print('❌ No PostgreSQL adapter found')
+        exit(1)
 "
 
 # Check de configuración Django
