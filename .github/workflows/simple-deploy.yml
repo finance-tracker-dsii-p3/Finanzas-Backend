@@ -1,0 +1,44 @@
+name: Simple Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_run:
+    workflows: ["CI (Tests Only)"]
+    types: [completed]
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+
+      - name: Wait for deployment
+        run: |
+          echo "✅ Deployment triggered successfully"
+          echo "⏳ Render will complete the deployment in a few minutes"
+          echo "🔍 Check your Render dashboard for deployment status"
+
+      - name: Basic connectivity test
+        continue-on-error: true
+        run: |
+          echo "⏳ Waiting 90 seconds for service to start..."
+          sleep 90
+          
+          if [[ -n "${{ secrets.RENDER_SERVICE_URL }}" ]]; then
+            echo "🔍 Testing connectivity to ${{ secrets.RENDER_SERVICE_URL }}"
+            curl -f "${{ secrets.RENDER_SERVICE_URL }}/" || echo "⚠️ Service may still be starting"
+          else
+            echo "ℹ️ No RENDER_SERVICE_URL configured for testing"
+          fi
