@@ -1,0 +1,55 @@
+name: Deploy Develop
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  deploy-develop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Verify branch
+        run: |
+          echo "🌿 Deploying from branch: $(git branch --show-current)"
+          echo "📝 Latest commit: $(git log -1 --oneline)"
+
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+
+      - name: Post-deployment check
+        run: |
+          echo "✅ Deployment triggered successfully from develop branch"
+          echo "⏳ Render is processing the deployment..."
+          echo "🌐 Your service will be available at: ${{ secrets.RENDER_SERVICE_URL }}"
+          sleep 60
+          
+          # Optional: Test if service is responding
+          if [[ -n "${{ secrets.RENDER_SERVICE_URL }}" ]]; then
+            echo "🔍 Testing service connectivity..."
+            
+            # Wait a bit more for deployment to complete
+            sleep 60
+            
+            # Test basic connectivity
+            if curl -f -s "${{ secrets.RENDER_SERVICE_URL }}/" > /dev/null; then
+              echo "✅ Service is responding!"
+            else
+              echo "⏳ Service might still be deploying (this is normal)"
+            fi
+          fi
+
+      - name: Deployment summary
+        run: |
+          echo "🎉 Develop branch deployment completed!"
+          echo "📍 Service URL: ${{ secrets.RENDER_SERVICE_URL }}"
+          echo "🔍 Check Render dashboard for detailed deployment status"

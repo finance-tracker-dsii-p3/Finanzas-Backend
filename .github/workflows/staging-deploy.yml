@@ -32,16 +32,14 @@ jobs:
           python manage.py check
           python manage.py test --verbosity 2 --parallel --keepdb || true
 
-      - name: Set service ID
+      - name: Set service info
         id: service
         run: |
-          if [[ -n "${{ secrets.RENDER_SERVICE_ID_STAGING }}" ]]; then
-            echo "service_id=${{ secrets.RENDER_SERVICE_ID_STAGING }}" >> $GITHUB_OUTPUT
-            echo "service_url=${{ secrets.RENDER_SERVICE_URL_STAGING }}" >> $GITHUB_OUTPUT
-          else
-            echo "service_id=${{ secrets.RENDER_SERVICE_ID }}" >> $GITHUB_OUTPUT
-            echo "service_url=${{ secrets.RENDER_SERVICE_URL }}" >> $GITHUB_OUTPUT
-          fi
+          # Para develop/staging, usamos los secretos principales
+          echo "service_id=${{ secrets.RENDER_SERVICE_ID }}" >> $GITHUB_OUTPUT
+          echo "service_url=${{ secrets.RENDER_SERVICE_URL }}" >> $GITHUB_OUTPUT
+          echo "✅ Using service ID: ${{ secrets.RENDER_SERVICE_ID }}"
+          echo "✅ Using service URL: ${{ secrets.RENDER_SERVICE_URL }}"
 
       - name: Deploy to Staging
         uses: johnbeynon/render-deploy-action@v0.0.8
