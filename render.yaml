@@ -3,7 +3,11 @@ services:
     name: ds2-back
     env: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn finanzas_back.wsgi:application"
+    startCommand: "gunicorn finanzas_back.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
+    healthCheckPath: "/health/"
+    plan: starter
+    region: oregon
+    autoDeploy: true
     envVars:
       - key: DJANGO_ENV
         value: production
@@ -27,8 +31,12 @@ services:
         value: "https://ds2-2-front.vercel.app"
       - key: DEFAULT_FROM_EMAIL
         value: "Soporte DS2 <sado56hdgm@gmail.com>"
+      - key: PYTHON_VERSION
+        value: 3.13.0
 
 databases:
   - name: ds2-database
     databaseName: finanzas_back_db
     user: ds2_user
+    plan: starter
+    region: oregon

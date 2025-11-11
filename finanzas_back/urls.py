@@ -16,8 +16,42 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+from django.db import connection
+import django
+
+def health_check(request):
+    """Health check endpoint for deployment monitoring"""
+    try:
+        # Check database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'django_version': django.VERSION,
+            'database': 'connected',
+            'timestamp': django.utils.timezone.now().isoformat() if hasattr(django.utils.timezone, 'now') else 'unknown'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'error': str(e),
+            'django_version': django.VERSION
+        }, status=500)
+
+def root_view(request):
+    """Root endpoint"""
+    return JsonResponse({
+        'message': 'Finanzas Backend API',
+        'status': 'running',
+        'version': '1.0.0'
+    })
 
 urlpatterns = [
+    path('', root_view, name='root'),
+    path('health/', health_check, name='health_check'),
+    path('api/', root_view, name='api_root'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/notifications/', include('notifications.urls')),

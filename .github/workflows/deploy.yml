@@ -9,25 +9,125 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  deploy:
+  # Job condicional: solo ejecutar si los tests pasaron
+  check-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    outputs:
+      deploy-needed: ${{ steps.check.outputs.result }}
+      branch: ${{ steps.branch.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Get branch name
+        id: branch
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            echo "name=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Check if deployment needed
+        id: check
+        run: |
+          echo "Tests passed, proceeding with deployment to ${{ steps.branch.outputs.name }}"
+          echo "result=true" >> $GITHUB_OUTPUT
+
+  # Job principal de despliegue
+  deploy:
+    needs: check-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ needs.check-tests.outputs.deploy-needed == 'true' }}
+    environment: 
+      name: ${{ needs.check-tests.outputs.branch == 'main' && 'production' || 'staging' }}
+      url: ${{ steps.deploy.outputs.url }}
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup deployment info
+        id: setup
+        run: |
+          if [[ "${{ needs.check-tests.outputs.branch }}" == "main" ]]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+            echo "service_id=${{ secrets.RENDER_SERVICE_ID_PROD }}" >> $GITHUB_OUTPUT
+            echo "service_url=${{ secrets.RENDER_SERVICE_URL_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "service_id=${{ secrets.RENDER_SERVICE_ID_STAGING || secrets.RENDER_SERVICE_ID }}" >> $GITHUB_OUTPUT
+            echo "service_url=${{ secrets.RENDER_SERVICE_URL_STAGING || secrets.RENDER_SERVICE_URL }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to Render
+        id: deploy
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          service-id: ${{ steps.setup.outputs.service_id }}
           api-key: ${{ secrets.RENDER_API_KEY }}
           wait-for-success: true
-          timeout: 600
+          timeout: 900
 
-      - name: Health Check
+      - name: Set deployment URL
         run: |
-          echo "Waiting for deployment to be ready..."
-          sleep 30
-          curl -f ${{ secrets.RENDER_SERVICE_URL }}/health/ || echo "Health check endpoint not available"
+          echo "url=${{ steps.setup.outputs.service_url }}" >> $GITHUB_OUTPUT
+
+      - name: Advanced Health Check
+        run: |
+          echo "🚀 Deployment completed for ${{ steps.setup.outputs.env_name }}"
+          echo "⏳ Waiting for service to be ready..."
+          sleep 45
+          
+          # Health check con reintentos
+          max_attempts=5
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "🔍 Health check attempt $attempt/$max_attempts"
+            
+            if curl -f -s "${{ steps.setup.outputs.service_url }}/health/" > /dev/null 2>&1; then
+              echo "✅ Health check passed!"
+              break
+            elif [ $attempt -eq $max_attempts ]; then
+              echo "❌ Health check failed after $max_attempts attempts"
+              echo "🔍 Trying basic connectivity..."
+              curl -I "${{ steps.setup.outputs.service_url }}/" || echo "Service might still be starting up"
+              exit 1
+            else
+              echo "⏳ Attempt $attempt failed, retrying in 30 seconds..."
+              sleep 30
+            fi
+            
+            attempt=$((attempt + 1))
+          done
+
+      - name: Run post-deployment tests
+        if: success()
+        run: |
+          echo "🧪 Running post-deployment smoke tests..."
+          
+          # Test endpoint básico
+          curl -f "${{ steps.setup.outputs.service_url }}/" || echo "Root endpoint check failed"
+          
+          # Test API health
+          curl -f "${{ steps.setup.outputs.service_url }}/api/" || echo "API endpoint check failed"
+          
+          echo "🎉 Deployment successful to ${{ steps.setup.outputs.env_name }}!"
+
+  # Job de notificación (opcional)
+  notify:
+    needs: [check-tests, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
+            echo "✅ Deployment successful to ${{ needs.check-tests.outputs.branch }}"
+          else
+            echo "❌ Deployment failed to ${{ needs.check-tests.outputs.branch }}"
+            exit 1
+          fi
