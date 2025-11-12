@@ -2,11 +2,11 @@ name: Deploy
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [develop ]
   workflow_run:
     workflows: ["CI (Tests Only)"]
     types: [completed]
-    branches: [ main, develop ]
+    branches: [develop ]
 
 jobs:
   # Job condicional: solo ejecutar si los tests pasaron
@@ -57,7 +57,7 @@ jobs:
         run: |
           echo "✅ Deployment triggered successfully"
           echo "⏳ Waiting for Render deployment to complete..."
-          sleep 90
+          sleep 200
 
       - name: Health Check
         continue-on-error: true
