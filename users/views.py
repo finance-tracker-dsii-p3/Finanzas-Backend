@@ -14,14 +14,16 @@ from .serializers import (
     UserProfileCompleteSerializer,
     AdminUserListSerializer,
     AdminUserVerificationSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    DeleteOwnAccountSerializer
 )
 from .permissions import IsAdminUser, IsVerifiedUser
 from django.conf import settings
+from django.utils import timezone
 
 import hashlib
 from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db import transaction
 
 
@@ -563,6 +565,54 @@ def admin_delete_user_view(request, user_id):
 
     user.delete()  # esto dispara post_delete y enviará el correo
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_own_account_view(request):
+    """
+    Permite a los usuarios autenticados eliminar su propia cuenta.
+    Requiere confirmación mediante contraseña por seguridad.
+    
+    Body parameters:
+    - password (string): Contraseña actual del usuario para confirmar la eliminación
+    
+    Returns:
+    - 200: Cuenta eliminada exitosamente
+    - 400: Datos inválidos o faltantes
+    - 401: Contraseña incorrecta
+    - 403: Usuario administrador (no permitido)
+    """
+    serializer = DeleteOwnAccountSerializer(data=request.data, context={'request': request})
+    
+    if not serializer.is_valid():
+        return Response({
+            'error': 'Datos inválidos',
+            'details': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Guardar información antes de eliminar para la respuesta
+        user_info = {
+            'id': request.user.id,
+            'username': request.user.username,
+            'email': request.user.email,
+            'deleted_at': timezone.now().isoformat()
+        }
+        
+        # Eliminar la cuenta - esto dispara las señales post_delete
+        request.user.delete()
+        
+        return Response({
+            'message': 'Tu cuenta ha sido eliminada exitosamente',
+            'user_info': user_info
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': f'Error interno al eliminar la cuenta: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

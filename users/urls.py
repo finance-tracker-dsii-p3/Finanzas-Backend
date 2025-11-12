@@ -10,6 +10,7 @@ urlpatterns = [
     # Perfil de usuario
     path('profile/', views.profile_view, name='profile'),                                            # GET - Ver perfil actual
     path('profile/update/', views.update_profile_view, name='update_profile'),                      # PUT/PATCH - Actualizar perfil
+    path('profile/delete/', views.delete_own_account_view, name='delete_own_account'),              # DELETE - Eliminar propia cuenta
     path('change-password/', views.change_password_view, name='change_password'),                   # POST - Cambiar contraseña
     
     # Dashboard

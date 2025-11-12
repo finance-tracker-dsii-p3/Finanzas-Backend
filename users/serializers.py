@@ -310,3 +310,42 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
         pr.mark_as_used()
         return {}
+
+
+class DeleteOwnAccountSerializer(serializers.Serializer):
+    """
+    Serializador para validar la eliminación de cuenta propia del usuario
+    """
+    password = serializers.CharField(write_only=True, required=True)
+    
+    def validate_password(self, value):
+        """
+        Validar que la contraseña sea correcta
+        """
+        if not value:
+            raise serializers.ValidationError("La contraseña es requerida")
+        return value
+    
+    def validate(self, attrs):
+        """
+        Validación adicional a nivel de serializador
+        """
+        user = self.context['request'].user
+        
+        # Verificar que el usuario esté autenticado
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError("Usuario no autenticado")
+            
+        # Verificar la contraseña
+        if not user.check_password(attrs['password']):
+            raise serializers.ValidationError({
+                'password': 'Contraseña incorrecta'
+            })
+            
+        # Opcional: prevenir que administradores se eliminen
+        if user.is_staff or user.is_superuser:
+            raise serializers.ValidationError(
+                "Los administradores no pueden eliminar sus cuentas mediante este endpoint"
+            )
+            
+        return attrs
