@@ -15,9 +15,11 @@ class CategoryModelTest(TestCase):
     def setUp(self):
         """Configurar datos de prueba"""
         self.user = User.objects.create_user(
+            identification='CAT-TEST-001',
             username='testuser',
             email='test@example.com',
-            password='testpass123'
+            password='testpass123',
+            role='user'
         )
     
     def test_create_category(self):
@@ -26,7 +28,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Comida',
             type=Category.EXPENSE,
-            color='#EF4444',
+            color='#DC2626',
             icon='fa-utensils'
         )
         
@@ -41,7 +43,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='comida rápida',
             type=Category.EXPENSE,
-            color='#EF4444'
+            color='#DC2626'
         )
         
         self.assertEqual(category.name, 'Comida Rápida')
@@ -52,7 +54,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Comida',
             type=Category.EXPENSE,
-            color='#EF4444'
+            color='#DC2626'
         )
         
         # Intentar crear categoría duplicada
@@ -61,7 +63,7 @@ class CategoryModelTest(TestCase):
                 user=self.user,
                 name='comida',  # Mismo nombre, diferente case
                 type=Category.EXPENSE,
-                color='#10B981'
+                color='#059669'
             )
             duplicate.full_clean()
     
@@ -71,7 +73,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Regalos',
             type=Category.INCOME,
-            color='#10B981'
+            color='#059669'
         )
         
         # Debe permitir crear con mismo nombre pero tipo diferente
@@ -79,7 +81,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Regalos',
             type=Category.EXPENSE,
-            color='#EF4444'
+            color='#DC2626'
         )
         
         self.assertEqual(category2.name, 'Regalos')
@@ -88,16 +90,18 @@ class CategoryModelTest(TestCase):
     def test_same_name_different_user_allowed(self):
         """Probar que diferentes usuarios pueden tener categorías con mismo nombre"""
         user2 = User.objects.create_user(
+            identification='CAT-TEST-002',
             username='testuser2',
             email='test2@example.com',
-            password='testpass123'
+            password='testpass123',
+            role='user'
         )
         
         Category.objects.create(
             user=self.user,
             name='Comida',
             type=Category.EXPENSE,
-            color='#EF4444'
+            color='#DC2626'
         )
         
         # Debe permitir a otro usuario crear categoría con mismo nombre
@@ -105,7 +109,7 @@ class CategoryModelTest(TestCase):
             user=user2,
             name='Comida',
             type=Category.EXPENSE,
-            color='#10B981'
+            color='#059669'
         )
         
         self.assertEqual(category2.user, user2)
@@ -139,7 +143,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Comida',
             type=Category.EXPENSE,
-            color='#EF4444'
+            color='#DC2626'
         )
         
         # Sin transacciones ni presupuestos, debe poder eliminarse
@@ -151,7 +155,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Comida',
             type=Category.EXPENSE,
-            color='#EF4444'
+            color='#DC2626'
         )
         
         # Sin transacciones, debe retornar 0
@@ -163,7 +167,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='Z Último',
             type=Category.EXPENSE,
-            color='#EF4444',
+            color='#DC2626',
             order=3
         )
         
@@ -171,7 +175,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='A Primero',
             type=Category.EXPENSE,
-            color='#10B981',
+            color='#059669',
             order=1
         )
         
@@ -179,7 +183,7 @@ class CategoryModelTest(TestCase):
             user=self.user,
             name='M Medio',
             type=Category.EXPENSE,
-            color='#3B82F6',
+            color='#2563EB',
             order=2
         )
         
