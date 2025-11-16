@@ -262,9 +262,8 @@ class Category(models.Model):
         # has_transactions = self.transactions.exists()
         has_transactions = False
         
-        # TODO: Verificar presupuestos cuando se implemente el modelo
-        # has_budgets = self.budgets.exists()
-        has_budgets = False
+        # Verificar presupuestos
+        has_budgets = self.budgets.exists()
         
         return not (has_transactions or has_budgets)
     
@@ -272,11 +271,11 @@ class Category(models.Model):
         """
         Obtener el número de veces que se usa esta categoría
         """
-        # TODO: Implementar cuando existan transacciones y presupuestos
+        # TODO: Implementar cuando existan transacciones
         # transactions_count = self.transactions.count()
-        # budgets_count = self.budgets.count()
+        budgets_count = self.budgets.count()
         # return transactions_count + budgets_count
-        return 0
+        return budgets_count
     
     def get_related_data(self):
         """
@@ -284,7 +283,8 @@ class Category(models.Model):
         """
         return {
             'transactions_count': 0,  # TODO: self.transactions.count()
-            'budgets_count': 0,  # TODO: self.budgets.count()
+            'budgets_count': self.budgets.count(),
             'can_be_deleted': self.can_be_deleted(),
             'usage_count': self.get_usage_count()
         }
+

@@ -60,6 +60,7 @@ urlpatterns = [
     path('api/export/', include('export.urls')),
     path('api/accounts/', include('accounts.urls')),  # HU-04: Cuentas financieras
     path('api/categories/', include('categories.urls')),  # HU-05: Categorías
+    path('api/budgets/', include('budgets.urls')),  # HU-07: Presupuestos por categoría
 ]
 
 
