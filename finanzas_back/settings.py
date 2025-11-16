@@ -58,6 +58,10 @@ INSTALLED_APPS = [
     
     # Local apps (Sprint 2 - HU-04)
     'accounts',
+    
+    # Local apps (Sprint 3 - HU-05, HU-07)
+    'categories',
+    'budgets.apps.BudgetsConfig',
 ]
 
 MIDDLEWARE = [

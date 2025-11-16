@@ -191,9 +191,9 @@ class CategoryService:
             # transactions_updated = category.transactions.update(category=target_category)
             # result['reassigned_transactions'] = transactions_updated
             
-            # TODO: Reasignar presupuestos cuando se implemente el modelo
-            # budgets_updated = category.budgets.update(category=target_category)
-            # result['reassigned_budgets'] = budgets_updated
+            # Reasignar presupuestos
+            budgets_updated = category.budgets.update(category=target_category)
+            result['reassigned_budgets'] = budgets_updated
             
             logger.info(
                 f'Reasignadas transacciones y presupuestos de categoría {category.id} '
