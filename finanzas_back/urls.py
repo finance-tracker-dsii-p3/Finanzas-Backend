@@ -58,7 +58,8 @@ urlpatterns = [
     path('api/dashboard/', include('dashboard.urls')),
     path('api/reports/', include('reports.urls')),
     path('api/export/', include('export.urls')),
-    path('api/accounts/', include('accounts.urls')),  # Cuentas financieras
+    path('api/accounts/', include('accounts.urls')),  # HU-04: Cuentas financieras
+    path('api/categories/', include('categories.urls')),  # HU-05: Categorías
 ]
 
 
