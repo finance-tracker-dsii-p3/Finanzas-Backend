@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     
     # HU-04 - Cuentas financieras
     'accounts',
+    
+    # HU-05 - Categorías de ingresos y gastos
+    'categories',
 ]
 
 MIDDLEWARE = [
