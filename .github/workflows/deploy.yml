@@ -57,7 +57,7 @@ jobs:
         run: |
           echo "✅ Deployment triggered successfully"
           echo "⏳ Waiting for Render deployment to complete..."
-          sleep 200
+          sleep 90
 
       - name: Health Check
         continue-on-error: true
