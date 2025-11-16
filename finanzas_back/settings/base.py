@@ -31,6 +31,9 @@ INSTALLED_APPS = [
     'dashboard',
     'reports',
     'export',
+    
+    # HU-04 - Cuentas financieras
+    'accounts',
 ]
 
 MIDDLEWARE = [

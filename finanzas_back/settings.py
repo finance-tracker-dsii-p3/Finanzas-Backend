@@ -55,6 +55,9 @@ INSTALLED_APPS = [
     'dashboard',
     'reports',
     'export',
+    
+    # Local apps (Sprint 2 - HU-04)
+    'accounts',
 ]
 
 MIDDLEWARE = [
