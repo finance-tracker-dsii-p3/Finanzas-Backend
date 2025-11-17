@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
-from .models import Account
+from .models import Account, AccountOption
 
 
 class AccountListSerializer(serializers.ModelSerializer):
@@ -12,9 +12,10 @@ class AccountListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            'id', 'name', 'account_type', 'account_type_display',
+            'id', 'name', 'bank_name', 'account_number', 'account_type', 'account_type_display',
             'category', 'category_display', 'currency', 'currency_display',
-            'current_balance', 'is_active'
+            'current_balance', 'is_active', 'gmf_exempt',
+            'expiration_date', 'credit_limit'
         ]
 
 
@@ -27,9 +28,10 @@ class AccountDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            'id', 'name', 'description', 'account_type', 'account_type_display',
+            'id', 'name', 'bank_name', 'account_number', 'description', 'account_type', 'account_type_display',
             'category', 'category_display', 'currency', 'currency_display',
-            'current_balance', 'is_active',
+            'current_balance', 'is_active', 'gmf_exempt',
+            'expiration_date', 'credit_limit',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -41,19 +43,27 @@ class AccountCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            'name', 'account_type', 'category', 'currency',
-            'current_balance', 'description', 'is_active'
+            'name', 'bank_name', 'account_number', 'account_type', 'category', 'currency',
+            'current_balance', 'description', 'is_active',
+            'gmf_exempt', 'expiration_date', 'credit_limit'
         ]
         extra_kwargs = {
             'current_balance': {'required': False, 'default': Decimal('0.00')},
             'description': {'required': False},
-            'is_active': {'required': False, 'default': True}
+            'bank_name': {'required': False},
+            'account_number': {'required': False},
+            'is_active': {'required': False, 'default': True},
+            'gmf_exempt': {'required': False, 'default': False},
+            'expiration_date': {'required': False},
+            'credit_limit': {'required': False}
         }
     
     def validate(self, attrs):
         category = attrs.get('category')
         account_type = attrs.get('account_type')
         current_balance = attrs.get('current_balance', Decimal('0.00'))
+        expiration_date = attrs.get('expiration_date')
+        credit_limit = attrs.get('credit_limit')
         
         if category == Account.CREDIT_CARD:
             attrs['account_type'] = Account.LIABILITY
@@ -61,13 +71,28 @@ class AccountCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'current_balance': 'Las tarjetas de crédito no pueden tener saldo positivo.'
                 })
+            # Validar que credit_limit sea positivo si se proporciona
+            if credit_limit is not None and credit_limit <= 0:
+                raise serializers.ValidationError({
+                    'credit_limit': 'El límite de crédito debe ser mayor a cero.'
+                })
+        else:
+            # Si no es tarjeta de crédito, no debería tener estos campos
+            if expiration_date is not None:
+                raise serializers.ValidationError({
+                    'expiration_date': 'La fecha de vencimiento solo aplica para tarjetas de crédito.'
+                })
+            if credit_limit is not None:
+                raise serializers.ValidationError({
+                    'credit_limit': 'El límite de crédito solo aplica para tarjetas de crédito.'
+                })
         
-        elif account_type == Account.LIABILITY and current_balance > 0:
+        if account_type == Account.LIABILITY and current_balance > 0:
             raise serializers.ValidationError({
                 'current_balance': 'Las cuentas de pasivo deben tener saldo negativo o cero.'
             })
         
-        elif account_type == Account.ASSET and current_balance < 0:
+        if account_type == Account.ASSET and current_balance < 0:
             raise serializers.ValidationError({
                 'current_balance': 'Las cuentas de activo no pueden tener saldo negativo.'
             })
@@ -91,19 +116,44 @@ class AccountUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Account
-        fields = ['name', 'account_type', 'category', 'currency', 'description', 'is_active']
+        fields = [
+            'name', 'bank_name', 'account_number', 'account_type', 'category', 'currency', 'description', 
+            'is_active', 'gmf_exempt', 'expiration_date', 'credit_limit'
+        ]
         extra_kwargs = {
             'name': {'required': False},
+            'bank_name': {'required': False},
+            'account_number': {'required': False},
             'account_type': {'required': False},
             'category': {'required': False},
-            'currency': {'required': False}
+            'currency': {'required': False},
+            'gmf_exempt': {'required': False},
+            'expiration_date': {'required': False},
+            'credit_limit': {'required': False}
         }
     
     def validate(self, attrs):
         category = attrs.get('category', self.instance.category)
+        expiration_date = attrs.get('expiration_date', self.instance.expiration_date)
+        credit_limit = attrs.get('credit_limit', self.instance.credit_limit)
         
         if category == Account.CREDIT_CARD:
             attrs['account_type'] = Account.LIABILITY
+            # Validar credit_limit si se proporciona
+            if 'credit_limit' in attrs and credit_limit is not None and credit_limit <= 0:
+                raise serializers.ValidationError({
+                    'credit_limit': 'El límite de crédito debe ser mayor a cero.'
+                })
+        else:
+            # Si no es tarjeta de crédito, no debería tener estos campos
+            if 'expiration_date' in attrs and expiration_date is not None:
+                raise serializers.ValidationError({
+                    'expiration_date': 'La fecha de vencimiento solo aplica para tarjetas de crédito.'
+                })
+            if 'credit_limit' in attrs and credit_limit is not None:
+                raise serializers.ValidationError({
+                    'credit_limit': 'El límite de crédito solo aplica para tarjetas de crédito.'
+                })
         
         if 'account_type' in attrs and self.instance.current_balance != 0:
             if attrs['account_type'] != self.instance.account_type:
@@ -150,3 +200,12 @@ class AccountSummarySerializer(serializers.Serializer):
     active_accounts_count = serializers.IntegerField()
     balances_by_currency = serializers.DictField()
     accounts_by_category = serializers.DictField()
+
+
+class AccountOptionSerializer(serializers.ModelSerializer):
+    """Serializer para opciones de cuentas (bancos, billeteras, etc.)"""
+    option_type_display = serializers.CharField(source='get_option_type_display', read_only=True)
+    
+    class Meta:
+        model = AccountOption
+        fields = ['id', 'name', 'option_type', 'option_type_display', 'is_active', 'order']

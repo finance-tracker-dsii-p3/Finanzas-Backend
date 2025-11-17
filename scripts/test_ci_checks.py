@@ -8,7 +8,7 @@ import subprocess
 
 def run_command(command, description):
     """Ejecutar un comando y mostrar el resultado"""
-    print(f"\n🧪 {description}")
+    print(f"\n[TEST] {description}")
     print(f"   Comando: {command}")
     print("-" * 50)
     
@@ -33,22 +33,22 @@ def run_command(command, description):
                 print(f"     {line}")
         
         if result.returncode == 0:
-            print("   ✅ ÉXITO")
+            print("   [OK] EXITO")
             return True
         else:
-            print("   ❌ FALLO")
+            print("   [ERROR] FALLO")
             return False
             
     except subprocess.TimeoutExpired:
-        print("   ❌ TIMEOUT (60 segundos)")
+        print("   [ERROR] TIMEOUT (60 segundos)")
         return False
     except Exception as e:
-        print(f"   ❌ ERROR: {e}")
+        print(f"   [ERROR] {e}")
         return False
 
 def main():
     """Ejecutar todos los checks de CI/CD"""
-    print("🔍 Probando checks de CI/CD")
+    print("[CI/CD] Probando checks de CI/CD")
     print("=" * 50)
     
     checks = [
@@ -64,23 +64,23 @@ def main():
         results.append((description, success))
     
     # Resumen
-    print("\n📊 Resumen de Checks:")
+    print("\n[RESUMEN] Resumen de Checks:")
     print("=" * 50)
     
     success_count = 0
     for description, success in results:
-        status = "✅ ÉXITO" if success else "❌ FALLO"
+        status = "[OK] EXITO" if success else "[ERROR] FALLO"
         print(f"   - {description}: {status}")
         if success:
             success_count += 1
     
-    print(f"\n🎯 Resultado: {success_count}/{len(results)} checks exitosos")
+    print(f"\n[RESULTADO] {success_count}/{len(results)} checks exitosos")
     
     if success_count == len(results):
-        print("🎉 ¡Todos los checks pasaron!")
-        print("   El proyecto está listo para CI/CD")
+        print("[OK] Todos los checks pasaron!")
+        print("   El proyecto esta listo para CI/CD")
     else:
-        print("⚠️  Algunos checks fallaron")
+        print("[WARNING] Algunos checks fallaron")
         print("   Revisa los errores antes de hacer push")
     
     return success_count == len(results)

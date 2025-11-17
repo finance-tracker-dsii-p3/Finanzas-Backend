@@ -8,6 +8,9 @@ router = DefaultRouter()
 router.register(r'', views.AccountViewSet, basename='account')
 
 urlpatterns = [
+    # Endpoint para opciones de cuentas (bancos, billeteras, etc.)
+    # IMPORTANTE: Debe ir ANTES del router para que no sea capturado por el router
+    path('options/', views.get_account_options, name='account-options'),
     # Incluir rutas del router
     path('', include(router.urls)),
 ]

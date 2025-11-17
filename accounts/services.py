@@ -267,18 +267,30 @@ class AccountService:
             is_active=True
         )
         
-        # Nota: El modelo simplificado no tiene credit_limit
-        # Por ahora retornamos solo el conteo y saldo usado
         total_used_credit = sum(
             abs(card.current_balance) for card in credit_cards
         )
         
+        # Calcular límite total de crédito
+        total_credit_limit = sum(
+            card.credit_limit for card in credit_cards 
+            if card.credit_limit is not None
+        ) or Decimal('0.00')
+        
+        # Calcular crédito disponible
+        available_credit = total_credit_limit - total_used_credit if total_credit_limit > 0 else Decimal('0.00')
+        
+        # Calcular porcentaje de utilización
+        utilization_percentage = 0.0
+        if total_credit_limit > 0:
+            utilization_percentage = float((total_used_credit / total_credit_limit) * 100)
+        
         return {
             'cards_count': credit_cards.count(),
-            'total_credit_limit': Decimal('0.00'),  # No disponible en modelo simplificado
+            'total_credit_limit': total_credit_limit,
             'total_used_credit': total_used_credit,
-            'available_credit': Decimal('0.00'),  # No se puede calcular sin credit_limit
-            'utilization_percentage': 0.0  # No se puede calcular sin credit_limit
+            'available_credit': available_credit,
+            'utilization_percentage': round(utilization_percentage, 2)
         }
     
     @staticmethod

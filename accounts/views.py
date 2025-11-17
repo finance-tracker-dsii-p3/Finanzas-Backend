@@ -2,14 +2,14 @@
 Views para la gestión de cuentas financieras
 """
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from decimal import Decimal
 import logging
 
-from .models import Account
+from .models import Account, AccountOption, AccountOptionType
 from .serializers import (
     AccountListSerializer,
     AccountDetailSerializer, 
@@ -366,7 +366,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         Listar cuentas del usuario con filtros opcionales
         
         Query params:
-            active_only (bool): Solo cuentas activas (default: true)
+            active_only (bool): Solo cuentas activas (default: false - devuelve todas)
             category (str): Filtrar por categoría
             account_type (str): Filtrar por tipo (asset/liability)
         
@@ -375,8 +375,8 @@ class AccountViewSet(viewsets.ModelViewSet):
         """
         queryset = self.get_queryset()
         
-        # Filtro por cuentas activas
-        active_only = request.query_params.get('active_only', 'true').lower() == 'true'
+        # Filtro por cuentas activas (solo si se solicita explícitamente)
+        active_only = request.query_params.get('active_only', 'false').lower() == 'true'
         if active_only:
             queryset = queryset.filter(is_active=True)
         
@@ -397,3 +397,52 @@ class AccountViewSet(viewsets.ModelViewSet):
         )
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_account_options(request):
+    """
+    Retorna los listados de opciones para crear cuentas.
+    Incluye bancos, billeteras y bancos para tarjetas de crédito.
+    
+    Returns:
+        Response: Diccionario con los listados de opciones
+    """
+    try:
+        # Obtener bancos activos ordenados
+        banks = AccountOption.objects.filter(
+            option_type=AccountOptionType.BANK,
+            is_active=True
+        ).order_by('order', 'name').values_list('name', flat=True)
+        
+        # Obtener billeteras activas ordenadas
+        wallets = AccountOption.objects.filter(
+            option_type=AccountOptionType.WALLET,
+            is_active=True
+        ).order_by('order', 'name').values_list('name', flat=True)
+        
+        # Obtener bancos para tarjetas de crédito activos ordenados
+        credit_card_banks = AccountOption.objects.filter(
+            option_type=AccountOptionType.CREDIT_CARD_BANK,
+            is_active=True
+        ).order_by('order', 'name').values_list('name', flat=True)
+        
+        logger.info(
+            f'Usuario {request.user.id} consultó opciones de cuentas: '
+            f'{banks.count()} bancos, {wallets.count()} billeteras, '
+            f'{credit_card_banks.count()} bancos para tarjetas'
+        )
+        
+        return Response({
+            'banks': list(banks),
+            'wallets': list(wallets),
+            'credit_card_banks': list(credit_card_banks)
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f'Error al obtener opciones de cuentas: {str(e)}')
+        return Response(
+            {'error': 'Error al obtener opciones de cuentas'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
