@@ -87,6 +87,7 @@ class Category(models.Model):
     # Lista de iconos válidos (Font Awesome)
     ICON_CHOICES = [
         ('fa-shopping-cart', 'Carrito de compras'),
+        ('fa-shopping-basket', 'Canasta de compras'),
         ('fa-utensils', 'Comida'),
         ('fa-home', 'Casa'),
         ('fa-car', 'Transporte'),
