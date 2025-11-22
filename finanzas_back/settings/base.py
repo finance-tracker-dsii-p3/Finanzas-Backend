@@ -43,6 +43,9 @@ INSTALLED_APPS = [
 
     # HU-09 - Movimientos
     'transactions.apps.TransactionsConfig',
+
+    # HU-11 - Metas de ahorro
+    'goals',
 ]
 
 MIDDLEWARE = [

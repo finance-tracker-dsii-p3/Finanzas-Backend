@@ -1,4 +1,4 @@
-"""URLs para la app transactions"""
+"""URLs para la app categories"""
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -6,7 +6,7 @@ from . import views
 
 # Configurar router para ViewSet
 router = DefaultRouter()
-router.register(r"", views.TransactionViewSet, basename="transaction")
+router.register(r"", views.GoalViewSet, basename="goal")
 
 urlpatterns = [
     # Incluir rutas del router

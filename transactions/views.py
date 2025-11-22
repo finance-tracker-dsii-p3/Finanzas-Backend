@@ -34,7 +34,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """Seleccionar serializer según la acción"""
         if self.action == "create":
             return TransactionSerializer
-        elif self.action == "retrieve":
+        elif self.action in ["retrieve", "list"]:
             return TransactionDetailSerializer
         elif self.action in ["update", "partial_update"]:
             return TransactionUpdateSerializer
@@ -43,11 +43,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Listar categorías del usuario con filtros opcionales
-
-        Query params:
-            active_only (bool): Solo categorías activas (default: true)
-            type (str): Filtrar por tipo (income/expense)
+        Listar transacciones del usuario con filtros opcionales
         """
         queryset = self.get_queryset()
 
@@ -66,7 +62,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "count": 0,
-                    "message": "No tienes transacciones creadas. Usa POST /api/transactions/create_defaults/ para crear transacciones por defecto.",
+                    "message": "No tienes transacciones creadas.",
                     "results": [],
                 },
                 status=status.HTTP_200_OK,
@@ -75,11 +71,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
-        """Crear categoría asignando el usuario autenticado"""
+        """Crear transacción asignando el usuario autenticado"""
         try:
             transaction = serializer.save()
             
-
             logger.info(
                 f"Usuario {self.request.user.id} creó transacción: {transaction.name} "
                 f"({transaction.get_type_display()})"
@@ -94,7 +89,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """Actualizar transacción"""
         try:
-
+            serializer.save()
             logger.info(
                 f"Usuario {self.request.user.id} actualizó una transacción"
             )
@@ -122,7 +117,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             raise e
 
     def perform_destroy(self, instance):
-        """Eliminar transacción sin reasignación (solo si no tiene datos relacionados)"""
+        """Eliminar transacción existente"""
         try:
             instance.delete()
 
