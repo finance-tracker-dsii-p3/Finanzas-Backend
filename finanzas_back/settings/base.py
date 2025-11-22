@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     
     # HU-07 - Presupuestos por categoría
     'budgets',
+
+    # HU-09 - Movimientos
+    'transactions.apps.TransactionsConfig',
 ]
 
 MIDDLEWARE = [

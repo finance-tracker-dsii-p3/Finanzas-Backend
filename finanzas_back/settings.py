@@ -1,3 +1,5 @@
+#THIS FILE IS DEPRECATED. USE finanzas_back/settings/base.py INSTEAD.
+
 from pathlib import Path
 import environ
 import sys
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     # Local apps (Sprint 3 - HU-05, HU-07)
     'categories',
     'budgets.apps.BudgetsConfig',
+
 ]
 
 MIDDLEWARE = [
