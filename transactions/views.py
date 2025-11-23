@@ -40,8 +40,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
     ordering = ["-date"]  # default ordering
 
     def get_queryset(self):
-        """Filtrar categorías por usuario autenticado"""
-        return Transaction.objects.filter(user=self.request.user).order_by("order", "name")
+        """Filtrar transacciones por usuario autenticado"""
+        return Transaction.objects.filter(user=self.request.user).order_by("-date", "-created_at")
 
     def get_serializer_class(self):
         """Seleccionar serializer según la acción"""
