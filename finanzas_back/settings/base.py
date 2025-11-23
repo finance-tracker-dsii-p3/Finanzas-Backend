@@ -49,6 +49,9 @@ INSTALLED_APPS = [
 
     # HU-11 - Metas de ahorro
     'goals',
+
+    # HU-12 - Reglas automáticas
+    'rules.apps.RulesConfig',
 ]
 
 MIDDLEWARE = [
@@ -61,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'finanzas_back.middleware.APIErrorHandlerMiddleware',  # HU-12 - Mejor manejo de errores
 ]
 
 ROOT_URLCONF = 'finanzas_back.urls'
@@ -131,7 +135,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'finanzas_back.middleware.custom_exception_handler',  # HU-12 - Mejor manejo de errores
 }
 
 # Media files configuration

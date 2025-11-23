@@ -86,6 +86,35 @@ class Transaction(models.Model):
         help_text='Etiqueta asociada a la transacción'
     )
 
+    # HU-12 - Reglas automáticas: Campos adicionales
+    description = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name='Descripción',
+        help_text='Descripción del movimiento para aplicar reglas automáticas'
+    )
+
+    category = models.ForeignKey(
+        'categories.Category',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transactions',
+        verbose_name='Categoría',
+        help_text='Categoría asignada automáticamente por regla o manualmente'
+    )
+
+    applied_rule = models.ForeignKey(
+        'rules.AutomaticRule',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='applied_transactions',
+        verbose_name='Regla aplicada',
+        help_text='Regla automática que se aplicó a esta transacción'
+    )
+
     # Timestamps
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -107,7 +136,38 @@ class Transaction(models.Model):
             self.taxed_amount = 0
             self.total_amount = self.base_amount
 
+        # HU-12: Aplicar reglas automáticas en transacciones nuevas
+        is_new_transaction = self.pk is None
+        
         super().save(*args, **kwargs)
+        
+        # Aplicar reglas automáticas solo si es una transacción nueva
+        # y no tiene categoría ni regla asignada manualmente
+        if is_new_transaction and not self.category and not self.applied_rule:
+            self._apply_automatic_rules()
+
+    def _apply_automatic_rules(self):
+        """
+        Aplica reglas automáticas a esta transacción.
+        Se ejecuta después de save() para evitar problemas de FK.
+        """
+        try:
+            # Importar aquí para evitar dependencias circulares
+            from rules.services import RuleEngineService
+            
+            # Aplicar reglas automáticas
+            result = RuleEngineService.apply_rules_to_transaction(self)
+            
+            # Log del resultado para debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Reglas automáticas en transacción {self.id}: {result['message']}")
+            
+        except Exception as e:
+            # No fallar si hay error aplicando reglas
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Error aplicando reglas automáticas a transacción {self.id}: {str(e)}")
 
     def __str__(self):
         return f"Transacción {self.id} - {self.get_type_display()} - {self.total_amount}"
