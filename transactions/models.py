@@ -12,6 +12,7 @@ class Transaction(models.Model):
         (1, 'Income'),
         (2, 'Expense'),
         (3, 'Transfer'),
+        (4, 'Saving'),
     ]
 
     User = get_user_model()

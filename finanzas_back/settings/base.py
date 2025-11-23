@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     # HU-07 - Presupuestos por categoría
     'budgets',
 
+    # HU-08 - Alertas de presupuestos
+    'alerts.apps.AlertsConfig',
+
     # HU-09 - Movimientos
     'transactions.apps.TransactionsConfig',
 
