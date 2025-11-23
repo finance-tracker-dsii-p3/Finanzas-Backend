@@ -21,6 +21,8 @@ class RulesAPIWorkflowTests(TestCase):
         
         # Crear usuario de prueba
         self.user = User.objects.create_user(
+            identification='12345678',
+            username='testuser',
             email='test@example.com',
             password='testpass123',
             first_name='Test',
@@ -125,6 +127,8 @@ class RulesModelWorkflowTests(TestCase):
     
     def setUp(self):
         self.user = User.objects.create_user(
+            identification='87654321',
+            username='modeluser',
             email='model@test.com',
             password='testpass123'
         )
@@ -139,10 +143,11 @@ class RulesModelWorkflowTests(TestCase):
         """Verificar que el método __str__ del modelo funciona"""
         rule = AutomaticRule(
             user=self.user,
-            name='Test Rule Name'
+            name='Test Rule Name',
+            criteria_type=AutomaticRule.DESCRIPTION_CONTAINS
         )
         
-        self.assertEqual(str(rule), 'Test Rule Name')
+        self.assertEqual(str(rule), 'Test Rule Name - Descripción contiene texto')
     
     def test_rule_choices_are_valid(self):
         """Verificar que las opciones del modelo están definidas"""

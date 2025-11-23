@@ -21,6 +21,8 @@ class RulesTransactionsIntegrationTests(TestCase):
         """Configuración completa para tests de integración"""
         # Usuario de prueba
         self.user = User.objects.create_user(
+            identification='33333333',
+            username='fullintegration',
             email='integration@test.com',
             password='testpass123'
         )
@@ -29,8 +31,9 @@ class RulesTransactionsIntegrationTests(TestCase):
         self.account = Account.objects.create(
             user=self.user,
             name='Test Integration Account',
-            type='checking',
-            balance=Decimal('10000.00')
+            account_type='asset',
+            category='bank_account',
+            current_balance=Decimal('10000.00')
         )
         
         # Categorías de prueba

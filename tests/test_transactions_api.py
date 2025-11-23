@@ -24,6 +24,8 @@ class TransactionsAPIWorkflowTests(TestCase):
         
         # Crear usuario de prueba
         self.user = User.objects.create_user(
+            identification='11111111',
+            username='transuser',
             email='trans@example.com',
             password='testpass123',
             first_name='Trans',
@@ -43,8 +45,9 @@ class TransactionsAPIWorkflowTests(TestCase):
         self.test_account = Account.objects.create(
             user=self.user,
             name='Test Account',
-            type='checking',
-            balance=Decimal('1000.00')
+            account_type='asset',
+            category='bank_account',
+            current_balance=Decimal('1000.00')
         )
         
         # Crear categoría de prueba
@@ -151,6 +154,8 @@ class TransactionsRulesIntegrationWorkflowTests(TestCase):
     
     def setUp(self):
         self.user = User.objects.create_user(
+            identification='22222222',
+            username='integrationuser',
             email='integration@test.com',
             password='testpass123'
         )
@@ -158,8 +163,9 @@ class TransactionsRulesIntegrationWorkflowTests(TestCase):
         self.account = Account.objects.create(
             user=self.user,
             name='Integration Account',
-            type='checking',
-            balance=Decimal('5000.00')
+            account_type='asset',
+            category='bank_account',
+            current_balance=Decimal('5000.00')
         )
         
         self.category = Category.objects.create(
