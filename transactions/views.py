@@ -4,6 +4,7 @@ Views para gestión de categorías de ingresos y gastos
 
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
 import logging
 
 from .models import Transaction
@@ -12,6 +13,8 @@ from .serializers import (
     TransactionDetailSerializer,
     TransactionUpdateSerializer
 )
+from .filters import TransactionFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter,
+    ]
+    filterset_class = TransactionFilter
+    search_fields = ["origin_account", "destination_account", "tag", "date"]  # DRF search filter (optional)
+    ordering_fields = ["date", "total_amount"]  # user can order by these
+    ordering = ["-date"]  # default ordering
 
     def get_queryset(self):
         """Filtrar categorías por usuario autenticado"""
