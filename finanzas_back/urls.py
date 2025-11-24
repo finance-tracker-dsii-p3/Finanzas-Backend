@@ -65,5 +65,6 @@ urlpatterns = [
     path('api/alerts/', include('alerts.urls')),  # HU-08: Alertas de presupuestos
     path('api/goals/', include('goals.urls')),  # HU-11: Metas de ahorro
     path('api/rules/', include('rules.urls')),  # HU-12: Reglas automáticas
+    path('api/analytics/', include('analytics.urls')),  # HU-13: Indicadores y gráficos del período
 ]
 

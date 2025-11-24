@@ -48,12 +48,18 @@ class TransactionSerializer(serializers.ModelSerializer):
             'tax_percentage',
             'taxed_amount',
             'total_amount',
-            'date'
+            'date',
+            'tag',
+            'description',
+            'category',
+            'applied_rule',
+            'created_at',
+            'updated_at'
         ]
-        read_only_fields = ['id', 'user']
+        read_only_fields = ['id', 'user', 'taxed_amount', 'total_amount', 'applied_rule', 'created_at', 'updated_at']
 
-    def validate_amount(self, value):
-        """Validar que el monto sea positivo"""
+    def validate_base_amount(self, value):
+        """Validar que el monto base sea positivo"""
         if value <= 0:
             raise serializers.ValidationError("El monto debe ser un valor positivo mayor que cero.")
         return value
@@ -94,13 +100,15 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
             'type',
             'base_amount',
             'tax_percentage',
-            'taxed_amount',
-            'total_amount',
-            'date'
+            'date',
+            'tag',
+            'description',
+            'category'
         ]
+        # taxed_amount y total_amount se calculan automáticamente
     
-    def validate_amount(self, value):
-        """Validar que el monto sea positivo"""
+    def validate_base_amount(self, value):
+        """Validar que el monto base sea positivo"""
         if value <= 0:
             raise serializers.ValidationError("El monto debe ser un valor positivo mayor que cero.")
         return value
