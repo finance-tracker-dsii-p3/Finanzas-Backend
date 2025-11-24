@@ -3,6 +3,8 @@ name: Deploy Develop
 on:
   push:
     branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
 
 jobs:
   deploy-develop:
@@ -10,15 +12,19 @@ jobs:
     timeout-minutes: 10
     
     steps:
-      - name: Checkout develop branch
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'develop' }}
 
       - name: Verify branch
         run: |
           echo "🌿 Deploying from branch: $(git branch --show-current)"
           echo "📝 Latest commit: $(git log -1 --oneline)"
+          echo "🔀 Event type: ${{ github.event_name }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "📋 PR from: ${{ github.head_ref }} to ${{ github.base_ref }}"
+          fi
 
       - name: Deploy to Render
         uses: johnbeynon/render-deploy-action@v0.0.8

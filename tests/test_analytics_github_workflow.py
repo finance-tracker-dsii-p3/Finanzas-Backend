@@ -72,7 +72,7 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         data = response.json()
         
         # Para usuario sin transacciones, debe retornar error controlado
-        if data.get('success') == False:
+        if not data.get('success'):
             self.assertIn('error', data)
             self.assertIn('code', data) 
             # Es válido que retorne NO_DATA_AVAILABLE para usuario sin transacciones
@@ -149,7 +149,7 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         data = response.json()
         
         # Para usuario sin transacciones, puede retornar error controlado
-        if data.get('success') == False:
+        if not data.get('success'):
             self.assertIn('error', data)
             self.assertIn('code', data)
             # Es válido que no tenga transacciones
@@ -174,7 +174,7 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         data = response.json()
         
         # Para usuario sin gastos, puede retornar error controlado
-        if data.get('success') == False:
+        if not data.get('success'):
             self.assertIn('error', data)
             self.assertIn('code', data)
             # Es válido que no tenga gastos
@@ -318,7 +318,7 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         
         # El otro usuario no debe ver datos del primero
         # Puede retornar error por no tener transacciones o indicadores en cero
-        if data.get('success') == False:
+        if not data.get('success'):
             self.assertIn('error', data)
             self.assertEqual(data['code'], 'NO_DATA_AVAILABLE')
         else:
@@ -341,7 +341,7 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         data = response.json()
         
         # Para usuario sin gastos, debe retornar error controlado
-        if data.get('success') == False:
+        if not data.get('success'):
             self.assertIn('error', data)
             self.assertEqual(data['code'], 'NO_EXPENSES')
         else:

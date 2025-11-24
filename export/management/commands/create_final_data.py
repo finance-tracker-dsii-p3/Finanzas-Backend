@@ -449,7 +449,7 @@ class Command(BaseCommand):
             equipment_item = random.choice(equipment)
             monitor = random.choice(monitors)
             problem = random.choice(problem_types)
-            severity = random.choice(severity_levels)
+            _ = random.choice(severity_levels)  # severity no se usa actualmente
             
             # Fecha aleatoria en agosto-septiembre 2025
             report_date = date(2025, random.randint(8, 9), random.randint(1, 28))

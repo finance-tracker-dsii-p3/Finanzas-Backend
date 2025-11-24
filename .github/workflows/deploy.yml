@@ -3,6 +3,8 @@ name: Deploy
 on:
   push:
     branches: [develop ]
+  pull_request:
+    branches: [develop ]
   workflow_run:
     workflows: ["CI (Tests Only)"]
     types: [completed]
@@ -12,7 +14,7 @@ jobs:
   # Job condicional: solo ejecutar si los tests pasaron
   check-tests:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     outputs:
       deploy-needed: ${{ steps.check.outputs.result }}
       branch: ${{ steps.branch.outputs.name }}
@@ -25,6 +27,8 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
             echo "name=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
           else
             echo "name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
           fi

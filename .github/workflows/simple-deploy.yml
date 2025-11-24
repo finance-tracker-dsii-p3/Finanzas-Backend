@@ -3,6 +3,8 @@ name: Simple Deploy
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_run:
     workflows: ["CI (Tests Only)"]
     types: [completed]
@@ -11,7 +13,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' || github.event_name == 'pull_request' }}
     timeout-minutes: 10
     
     steps:
