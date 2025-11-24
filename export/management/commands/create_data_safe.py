@@ -1,12 +1,10 @@
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import datetime, date, timedelta
 import random
 from users.models import User
 from rooms.models import Room, RoomEntry
 from schedule.models import Schedule
-from courses.models import Course
 from equipment.models import Equipment, EquipmentReport
 from attendance.models import Attendance, Incapacity
 from notifications.models import Notification

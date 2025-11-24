@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Notification
-from .serializers import NotificationSerializer, SystemAlertSerializer
-from .services import NotificationService, BasicCheckerService
+from .serializers import NotificationSerializer
+from .services import NotificationService
 
 
 class NotificationViewSet(viewsets.ModelViewSet):

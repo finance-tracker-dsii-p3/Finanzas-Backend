@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from accounts.models import Account
+from decimal import Decimal
 
 
 class Transaction(models.Model):
@@ -43,6 +44,16 @@ class Transaction(models.Model):
         help_text='Cuenta destino para transferencias (opcional)'
     )
 
+    category = models.ForeignKey(
+        'categories.Category',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='transactions',
+        verbose_name='Categoría',
+        help_text='Categoría de la transacción (requerida para ingresos y gastos, no aplica para transferencias)'
+    )
+
     type = models.IntegerField(
         choices=TYPE_CHOICES,
         verbose_name='Tipo de transacción',
@@ -68,9 +79,32 @@ class Transaction(models.Model):
         help_text='Monto adicional por impuesto (si aplica)'
     )
 
+    gmf_amount = models.IntegerField(
+        default=0,
+        null=True,
+        blank=True,
+        verbose_name='Monto GMF',
+        help_text='Monto del GMF (4x1000) calculado automáticamente si la cuenta no está exenta'
+    )
+
+    # Campos para pagos a tarjetas de crédito
+    capital_amount = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Monto capital',
+        help_text='Monto que va al capital (solo para pagos a tarjetas de crédito). Si no se especifica, se asume que todo el pago es capital.'
+    )
+
+    interest_amount = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Monto intereses',
+        help_text='Monto que va a intereses (solo para pagos a tarjetas de crédito). Si no se especifica, se calcula automáticamente.'
+    )
+
     total_amount = models.IntegerField(
         verbose_name='Monto total',
-        help_text='Monto total de la transacción (incluyendo impuestos)'
+        help_text='Monto total de la transacción (incluyendo impuestos y GMF)'
     )
 
     date = models.DateField(
@@ -83,7 +117,15 @@ class Transaction(models.Model):
         null=True,
         blank=True,
         verbose_name='Etiqueta',
-        help_text='Etiqueta asociada a la transacción'
+        help_text='Etiqueta asociada a la transacción (ej: #hogar, #viaje)'
+    )
+
+    note = models.TextField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name='Nota',
+        help_text='Nota descriptiva adicional sobre la transacción'
     )
 
     # HU-12 - Reglas automáticas: Campos adicionales
@@ -93,16 +135,6 @@ class Transaction(models.Model):
         blank=True,
         verbose_name='Descripción',
         help_text='Descripción del movimiento para aplicar reglas automáticas'
-    )
-
-    category = models.ForeignKey(
-        'categories.Category',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='transactions',
-        verbose_name='Categoría',
-        help_text='Categoría asignada automáticamente por regla o manualmente'
     )
 
     applied_rule = models.ForeignKey(
@@ -128,13 +160,49 @@ class Transaction(models.Model):
 
 
     def save(self, *args, **kwargs):
-        # If tax_percentage is provided, compute taxed_amount
+        # Calcular impuestos si se proporciona tax_percentage
         if self.tax_percentage:
-            self.taxed_amount = (self.base_amount * (self.tax_percentage / 100))
-            self.total_amount = self.base_amount + self.taxed_amount
+            self.taxed_amount = int(self.base_amount * (self.tax_percentage / 100))
         else:
             self.taxed_amount = 0
-            self.total_amount = self.base_amount
+        
+        # Calcular GMF (4x1000 = 0.4%) si aplica
+        # El GMF se aplica a:
+        # - Gastos (Expense) desde cuentas NO exentas
+        # - Transferencias (Transfer) desde cuentas NO exentas
+        # - NO se aplica a ingresos (Income)
+        # - NO se aplica a tarjetas de crédito generalmente
+        self.gmf_amount = 0
+        
+        if self.origin_account and not self.origin_account.gmf_exempt:
+            # Verificar si el tipo de transacción requiere GMF
+            if self.type in [2, 3]:  # Expense o Transfer
+                # NO aplicar GMF a tarjetas de crédito
+                if self.origin_account.category != Account.CREDIT_CARD:
+                    # GMF = 4x1000 = 0.4% del monto base + impuestos
+                    amount_for_gmf = Decimal(str(self.base_amount)) + Decimal(str(self.taxed_amount))
+                    self.gmf_amount = int(amount_for_gmf * Decimal('0.004'))  # 0.4% = 4/1000
+        
+        # Calcular total: base + impuestos + GMF
+        self.total_amount = self.base_amount + self.taxed_amount + self.gmf_amount
+        
+        # Para pagos a tarjetas de crédito (transferencias donde destino es tarjeta de crédito)
+        # Calcular capital e intereses si no se especificaron
+        if (self.type == 3 and  # Transfer
+            self.destination_account and
+            self.destination_account.category == Account.CREDIT_CARD):
+            
+            # Si no se especificó capital_amount, todo el pago es capital
+            if self.capital_amount is None:
+                self.capital_amount = self.total_amount
+                self.interest_amount = 0
+            # Si se especificó capital_amount pero no interest_amount, calcular intereses
+            elif self.interest_amount is None:
+                self.interest_amount = self.total_amount - self.capital_amount
+            # Si ambos están especificados, validar que sumen el total
+            elif self.capital_amount + self.interest_amount != self.total_amount:
+                # Ajustar interest_amount para que sumen el total
+                self.interest_amount = self.total_amount - self.capital_amount
 
         # HU-12: Aplicar reglas automáticas en transacciones nuevas
         is_new_transaction = self.pk is None

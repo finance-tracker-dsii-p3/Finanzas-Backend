@@ -3,7 +3,7 @@ Services para la lógica de negocio de cuentas
 """
 from decimal import Decimal
 from django.db import transaction
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum
 from .models import Account
 
 
@@ -198,7 +198,6 @@ class AccountService:
                 f'{account.current_balance} {account.currency}'
             )
         
-        account_name = account.name
         account.delete()
         
         return True
@@ -217,7 +216,6 @@ class AccountService:
         Returns:
             Account: Cuenta actualizada
         """
-        old_balance = account.current_balance
         account.current_balance = new_balance
         account.save(update_fields=['current_balance', 'updated_at'])
         
@@ -249,6 +247,98 @@ class AccountService:
             currency=currency,
             is_active=True
         ).order_by('name')
+    
+    @staticmethod
+    def get_credit_card_details(account):
+        """
+        Obtener detalles completos de una tarjeta de crédito
+        
+        Calcula:
+        - Límite de crédito
+        - Lo usado (deuda actual)
+        - Lo que se debe (saldo actual, negativo)
+        - Lo que se ha pagado (suma de pagos realizados, puede ser mayor al límite por intereses)
+        
+        Args:
+            account: Instancia de Account (debe ser tarjeta de crédito)
+            
+        Returns:
+            dict: Detalles de la tarjeta de crédito o None si no es tarjeta de crédito
+        """
+        try:
+            from transactions.models import Transaction
+        except ImportError:
+            return None
+        
+        if account.category != Account.CREDIT_CARD:
+            return None
+        
+        # Límite de crédito
+        credit_limit = account.credit_limit or Decimal('0.00')
+        
+        # Lo usado = deuda actual (valor absoluto del saldo negativo)
+        used_credit = abs(account.current_balance) if account.current_balance < 0 else Decimal('0.00')
+        
+        # Lo que se debe = saldo actual (negativo)
+        current_debt = account.current_balance
+        
+        # Lo que se ha pagado = suma de transferencias donde la tarjeta es destino
+        # IMPORTANTE: Para calcular "lo usado" correctamente, solo contamos el capital pagado
+        # Los intereses ya estaban incluidos en la deuda como transacciones separadas
+        
+        # Capital pagado (reduce la deuda)
+        capital_paid = Decimal('0.00')
+        
+        # Total pagado (capital + intereses, para mostrar al usuario)
+        total_paid = Decimal('0.00')
+        
+        # Transferencias donde la tarjeta es destino (pagos a la tarjeta)
+        transfer_payments = Transaction.objects.filter(
+            user=account.user,
+            destination_account=account,
+            type=3  # Transfer
+        )
+        
+        for payment in transfer_payments:
+            total_paid += Decimal(str(payment.total_amount))
+            # Si tiene capital_amount especificado, usar ese; sino, todo el pago es capital
+            if payment.capital_amount is not None:
+                capital_paid += Decimal(str(payment.capital_amount))
+            else:
+                capital_paid += Decimal(str(payment.total_amount))
+        
+        # Ingresos donde la tarjeta es origen (aunque es raro para tarjetas de crédito)
+        income_payments = Transaction.objects.filter(
+            user=account.user,
+            origin_account=account,
+            type=1  # Income
+        ).aggregate(
+            total=Sum('total_amount')
+        )['total'] or Decimal('0.00')
+        
+        total_paid += Decimal(str(income_payments))
+        capital_paid += Decimal(str(income_payments))  # Los ingresos directos son todo capital
+        
+        # El "lo usado" debería ser: deuda actual = gastos - capital pagado
+        # Pero como current_balance ya refleja esto (se actualiza solo con capital),
+        # used_credit = abs(current_balance) ya es correcto
+        
+        # Crédito disponible
+        available_credit = credit_limit - used_credit if credit_limit > 0 else Decimal('0.00')
+        
+        # Porcentaje de utilización
+        utilization_percentage = 0.0
+        if credit_limit > 0:
+            utilization_percentage = float((used_credit / credit_limit) * 100)
+        
+        return {
+            'credit_limit': credit_limit,
+            'used_credit': used_credit,
+            'current_debt': current_debt,
+            'total_paid': total_paid,
+            'available_credit': available_credit,
+            'utilization_percentage': round(utilization_percentage, 2)
+        }
     
     @staticmethod
     def get_credit_cards_summary(user):

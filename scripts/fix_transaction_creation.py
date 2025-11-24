@@ -32,7 +32,7 @@ def check_accounts_and_fix():
     
     # Verificar cuentas del usuario
     accounts = Account.objects.filter(user=user)
-    print(f"\n💳 CUENTAS DISPONIBLES:")
+    print("\n💳 CUENTAS DISPONIBLES:")
     print(f"   - Total cuentas: {accounts.count()}")
     
     if accounts.exists():
@@ -45,7 +45,7 @@ def check_accounts_and_fix():
         # Usar la primera cuenta disponible
         first_account = accounts.first()
         
-        print(f"🧪 EJEMPLO CORRECTO DE TRANSACCIÓN:")
+        print("🧪 EJEMPLO CORRECTO DE TRANSACCIÓN:")
         print(f"   Usar cuenta ID: {first_account.id}")
         
         transaction_example = {
@@ -57,21 +57,21 @@ def check_accounts_and_fix():
             "tag": "salario"
         }
         
-        print(f"\n📋 JSON CORREGIDO:")
+        print("\n📋 JSON CORREGIDO:")
         import json
         print(json.dumps(transaction_example, indent=2))
         
         # Verificar token
         token, _ = Token.objects.get_or_create(user=user)
-        print(f"\n🔑 TOKEN PARA USAR:")
+        print("\n🔑 TOKEN PARA USAR:")
         print(f"Authorization: Token {token.key}")
         
-        print(f"\n🚀 COMANDO CURL COMPLETO:")
-        print(f'curl -X POST \\')
+        print("\n🚀 COMANDO CURL COMPLETO:")
+        print('curl -X POST \\')
         print(f'  -H "Authorization: Token {token.key}" \\')
-        print(f'  -H "Content-Type: application/json" \\')
+        print('  -H "Content-Type: application/json" \\')
         print(f'  -d \'{json.dumps(transaction_example)}\' \\')
-        print(f'  http://localhost:8000/api/transactions/')
+        print('  http://localhost:8000/api/transactions/')
         
     else:
         print("❌ No hay cuentas disponibles para este usuario")

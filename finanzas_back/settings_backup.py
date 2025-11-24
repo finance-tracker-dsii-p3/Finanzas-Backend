@@ -97,7 +97,6 @@ WSGI_APPLICATION = 'finanzas_back.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-import sys
 
 # Configuración condicional de base de datos
 if 'test' in sys.argv or 'pytest' in sys.modules:

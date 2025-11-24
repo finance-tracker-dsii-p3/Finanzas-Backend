@@ -4,7 +4,6 @@ Modelos para gestión de categorías de ingresos y gastos
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 import re
 
 User = get_user_model()

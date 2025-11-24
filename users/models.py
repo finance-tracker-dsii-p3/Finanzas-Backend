@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-from datetime import timedelta
 from .managers import CustomUserManager
 from django.conf import settings
 

@@ -1,6 +1,5 @@
 from pathlib import Path
 import environ
-import sys
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent

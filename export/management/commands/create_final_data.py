@@ -6,7 +6,6 @@ import random
 from users.models import User
 from rooms.models import Room, RoomEntry
 from schedule.models import Schedule
-from courses.models import Course
 from equipment.models import Equipment, EquipmentReport
 from attendance.models import Attendance, Incapacity
 from notifications.models import Notification

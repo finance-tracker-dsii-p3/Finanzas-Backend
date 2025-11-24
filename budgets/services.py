@@ -3,7 +3,7 @@ Servicios de lógica de negocio para presupuestos
 """
 from decimal import Decimal
 from datetime import date
-from django.db.models import Sum, Q, Count, Avg
+from django.db.models import Sum
 from .models import Budget
 from categories.models import Category
 import logging

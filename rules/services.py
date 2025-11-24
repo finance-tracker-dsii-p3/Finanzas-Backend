@@ -3,7 +3,7 @@ Servicios para reglas automáticas (HU-12)
 Motor de reglas que aplica automáticamente categorías y etiquetas
 """
 import logging
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from .models import AutomaticRule

@@ -1,7 +1,6 @@
 """
 Middleware personalizado para el proyecto de finanzas
 """
-import json
 import logging
 from django.conf import settings
 from django.http import JsonResponse

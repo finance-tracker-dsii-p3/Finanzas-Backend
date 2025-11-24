@@ -1,13 +1,9 @@
 import os
-import tempfile
-from io import BytesIO
-from datetime import datetime, date
 from django.conf import settings
-from django.db.models import Q, Count
 from django.utils import timezone
 from django.core.files import File
 import openpyxl
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 from users.models import User
 from notifications.models import Notification

@@ -1,9 +1,7 @@
 """
 Services para lógica de negocio de categorías
 """
-from decimal import Decimal
 from django.db import transaction
-from django.db.models import Count, Q
 from .models import Category
 import logging
 
