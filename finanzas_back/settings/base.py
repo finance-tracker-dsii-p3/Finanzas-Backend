@@ -52,6 +52,9 @@ INSTALLED_APPS = [
 
     # HU-12 - Reglas automáticas
     'rules.apps.RulesConfig',
+
+    # HU-13 - Indicadores y gráficos del período
+    'analytics.apps.AnalyticsConfig',
 ]
 
 MIDDLEWARE = [

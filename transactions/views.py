@@ -89,8 +89,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             transaction = serializer.save()
             
             logger.info(
-                f"Usuario {self.request.user.id} creó transacción: {transaction.name} "
-                f"({transaction.get_type_display()})"
+                f"Usuario {self.request.user.id} creó transacción ID {transaction.id}: {transaction.description or 'Sin descripción'} "
+                f"({transaction.get_type_display()}) - ${transaction.total_amount:,}"
             )
 
         except Exception as e:
