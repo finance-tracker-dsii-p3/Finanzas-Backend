@@ -11,15 +11,15 @@ class TransactionFilter(django_filters.FilterSet):
     start_date = django_filters.DateFilter(field_name="date", lookup_expr="gte")
     end_date = django_filters.DateFilter(field_name="date", lookup_expr="lte")
 
-    # Filtrar por categoría y cuenta
-    category = django_filters.NumberFilter(field_name="category__id")
-    account = django_filters.NumberFilter(field_name="account__id")
+    # Filtrar por cuenta
+    origin_account = django_filters.NumberFilter(field_name="origin_account__id")
+    destination_account = django_filters.NumberFilter(field_name="destination_account__id")
 
     class Meta:
         model = Transaction
-        fields = ["type", "category", "account"]
+        fields = ["type", "origin_account", "destination_account"]
 
     def filter_search(self, queryset, name, value):
         return queryset.filter(
-            models.Q(name__icontains=value) | models.Q(description__icontains=value)
+            models.Q(tag__icontains=value)
         )

@@ -27,15 +27,15 @@ def get_test_token():
     # Obtener o crear token
     token, created = Token.objects.get_or_create(user=user)
     
-    print(f"🔑 TOKEN PARA TESTING:")
+    print("🔑 TOKEN PARA TESTING:")
     print(f"Usuario: {user.username}")
     print(f"Token: {token.key}")
     print(f"{'✅ Creado' if created else '🔄 Existente'}")
     
-    print(f"\n📋 USAR EN POSTMAN:")
+    print("\n📋 USAR EN POSTMAN:")
     print(f"Authorization: Token {token.key}")
     
-    print(f"\n🧪 CURL DE PRUEBA:")
+    print("\n🧪 CURL DE PRUEBA:")
     print(f'curl -H "Authorization: Token {token.key}" http://localhost:8000/api/analytics/dashboard/')
 
 if __name__ == "__main__":

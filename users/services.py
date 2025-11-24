@@ -1,5 +1,3 @@
-from django.core.mail import send_mail
-from django.conf import settings
 from .email_utils import send_email_unified
 
 def send_password_reset_email(user, reset_url: str) -> str:

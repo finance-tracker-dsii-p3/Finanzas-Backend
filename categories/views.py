@@ -4,8 +4,6 @@ Views para gestión de categorías de ingresos y gastos
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from django.db import transaction
 import logging
 
 from .models import Category
@@ -139,7 +137,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 )
             
             # Eliminar usando service
-            result = CategoryService.delete_category(instance)
+            CategoryService.delete_category(instance)
             
             logger.info(
                 f'Usuario {self.request.user.id} eliminó categoría: {instance.name}'

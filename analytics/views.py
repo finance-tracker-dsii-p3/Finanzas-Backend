@@ -7,7 +7,6 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.http import JsonResponse
 from django.db import models
 
 from .services import FinancialAnalyticsService
@@ -16,8 +15,7 @@ from .serializers import (
     PeriodIndicatorsSerializer,
     ExpensesCategoryChartSerializer,
     DailyFlowChartSerializer,
-    CategoryTransactionsSerializer,
-    AnalyticsErrorSerializer
+    CategoryTransactionsSerializer
 )
 
 import logging
@@ -459,7 +457,7 @@ def category_transactions(request, category_id):
         return Response({
             'success': True,
             'data': serializer.data,
-            'message': f'Transacciones de categoría obtenidas exitosamente'
+            'message': 'Transacciones de categoría obtenidas exitosamente'
         }, status=status.HTTP_200_OK)
         
     except Exception as e:

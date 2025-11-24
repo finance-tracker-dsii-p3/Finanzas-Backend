@@ -6,4 +6,4 @@ class AlertsConfig(AppConfig):
     name = "alerts"
 
     def ready(self):
-        import alerts.signals
+        pass

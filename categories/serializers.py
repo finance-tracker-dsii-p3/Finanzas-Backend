@@ -2,7 +2,6 @@
 Serializers para gestión de categorías
 """
 from rest_framework import serializers
-from django.db import models
 from .models import Category
 
 

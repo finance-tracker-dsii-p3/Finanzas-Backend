@@ -1,7 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from django.conf import settings
-from django.core.mail import send_mail
 from datetime import timedelta
 from .models import Notification
 from users.models import User

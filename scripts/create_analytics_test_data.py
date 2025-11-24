@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'finanzas_back.settings')
 django.setup()
 
-from datetime import datetime, date, timedelta
+from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from transactions.models import Transaction
@@ -128,7 +128,7 @@ def create_test_data():
         else:
             print(f"   🔄 Existe: {tx_data['description']} - ${tx_data['base_amount']:,}")
     
-    print(f"\n📊 RESUMEN:")
+    print("\n📊 RESUMEN:")
     
     # Contar transacciones creadas
     total_tx = Transaction.objects.filter(user=user).count()
@@ -153,8 +153,8 @@ def create_test_data():
     print(f"   - Total gastos: ${total_expenses:,}")
     print(f"   - Balance: ${total_income - total_expenses:,}")
     
-    print(f"\n✅ ¡Datos de prueba listos para analytics!")
-    print(f"🧪 Ahora puedes probar: GET /api/analytics/dashboard/")
+    print("\n✅ ¡Datos de prueba listos para analytics!")
+    print("🧪 Ahora puedes probar: GET /api/analytics/dashboard/")
 
 if __name__ == "__main__":
     import django.db.models

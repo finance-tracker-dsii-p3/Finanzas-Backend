@@ -2,7 +2,6 @@ from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
-from django.shortcuts import redirect
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.views.decorators.csrf import csrf_exempt
@@ -18,13 +17,10 @@ from .serializers import (
     DeleteOwnAccountSerializer
 )
 from .permissions import IsAdminUser, IsVerifiedUser
-from django.conf import settings
 from django.utils import timezone
 
-import hashlib
 from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.db import transaction
 
 
 

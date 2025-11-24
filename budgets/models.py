@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from datetime import datetime, date
+from datetime import date
 import calendar
 
 User = get_user_model()

@@ -4,11 +4,10 @@ Maneja indicadores, gráficos y agregaciones por período y categoría
 """
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-from django.db.models import Sum, Count, Q, F
-from django.db.models.functions import TruncDate
+from django.db.models import Sum, Count, Q
 from transactions.models import Transaction
 from categories.models import Category
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 import calendar
 
 

@@ -2,8 +2,6 @@
 Serializers para la gestión de presupuestos
 """
 from rest_framework import serializers
-from decimal import Decimal
-from datetime import date
 from .models import Budget
 from categories.models import Category
 

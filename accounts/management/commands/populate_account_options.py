@@ -115,7 +115,7 @@ class Command(BaseCommand):
         total_credit_banks = AccountOption.objects.filter(option_type=AccountOptionType.CREDIT_CARD_BANK).count()
         
         self.stdout.write(self.style.SUCCESS('\nProceso completado!'))
-        self.stdout.write(self.style.SUCCESS(f'\nResumen:'))
+        self.stdout.write(self.style.SUCCESS('\nResumen:'))
         self.stdout.write(self.style.SUCCESS(f'  - Bancos: {total_banks}'))
         self.stdout.write(self.style.SUCCESS(f'  - Billeteras: {total_wallets}'))
         self.stdout.write(self.style.SUCCESS(f'  - Bancos para tarjetas: {total_credit_banks}'))

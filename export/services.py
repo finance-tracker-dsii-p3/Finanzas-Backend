@@ -1,13 +1,9 @@
 import os
-import tempfile
-from io import BytesIO
-from datetime import datetime, date
 from django.conf import settings
-from django.db.models import Q, Count
 from django.utils import timezone
 from django.core.files import File
 import openpyxl
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 from users.models import User
 from notifications.models import Notification
@@ -74,7 +70,7 @@ class BasicDataExporter:
                     try:
                         if len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
-                    except:
+                    except Exception:
                         pass
                 adjusted_width = (max_length + 2)
                 worksheet.column_dimensions[column_letter].width = adjusted_width
@@ -146,7 +142,7 @@ class BasicDataExporter:
                     try:
                         if len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
-                    except:
+                    except Exception:
                         pass
                 adjusted_width = min(50, max(12, max_length + 2))  # Límite de ancho
                 worksheet.column_dimensions[column_letter].width = adjusted_width
@@ -201,6 +197,6 @@ class ExportService:
             try:
                 export_job = ExportJob.objects.get(id=export_job_id)
                 export_job.mark_as_failed(str(e))
-            except:
+            except Exception:
                 pass
             return False

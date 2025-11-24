@@ -1,4 +1,3 @@
-import os
 import requests
 from django.conf import settings
 
@@ -14,7 +13,7 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
     
     # En entorno de testing, simular envío exitoso
     if brevo_api_key == 'test-key':
-        print(f"[BREVO_DEBUG] Modo testing - simulando envío exitoso")
+        print("[BREVO_DEBUG] Modo testing - simulando envío exitoso")
         print(f"[BREVO_DEBUG] To: {to}")
         print(f"[BREVO_DEBUG] Subject: {subject}")
         return {"messageId": "test-message-id", "status": "sent"}
@@ -48,7 +47,7 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
         payload["textContent"] = text_content
 
     try:
-        print(f"[BREVO_DEBUG] Enviando request a Brevo API...")
+        print("[BREVO_DEBUG] Enviando request a Brevo API...")
         print(f"[BREVO_DEBUG] URL: {BREVO_API_URL}")
         print(f"[BREVO_DEBUG] Headers: {headers}")
         print(f"[BREVO_DEBUG] Payload: {payload}")

@@ -8,6 +8,7 @@ class AccountListSerializer(serializers.ModelSerializer):
     currency_display = serializers.CharField(source='get_currency_display', read_only=True)
     account_type_display = serializers.CharField(source='get_account_type_display', read_only=True)
     category_display = serializers.CharField(source='get_category_display', read_only=True)
+    credit_card_details = serializers.SerializerMethodField()
     
     class Meta:
         model = Account
@@ -15,8 +16,15 @@ class AccountListSerializer(serializers.ModelSerializer):
             'id', 'name', 'bank_name', 'account_number', 'account_type', 'account_type_display',
             'category', 'category_display', 'currency', 'currency_display',
             'current_balance', 'is_active', 'gmf_exempt',
-            'expiration_date', 'credit_limit'
+            'expiration_date', 'credit_limit', 'credit_card_details'
         ]
+    
+    def get_credit_card_details(self, obj):
+        """Obtener detalles de tarjeta de crédito si aplica"""
+        if obj.category == Account.CREDIT_CARD:
+            from .services import AccountService
+            return AccountService.get_credit_card_details(obj)
+        return None
 
 
 class AccountDetailSerializer(serializers.ModelSerializer):
@@ -24,6 +32,7 @@ class AccountDetailSerializer(serializers.ModelSerializer):
     currency_display = serializers.CharField(source='get_currency_display', read_only=True)
     account_type_display = serializers.CharField(source='get_account_type_display', read_only=True)
     category_display = serializers.CharField(source='get_category_display', read_only=True)
+    credit_card_details = serializers.SerializerMethodField()
     
     class Meta:
         model = Account
@@ -31,10 +40,17 @@ class AccountDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'bank_name', 'account_number', 'description', 'account_type', 'account_type_display',
             'category', 'category_display', 'currency', 'currency_display',
             'current_balance', 'is_active', 'gmf_exempt',
-            'expiration_date', 'credit_limit',
+            'expiration_date', 'credit_limit', 'credit_card_details',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_credit_card_details(self, obj):
+        """Obtener detalles de tarjeta de crédito si aplica"""
+        if obj.category == Account.CREDIT_CARD:
+            from .services import AccountService
+            return AccountService.get_credit_card_details(obj)
+        return None
 
 
 class AccountCreateSerializer(serializers.ModelSerializer):

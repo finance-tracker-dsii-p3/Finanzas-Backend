@@ -1,4 +1,3 @@
-import os
 import requests
 from django.conf import settings
 
@@ -30,7 +29,7 @@ def send_email_via_resend(to, subject, html_content, text_content=None):
         payload["text"] = text_content
 
     try:
-        print(f"[RESEND_DEBUG] Enviando request a Resend API...")
+        print("[RESEND_DEBUG] Enviando request a Resend API...")
         print(f"[RESEND_DEBUG] URL: {RESEND_API_URL}")
         print(f"[RESEND_DEBUG] Headers: {headers}")
         print(f"[RESEND_DEBUG] Payload: {payload}")

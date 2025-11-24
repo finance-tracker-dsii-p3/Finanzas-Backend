@@ -18,7 +18,7 @@ def send_email_unified(to, subject, text_content, html_content=None):
     
     # En modo testing, usar fallback a locmem
     if brevo_api_key == 'test-key':
-        print(f"[EMAIL_DEBUG] Modo testing detectado - usando locmem backend")
+        print("[EMAIL_DEBUG] Modo testing detectado - usando locmem backend")
         result = send_mail(
             subject=subject,
             message=text_content,
@@ -27,12 +27,12 @@ def send_email_unified(to, subject, text_content, html_content=None):
             html_message=html_content,
             fail_silently=False,
         )
-        print(f"[EMAIL_SUCCESS] Correo enviado via locmem")
+        print("[EMAIL_SUCCESS] Correo enviado via locmem")
         return result
     
     # En desarrollo local (sin BREVO_API_KEY), usar Gmail SMTP
     if not brevo_api_key:
-        print(f"[EMAIL_DEBUG] Modo desarrollo local - usando Gmail SMTP")
+        print("[EMAIL_DEBUG] Modo desarrollo local - usando Gmail SMTP")
         result = send_mail(
             subject=subject,
             message=text_content,
@@ -41,16 +41,16 @@ def send_email_unified(to, subject, text_content, html_content=None):
             html_message=html_content,
             fail_silently=False,
         )
-        print(f"[EMAIL_SUCCESS] Correo enviado via Gmail SMTP")
+        print("[EMAIL_SUCCESS] Correo enviado via Gmail SMTP")
         return result
     
     # En producción (con BREVO_API_KEY), usar Brevo API
-    print(f"[EMAIL_DEBUG] Modo producción - usando Brevo API...")
+    print("[EMAIL_DEBUG] Modo producción - usando Brevo API...")
     result = send_email_via_brevo(
         to=to,
         subject=subject,
         html_content=html_content,
         text_content=text_content
     )
-    print(f"[EMAIL_SUCCESS] Correo enviado via Brevo API")
+    print("[EMAIL_SUCCESS] Correo enviado via Brevo API")
     return result

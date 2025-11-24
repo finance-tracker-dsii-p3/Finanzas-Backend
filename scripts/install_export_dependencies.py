@@ -30,7 +30,7 @@ def main():
         if install_package(dep):
             success_count += 1
     
-    print(f"\n📊 Resumen:")
+    print("\n📊 Resumen:")
     print(f"✅ Instalados: {success_count}/{len(dependencies)}")
     
     if success_count == len(dependencies):
