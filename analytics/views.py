@@ -558,3 +558,189 @@ def available_periods(request):
             'error': 'Error obteniendo períodos disponibles',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def compare_periods(request):
+    """
+    Compara indicadores financieros entre dos períodos (HU-14)
+    
+    Query Parameters:
+    - period1: Período base para comparación (requerido)
+    - period2: Período a comparar contra period1 (requerido)  
+    - mode: 'base' o 'total' (default: 'total')
+    
+    Examples:
+    - ?period1=2025-09&period2=2025-10&mode=total
+    - ?period1=last_month&period2=current_month&mode=base
+    
+    Returns:
+        Comparación detallada con diferencias absolutas y porcentuales
+    """
+    try:
+        # Validar parámetros requeridos
+        period1_str = request.GET.get('period1')
+        period2_str = request.GET.get('period2')
+        mode = request.GET.get('mode', 'total')
+        
+        if not period1_str or not period2_str:
+            return Response({
+                'success': False,
+                'error': 'Parámetros period1 y period2 son requeridos',
+                'code': 'MISSING_PERIODS',
+                'details': {
+                    'provided': {
+                        'period1': period1_str,
+                        'period2': period2_str
+                    },
+                    'examples': [
+                        '?period1=2025-09&period2=2025-10&mode=total',
+                        '?period1=last_month&period2=current_month&mode=base',
+                        '?period1=2025-01-01,2025-01-31&period2=2025-02-01,2025-02-28'
+                    ]
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar modo
+        if mode not in ['base', 'total']:
+            return Response({
+                'success': False,
+                'error': 'Modo inválido. Debe ser "base" o "total"',
+                'code': 'INVALID_MODE',
+                'details': {'provided_mode': mode}
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parsear períodos
+        try:
+            period1_start, period1_end = FinancialAnalyticsService.parse_period_param(period1_str)
+            period2_start, period2_end = FinancialAnalyticsService.parse_period_param(period2_str)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': 'Formato de período inválido',
+                'code': 'INVALID_PERIOD_FORMAT',
+                'details': {
+                    'period1_provided': period1_str,
+                    'period2_provided': period2_str,
+                    'error': str(e)
+                },
+                'supported_formats': [
+                    'current_month, last_month, current_year',
+                    'YYYY-MM (ej: 2025-10)', 
+                    'YYYY (ej: 2025)',
+                    'YYYY-MM-DD,YYYY-MM-DD (rango personalizado)'
+                ]
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar que los períodos no se superpongan (opcional, para mayor claridad)
+        if (period1_start <= period2_end and period2_start <= period1_end):
+            logger.warning(f"Períodos superpuestos detectados: {period1_str} vs {period2_str}")
+        
+        user = request.user
+        
+        # Validar que el usuario tenga transacciones
+        from transactions.models import Transaction
+        total_transactions = Transaction.objects.filter(user=user).count()
+        
+        if total_transactions == 0:
+            return Response({
+                'success': False,
+                'error': 'No tienes transacciones para comparar períodos',
+                'code': 'NO_USER_TRANSACTIONS',
+                'details': {
+                    'message': 'Necesitas crear transacciones antes de poder hacer comparaciones',
+                    'suggestions': [
+                        'Crea transacciones con POST /api/transactions/',
+                        'Asigna categorías a tus transacciones',
+                        'Intenta la comparación nuevamente'
+                    ]
+                }
+            }, status=status.HTTP_200_OK)
+        
+        # Realizar comparación
+        comparison_data = FinancialAnalyticsService.compare_periods(
+            user, period1_start, period1_end, period2_start, period2_end, mode
+        )
+        
+        # Verificar si se puede hacer comparación válida
+        if not comparison_data['comparison_summary']['can_compare']:
+            period1_has_data = comparison_data['comparison_summary']['period1']['has_data']
+            period2_has_data = comparison_data['comparison_summary']['period2']['has_data']
+            
+            if not period1_has_data and not period2_has_data:
+                error_msg = f"Ninguno de los períodos tiene transacciones"
+                code = 'NO_DATA_IN_PERIODS'
+            elif not period1_has_data:
+                error_msg = f"No hay datos en el primer período ({period1_str})"
+                code = 'NO_DATA_PERIOD1'
+            else:
+                error_msg = f"No hay datos en el segundo período ({period2_str})"
+                code = 'NO_DATA_PERIOD2'
+            
+            return Response({
+                'success': False,
+                'error': error_msg,
+                'code': code,
+                'details': {
+                    'comparison_summary': comparison_data['comparison_summary'],
+                    'total_user_transactions': total_transactions,
+                    'suggestion': 'Intenta con períodos que tengan transacciones registradas'
+                }
+            }, status=status.HTTP_200_OK)
+        
+        # Serializar la respuesta
+        from .serializers import PeriodComparisonSerializer
+        
+        # Preparar mensaje de éxito
+        period1_name = comparison_data['comparison_summary']['period1']['name']
+        period2_name = comparison_data['comparison_summary']['period2']['name']
+        
+        # Generar resumen ejecutivo
+        differences = comparison_data['differences']
+        executive_summary = []
+        
+        if differences['income']['percentage'] != 0:
+            executive_summary.append(differences['income']['summary'])
+        if differences['expenses']['percentage'] != 0:
+            executive_summary.append(differences['expenses']['summary'])
+        if differences['balance']['percentage'] != 0:
+            executive_summary.append(differences['balance']['summary'])
+            
+        if not executive_summary:
+            executive_summary = ["Sin cambios significativos entre períodos"]
+        
+        # Serializar datos
+        serializer = PeriodComparisonSerializer(comparison_data)
+        
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': f'Comparación completada: {period1_name} vs {period2_name}',
+            'executive_summary': executive_summary,
+            'metadata': {
+                'request_params': {
+                    'period1': period1_str,
+                    'period2': period2_str,
+                    'mode': mode
+                },
+                'generated_at': date.today().isoformat()
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Error en comparación de períodos para usuario {request.user.id}: {e}")
+        return Response({
+            'success': False,
+            'error': 'Error interno del servidor en comparación de períodos',
+            'code': 'INTERNAL_ERROR',
+            'details': {
+                'error_message': str(e),
+                'provided_params': {
+                    'period1': request.GET.get('period1'),
+                    'period2': request.GET.get('period2'),
+                    'mode': request.GET.get('mode', 'total')
+                }
+            }
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

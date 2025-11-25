@@ -18,6 +18,9 @@ urlpatterns = [
     
     # Utilidades
     path('periods/', views.available_periods, name='available_periods'),
+    
+    # HU-14: Comparación entre períodos
+    path('compare-periods/', views.compare_periods, name='compare_periods'),
 ]
 
 # URLs disponibles para HU-13:
@@ -39,3 +42,13 @@ urlpatterns = [
 # GET /api/analytics/expenses-chart/?period=2025-10&mode=total
 # GET /api/analytics/category/5/transactions/?period=last_month&limit=20
 # GET /api/analytics/category/uncategorized/transactions/?period=current_year
+#
+# HU-14: Comparación entre períodos
+# GET /api/analytics/compare-periods/ - Compara dos períodos
+# Query parameters:
+# ?period1=2025-09&period2=2025-10&mode=total - Compara septiembre vs octubre
+# ?period1=last_month&period2=current_month&mode=base - Mes anterior vs actual
+#
+# Ejemplos de comparación:
+# GET /api/analytics/compare-periods/?period1=2025-09&period2=2025-10&mode=total
+# GET /api/analytics/compare-periods/?period1=last_month&period2=current_month&mode=base
