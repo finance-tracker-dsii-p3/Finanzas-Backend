@@ -106,3 +106,67 @@ class AnalyticsErrorSerializer(serializers.Serializer):
     code = serializers.CharField()
     details = serializers.DictField(required=False)
     suggestions = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class PeriodComparisonSummarySerializer(serializers.Serializer):
+    """Serializer para resumen de períodos en comparación"""
+    
+    name = serializers.CharField()
+    date_range = serializers.CharField()
+    has_data = serializers.BooleanField()
+    transactions_count = serializers.IntegerField()
+
+
+class ComparisonSummarySerializer(serializers.Serializer):
+    """Serializer para resumen general de comparación"""
+    
+    period1 = PeriodComparisonSummarySerializer()
+    period2 = PeriodComparisonSummarySerializer()
+    can_compare = serializers.BooleanField()
+    mode = serializers.CharField()
+
+
+class MetricDifferenceSerializer(serializers.Serializer):
+    """Serializer para diferencias de un métrico específico"""
+    
+    absolute = serializers.FloatField()
+    percentage = serializers.FloatField()
+    is_increase = serializers.BooleanField()
+    is_significant = serializers.BooleanField()
+    period1_amount = serializers.FloatField()
+    period2_amount = serializers.FloatField()
+    formatted_absolute = serializers.CharField()
+    summary = serializers.CharField()
+
+
+class ComparisonDifferencesSerializer(serializers.Serializer):
+    """Serializer para todas las diferencias entre períodos"""
+    
+    income = MetricDifferenceSerializer()
+    expenses = MetricDifferenceSerializer()
+    balance = MetricDifferenceSerializer()
+
+
+class ComparisonInsightsSerializer(serializers.Serializer):
+    """Serializer para insights automáticos de comparación"""
+    
+    messages = serializers.ListField(child=serializers.CharField())
+    alert_level = serializers.CharField()
+    has_significant_changes = serializers.BooleanField()
+
+
+class PeriodDataSerializer(serializers.Serializer):
+    """Serializer para datos completos de ambos períodos"""
+    
+    period1 = PeriodIndicatorsSerializer()
+    period2 = PeriodIndicatorsSerializer()
+
+
+class PeriodComparisonSerializer(serializers.Serializer):
+    """Serializer completo para comparación entre períodos (HU-14)"""
+    
+    comparison_summary = ComparisonSummarySerializer()
+    period_data = PeriodDataSerializer()
+    differences = ComparisonDifferencesSerializer()
+    insights = ComparisonInsightsSerializer()
+    metadata = serializers.DictField()

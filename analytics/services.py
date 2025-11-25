@@ -498,9 +498,257 @@ class FinancialAnalyticsService:
             end_date = date(year, 12, 31)
             
         else:
-            # Default: mes actual
-            start_date = today.replace(day=1)
-            last_day = calendar.monthrange(today.year, today.month)[1]
-            end_date = today.replace(day=last_day)
+            # Formato no reconocido, lanzar error específico
+            raise ValueError(f"Formato de período no reconocido: '{period_str}'. Formatos válidos: current_month, last_month, current_year, last_7_days, last_30_days, YYYY-MM, YYYY, YYYY-MM-DD,YYYY-MM-DD")
         
         return start_date, end_date
+    
+    @staticmethod
+    def compare_periods(
+        user,
+        period1_start: date,
+        period1_end: date,
+        period2_start: date,
+        period2_end: date,
+        mode: str = 'total'
+    ) -> Dict:
+        """
+        Compara indicadores financieros entre dos períodos (HU-14)
+        
+        Args:
+            user: Usuario autenticado
+            period1_start: Fecha inicio período 1 (base de comparación)
+            period1_end: Fecha fin período 1
+            period2_start: Fecha inicio período 2 (período a comparar)
+            period2_end: Fecha fin período 2
+            mode: 'base' o 'total' (incluye impuestos)
+            
+        Returns:
+            Dict con comparación detallada entre períodos
+        """
+        # Obtener indicadores de ambos períodos
+        period1_data = FinancialAnalyticsService.get_period_indicators(
+            user, period1_start, period1_end, mode
+        )
+        
+        period2_data = FinancialAnalyticsService.get_period_indicators(
+            user, period2_start, period2_end, mode
+        )
+        
+        # Función auxiliar para calcular diferencias
+        def calculate_difference(period1_val, period2_val):
+            absolute_diff = period2_val - period1_val
+            
+            if period1_val == 0:
+                if period2_val == 0:
+                    percentage_diff = 0
+                else:
+                    percentage_diff = 100 if period2_val > 0 else -100
+            else:
+                percentage_diff = (absolute_diff / abs(period1_val)) * 100
+            
+            return {
+                'absolute': absolute_diff,
+                'percentage': percentage_diff,
+                'is_increase': absolute_diff > 0,
+                'is_significant': abs(percentage_diff) >= 5  # Cambio >= 5%
+            }
+        
+        # Extraer valores numéricos
+        period1_income = period1_data['income']['amount']
+        period1_expenses = period1_data['expenses']['amount']
+        period1_balance = period1_data['balance']['amount']
+        
+        period2_income = period2_data['income']['amount']
+        period2_expenses = period2_data['expenses']['amount']
+        period2_balance = period2_data['balance']['amount']
+        
+        # Calcular diferencias
+        income_diff = calculate_difference(period1_income, period2_income)
+        expenses_diff = calculate_difference(period1_expenses, period2_expenses)
+        balance_diff = calculate_difference(period1_balance, period2_balance)
+        
+        # Verificar disponibilidad de datos
+        period1_has_data = (
+            period1_data['income']['count'] > 0 or 
+            period1_data['expenses']['count'] > 0
+        )
+        period2_has_data = (
+            period2_data['income']['count'] > 0 or 
+            period2_data['expenses']['count'] > 0
+        )
+        
+        return {
+            'comparison_summary': {
+                'period1': {
+                    'name': f"{period1_start.strftime('%B %Y')}",
+                    'date_range': f"{period1_start.strftime('%d/%m/%Y')} - {period1_end.strftime('%d/%m/%Y')}",
+                    'has_data': period1_has_data,
+                    'transactions_count': period1_data['income']['count'] + period1_data['expenses']['count']
+                },
+                'period2': {
+                    'name': f"{period2_start.strftime('%B %Y')}",
+                    'date_range': f"{period2_start.strftime('%d/%m/%Y')} - {period2_end.strftime('%d/%m/%Y')}",
+                    'has_data': period2_has_data,
+                    'transactions_count': period2_data['income']['count'] + period2_data['expenses']['count']
+                },
+                'can_compare': period1_has_data and period2_has_data,
+                'mode': mode
+            },
+            'period_data': {
+                'period1': period1_data,
+                'period2': period2_data
+            },
+            'differences': {
+                'income': {
+                    **income_diff,
+                    'period1_amount': period1_income,
+                    'period2_amount': period2_income,
+                    'formatted_absolute': FinancialAnalyticsService.format_currency(abs(income_diff['absolute'])),
+                    'summary': FinancialAnalyticsService._format_comparison_summary(
+                        'Ingresos', income_diff, mode
+                    )
+                },
+                'expenses': {
+                    **expenses_diff,
+                    'period1_amount': period1_expenses,
+                    'period2_amount': period2_expenses,
+                    'formatted_absolute': FinancialAnalyticsService.format_currency(abs(expenses_diff['absolute'])),
+                    'summary': FinancialAnalyticsService._format_comparison_summary(
+                        'Gastos', expenses_diff, mode
+                    )
+                },
+                'balance': {
+                    **balance_diff,
+                    'period1_amount': period1_balance,
+                    'period2_amount': period2_balance,
+                    'formatted_absolute': FinancialAnalyticsService.format_currency(abs(balance_diff['absolute'])),
+                    'summary': FinancialAnalyticsService._format_comparison_summary(
+                        'Balance', balance_diff, mode
+                    )
+                }
+            },
+            'insights': FinancialAnalyticsService._generate_comparison_insights(
+                income_diff, expenses_diff, balance_diff, period1_has_data, period2_has_data
+            ),
+            'metadata': {
+                'generated_at': date.today().isoformat(),
+                'comparison_mode': mode,
+                'currency': 'COP'
+            }
+        }
+    
+    @staticmethod
+    def _format_comparison_summary(metric_name: str, diff_data: Dict, mode: str) -> str:
+        """
+        Formatea resumen textual de comparación
+        
+        Args:
+            metric_name: Nombre del métrico (Ingresos, Gastos, Balance)
+            diff_data: Datos de diferencia calculados
+            mode: Modo de cálculo usado
+            
+        Returns:
+            String con resumen formateado (ej: "Gastos -12% ($-85.000)")
+        """
+        sign = '+' if diff_data['is_increase'] else ''
+        percentage = diff_data['percentage']
+        formatted_amount = FinancialAnalyticsService.format_currency(abs(diff_data['absolute']))
+        amount_sign = '+' if diff_data['is_increase'] else '-'
+        
+        if diff_data['absolute'] == 0:
+            return f"{metric_name} sin cambios (0%)"
+        
+        return f"{metric_name} {sign}{percentage:.1f}% ({amount_sign}{formatted_amount})"
+    
+    @staticmethod
+    def _generate_comparison_insights(
+        income_diff: Dict,
+        expenses_diff: Dict,
+        balance_diff: Dict,
+        period1_has_data: bool,
+        period2_has_data: bool
+    ) -> Dict:
+        """
+        Genera insights automáticos de la comparación
+        
+        Returns:
+            Dict con insights y recomendaciones
+        """
+        insights = []
+        alert_level = 'info'  # info, warning, success, error
+        
+        if not period1_has_data:
+            insights.append("No hay información del primer período para comparar.")
+            alert_level = 'warning'
+        elif not period2_has_data:
+            insights.append("No hay información del segundo período para comparar.")
+            alert_level = 'warning'
+        else:
+            # Análisis de ingresos
+            if income_diff['is_significant']:
+                if income_diff['is_increase']:
+                    insights.append(f"Excelente: Los ingresos aumentaron {income_diff['percentage']:.1f}%.")
+                    alert_level = 'success'
+                else:
+                    insights.append(f"Atención: Los ingresos disminuyeron {abs(income_diff['percentage']):.1f}%.")
+                    if alert_level == 'info': alert_level = 'warning'
+            
+            # Análisis de gastos
+            if expenses_diff['is_significant']:
+                if expenses_diff['is_increase']:
+                    insights.append(f"Cuidado: Los gastos aumentaron {expenses_diff['percentage']:.1f}%.")
+                    if alert_level in ['info', 'success']: alert_level = 'warning'
+                else:
+                    insights.append(f"Bien: Los gastos disminuyeron {abs(expenses_diff['percentage']):.1f}%.")
+                    if alert_level == 'info': alert_level = 'success'
+            
+            # Análisis de balance general
+            if balance_diff['is_increase']:
+                if balance_diff['percentage'] >= 20:
+                    insights.append("Situación financiera muy mejorada.")
+                    alert_level = 'success'
+                elif balance_diff['percentage'] >= 5:
+                    insights.append("Situación financiera mejorada.")
+                    if alert_level == 'info': alert_level = 'success'
+            else:
+                if abs(balance_diff['percentage']) >= 20:
+                    insights.append("La situación financiera ha empeorado significativamente.")
+                    alert_level = 'error'
+                elif abs(balance_diff['percentage']) >= 5:
+                    insights.append("La situación financiera ha empeorado.")
+                    if alert_level in ['info', 'success']: alert_level = 'warning'
+            
+            if not insights:
+                insights.append("Los cambios entre períodos son mínimos (< 5%).")
+        
+        return {
+            'messages': insights,
+            'alert_level': alert_level,
+            'has_significant_changes': any([
+                income_diff.get('is_significant', False),
+                expenses_diff.get('is_significant', False),
+                balance_diff.get('is_significant', False)
+            ]) if period1_has_data and period2_has_data else False
+        }
+    
+    @staticmethod
+    def format_currency(amount: int, currency: str = 'COP') -> str:
+        """
+        Formatea monto en centavos a string con formato de moneda
+        
+        Args:
+            amount: Monto en centavos
+            currency: Código de moneda (COP, USD, etc.)
+            
+        Returns:
+            String formateado (ej: "$1.250.000")
+        """
+        if currency == 'COP':
+            # Convertir centavos a pesos y formatear
+            pesos = amount / 100
+            return f"${pesos:,.0f}".replace(',', '.')
+        else:
+            # Para otras monedas, usar formato estándar
+            decimal_amount = amount / 100
+            return f"${decimal_amount:,.2f}"

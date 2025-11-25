@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     # HU-12 - Reglas automáticas
     'rules.apps.RulesConfig',
 
-    # HU-13 - Indicadores y gráficos del período
+    # HU-13 - Indicadores y gráficos del período, y HU-14 - Comparación básica entre períodos (ingresos vs. gastos)
     'analytics.apps.AnalyticsConfig',
 ]
 

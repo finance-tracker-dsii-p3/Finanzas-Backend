@@ -437,3 +437,234 @@ class AnalyticsPerformanceTests(TestCase):
         expenses_chart = analytics_data['expenses_chart']
         if expenses_chart.get('chart_data'):
             self.assertGreater(len(expenses_chart['chart_data']), 0)
+
+
+class AnalyticsPeriodComparisonTests(TestCase):
+    """Tests para comparación entre períodos (HU-14)"""
+    
+    def setUp(self):
+        """Configuración para tests de comparación"""
+        # Usuario de prueba
+        self.user = User.objects.create_user(
+            identification='11223344',
+            username='compareuser',
+            email='compare@test.com',
+            password='testpass123',
+            first_name='Compare',
+            last_name='User'
+        )
+        
+        # Token de autenticación
+        self.token = Token.objects.create(user=self.user)
+        self.auth_header = f'Token {self.token.key}'
+        
+        # Cuenta de prueba
+        self.account = Account.objects.create(
+            user=self.user,
+            name='Cuenta Comparación',
+            account_type='asset',
+            category='bank_account',
+            current_balance=Decimal('2000.00')
+        )
+        
+        # Categorías de prueba
+        self.income_category = Category.objects.create(
+            user=self.user,
+            name='Salario',
+            type='income',
+            color='#1B5E20'
+        )
+        
+        self.expense_category = Category.objects.create(
+            user=self.user,
+            name='Alimentación',
+            type='expense', 
+            color='#B71C1C'
+        )
+    
+    def test_compare_periods_basic(self):
+        """Test básico de comparación entre períodos"""
+        from datetime import date, timedelta
+        
+        # Crear transacciones en dos períodos diferentes
+        # Período 1: hace 60 días
+        period1_date = date.today() - timedelta(days=60)
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.income_category,
+            description='Ingreso Período 1',
+            base_amount=int(2000.00 * 100),
+            type=1,
+            date=period1_date
+        )
+        
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.expense_category,
+            description='Gasto Período 1', 
+            base_amount=int(500.00 * 100),
+            type=2,
+            date=period1_date
+        )
+        
+        # Período 2: hace 30 días
+        period2_date = date.today() - timedelta(days=30)
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.income_category,
+            description='Ingreso Período 2',
+            base_amount=int(2500.00 * 100),
+            type=1,
+            date=period2_date
+        )
+        
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.expense_category,
+            description='Gasto Período 2',
+            base_amount=int(400.00 * 100),
+            type=2,
+            date=period2_date
+        )
+        
+        # Realizar comparación usando rangos personalizados
+        period1_str = f"{(period1_date - timedelta(days=5)).strftime('%Y-%m-%d')},{(period1_date + timedelta(days=5)).strftime('%Y-%m-%d')}"
+        period2_str = f"{(period2_date - timedelta(days=5)).strftime('%Y-%m-%d')},{(period2_date + timedelta(days=5)).strftime('%Y-%m-%d')}"
+        
+        url = reverse('compare_periods')
+        response = self.client.get(
+            url + f'?period1={period1_str}&period2={period2_str}&mode=total',
+            HTTP_AUTHORIZATION=self.auth_header
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Verificar respuesta exitosa
+        self.assertTrue(data['success'])
+        comparison_data = data['data']
+        
+        # Verificar estructura de respuesta
+        self.assertIn('comparison_summary', comparison_data)
+        self.assertIn('period_data', comparison_data)
+        self.assertIn('differences', comparison_data)
+        self.assertIn('insights', comparison_data)
+        
+        # Verificar que puede comparar
+        self.assertTrue(comparison_data['comparison_summary']['can_compare'])
+        
+        # Verificar diferencias calculadas
+        differences = comparison_data['differences']
+        self.assertIn('income', differences)
+        self.assertIn('expenses', differences)
+        self.assertIn('balance', differences)
+        
+        # Los ingresos deben haber aumentado (2500 > 2000)
+        self.assertTrue(differences['income']['is_increase'])
+        
+        # Los gastos deben haber disminuido (400 < 500)
+        self.assertFalse(differences['expenses']['is_increase'])
+    
+    def test_compare_periods_missing_parameters(self):
+        """Test error por parámetros faltantes"""
+        url = reverse('compare_periods')
+        response = self.client.get(
+            url + '?period1=2025-09',  # Falta period2
+            HTTP_AUTHORIZATION=self.auth_header
+        )
+        
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        
+        self.assertFalse(data['success'])
+        self.assertEqual(data['code'], 'MISSING_PERIODS')
+        self.assertIn('period1 y period2 son requeridos', data['error'])
+    
+    def test_compare_periods_invalid_format(self):
+        """Test error por formato de período inválido"""
+        url = reverse('compare_periods')
+        response = self.client.get(
+            url + '?period1=invalid&period2=also-invalid',
+            HTTP_AUTHORIZATION=self.auth_header
+        )
+        
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        
+        self.assertFalse(data['success'])
+        self.assertEqual(data['code'], 'INVALID_PERIOD_FORMAT')
+        self.assertIn('supported_formats', data)
+    
+    def test_compare_periods_no_data(self):
+        """Test comparación cuando no hay datos en períodos"""
+        # Crear una transacción en un período diferente para evitar NO_USER_TRANSACTIONS
+        from datetime import date
+        
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.income_category,
+            description='Transacción en período diferente',
+            base_amount=int(1000.00 * 100),
+            type=1,
+            date=date.today()  # Período actual
+        )
+        
+        # Ahora comparar períodos que no tienen datos (2020)
+        url = reverse('compare_periods')
+        response = self.client.get(
+            url + '?period1=2020-01&period2=2020-02&mode=total',
+            HTTP_AUTHORIZATION=self.auth_header
+        )
+        
+        self.assertEqual(response.status_code, 200)  # 200 pero con error controlado
+        data = response.json()
+        
+        self.assertFalse(data['success'])
+        # Ahora debe ser NO_DATA_IN_PERIODS porque el usuario tiene transacciones, pero no en esos períodos
+        self.assertEqual(data['code'], 'NO_DATA_IN_PERIODS')
+    
+    def test_compare_periods_predefined_periods(self):
+        """Test comparación usando períodos predefinidos"""
+        from datetime import date
+        
+        # Crear transacción en mes actual
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.income_category,
+            description='Ingreso Actual',
+            base_amount=int(3000.00 * 100),
+            type=1,
+            date=date.today()
+        )
+        
+        url = reverse('compare_periods')
+        response = self.client.get(
+            url + '?period1=last_month&period2=current_month&mode=base',
+            HTTP_AUTHORIZATION=self.auth_header
+        )
+        
+        # Debe manejar correctamente incluso si un período no tiene datos
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Puede ser exitoso o fallar dependiendo de si hay datos en ambos períodos
+        if data['success']:
+            self.assertIn('comparison_summary', data['data'])
+        else:
+            # Error controlado por falta de datos
+            self.assertIn('NO_DATA', data['code'])
+    
+    def test_compare_periods_authentication_required(self):
+        """Test que comparación requiere autenticación"""
+        url = reverse('compare_periods')
+        response = self.client.get(
+            url + '?period1=2025-09&period2=2025-10'
+        )  # Sin token de autorización
+        
+        self.assertEqual(response.status_code, 401)
