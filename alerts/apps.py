@@ -6,4 +6,5 @@ class AlertsConfig(AppConfig):
     name = "alerts"
 
     def ready(self):
-        pass
+        # Registrar señales de la app (alertas de presupuesto)
+        from . import signals  # noqa: F401

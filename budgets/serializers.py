@@ -29,9 +29,9 @@ class BudgetListSerializer(serializers.ModelSerializer):
         model = Budget
         fields = [
             'id', 'category', 'category_name', 'category_type', 'category_type_display',
-            'category_color', 'category_icon', 'amount', 'calculation_mode',
-            'calculation_mode_display', 'period', 'period_display', 'start_date',
-            'is_active', 'alert_threshold', 'spent_amount', 'spent_percentage',
+            'category_color', 'category_icon', 'amount', 'currency',
+            'calculation_mode', 'calculation_mode_display', 'period', 'period_display',
+            'start_date', 'is_active', 'alert_threshold', 'spent_amount', 'spent_percentage',
             'remaining_amount', 'status', 'status_text', 'created_at', 'updated_at'
         ]
     
@@ -79,9 +79,9 @@ class BudgetDetailSerializer(serializers.ModelSerializer):
         model = Budget
         fields = [
             'id', 'category', 'category_name', 'category_type', 'category_type_display',
-            'category_color', 'category_icon', 'amount', 'calculation_mode',
-            'calculation_mode_display', 'period', 'period_display', 'start_date',
-            'is_active', 'alert_threshold', 'spent_amount', 'spent_percentage',
+            'category_color', 'category_icon', 'amount', 'currency',
+            'calculation_mode', 'calculation_mode_display', 'period', 'period_display',
+            'start_date', 'is_active', 'alert_threshold', 'spent_amount', 'spent_percentage',
             'remaining_amount', 'daily_average', 'projection', 'status', 'status_text',
             'is_over_budget', 'is_alert_triggered', 'period_dates',
             'created_at', 'updated_at'
@@ -136,7 +136,7 @@ class BudgetCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
         fields = [
-            'category', 'amount', 'calculation_mode', 'period',
+            'category', 'amount', 'currency', 'calculation_mode', 'period',
             'start_date', 'is_active', 'alert_threshold'
         ]
         extra_kwargs = {
@@ -144,7 +144,8 @@ class BudgetCreateSerializer(serializers.ModelSerializer):
             'is_active': {'required': False},
             'alert_threshold': {'required': False},
             'calculation_mode': {'required': False},
-            'period': {'required': False}
+            'period': {'required': False},
+            'currency': {'required': False}
         }
     
     def validate_category(self, value):
@@ -178,14 +179,18 @@ class BudgetCreateSerializer(serializers.ModelSerializer):
         category = attrs.get('category')
         period = attrs.get('period', Budget.MONTHLY)
         
-        # Verificar si ya existe un presupuesto para esta categoría y período
+        # Obtener moneda (por defecto COP si no se especifica)
+        currency = attrs.get('currency', 'COP')
+        
+        # Verificar si ya existe un presupuesto para esta categoría, período y moneda
         if Budget.objects.filter(
             user=user,
             category=category,
-            period=period
+            period=period,
+            currency=currency
         ).exists():
             raise serializers.ValidationError({
-                'category': f'Ya existe un presupuesto {Budget(period=period).get_period_display().lower()} para esta categoría.'
+                'category': f'Ya existe un presupuesto {Budget(period=period).get_period_display().lower()} en {Budget(currency=currency).get_currency_display()} para esta categoría.'
             })
         
         # Validar que la categoría sea de tipo gasto
@@ -208,7 +213,7 @@ class BudgetUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
         fields = [
-            'amount', 'calculation_mode', 'is_active', 'alert_threshold'
+            'amount', 'currency', 'calculation_mode', 'is_active', 'alert_threshold'
         ]
         extra_kwargs = {
             'amount': {'required': False},

@@ -59,6 +59,21 @@ class Budget(models.Model):
         help_text='Monto máximo permitido para esta categoría'
     )
     
+    # Monedas (mismas opciones que Account para consistencia)
+    CURRENCY_CHOICES = [
+        ('COP', 'Pesos Colombianos'),
+        ('USD', 'Dólares'),
+        ('EUR', 'Euros'),
+    ]
+    
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default='COP',
+        verbose_name='Moneda',
+        help_text='Moneda del presupuesto'
+    )
+    
     calculation_mode = models.CharField(
         max_length=10,
         choices=CALCULATION_MODE_CHOICES,
@@ -112,9 +127,9 @@ class Budget(models.Model):
         ordering = ['-created_at']
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'category', 'period'],
-                name='unique_budget_per_category_period',
-                violation_error_message='Ya existe un presupuesto para esta categoría y período.'
+                fields=['user', 'category', 'period', 'currency'],
+                name='unique_budget_per_category_period_currency',
+                violation_error_message='Ya existe un presupuesto para esta categoría, período y moneda.'
             )
         ]
         indexes = [
@@ -124,7 +139,7 @@ class Budget(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.category.name} - {self.get_period_display()} - ${self.amount}"
+        return f"{self.category.name} - {self.get_period_display()} - {self.get_currency_display()} ${self.amount}"
     
     def clean(self):
         """Validaciones personalizadas"""
@@ -183,26 +198,37 @@ class Budget(models.Model):
         Returns:
             Decimal: Monto gastado
         """
-        # TODO: Implementar cuando exista el modelo Transaction
-        # Por ahora retornar 0
-        # start_date, end_date = self.get_period_dates(reference_date)
-        # transactions = self.category.transactions.filter(
-        #     user=self.user,
-        #     date__gte=start_date,
-        #     date__lte=end_date,
-        #     type='expense'
-        # )
-        # 
-        # if self.calculation_mode == self.BASE:
-        #     return transactions.aggregate(
-        #         total=models.Sum('amount')
-        #     )['total'] or Decimal('0.00')
-        # else:  # TOTAL
-        #     return transactions.aggregate(
-        #         total=models.Sum('total_amount')
-        #     )['total'] or Decimal('0.00')
+        from transactions.models import Transaction
+        from django.db.models import Sum
         
-        return Decimal('0.00')
+        start_date, end_date = self.get_period_dates(reference_date)
+        
+        # Filtrar transacciones de gasto en el período, categoría y moneda
+        # La moneda se obtiene de la cuenta de origen de la transacción
+        transactions = Transaction.objects.filter(
+            user=self.user,
+            category=self.category,
+            date__gte=start_date,
+            date__lte=end_date,
+            type=2,  # Expense
+            origin_account__currency=self.currency  # Filtrar por moneda del presupuesto
+        )
+        
+        # Calcular según modo: base o total
+        if self.calculation_mode == self.BASE:
+            # Sumar base_amount (en centavos, convertir a Decimal)
+            total_cents = transactions.aggregate(
+                total=Sum('base_amount')
+            )['total'] or 0
+            # Convertir centavos a Decimal (dividir por 100)
+            return Decimal(str(total_cents)) / Decimal('100')
+        else:  # TOTAL
+            # Sumar total_amount (en centavos, convertir a Decimal)
+            total_cents = transactions.aggregate(
+                total=Sum('total_amount')
+            )['total'] or 0
+            # Convertir centavos a Decimal (dividir por 100)
+            return Decimal(str(total_cents)) / Decimal('100')
     
     def get_spent_percentage(self, reference_date=None):
         """
@@ -367,3 +393,46 @@ class Budget(models.Model):
             'good': 'Dentro del presupuesto'
         }
         return status_messages.get(status, 'Desconocido')
+
+    # Override de get_spent_amount con implementación real basada en transacciones
+    def get_spent_amount(self, reference_date=None):
+        """
+        Calcular el monto gastado en el período actual según el modo de cálculo,
+        usando el modelo Transaction.
+
+        Las transacciones almacenan montos como enteros (centavos), por lo que aquí
+        se convierten a Decimal con 2 decimales para ser consistentes con el campo
+        ``amount`` del presupuesto.
+
+        Args:
+            reference_date: Fecha de referencia (default: hoy)
+
+        Returns:
+            Decimal: Monto gastado en la misma unidad que ``amount``.
+        """
+        from transactions.models import Transaction  # Import local para evitar ciclos
+
+        if reference_date is None:
+            reference_date = date.today()
+
+        # Rango de fechas del período actual (mensual o anual)
+        start_date, end_date = self.get_period_dates(reference_date)
+
+        # Solo consideramos transacciones de gasto (type=2) de este usuario, categoría y moneda
+        # La moneda se obtiene de la cuenta de origen de la transacción
+        queryset = Transaction.objects.filter(
+            user=self.user,
+            category=self.category,
+            type=2,  # Expense
+            date__gte=start_date,
+            date__lte=end_date,
+            origin_account__currency=self.currency  # Filtrar por moneda del presupuesto
+        )
+
+        # Campo a sumar según modo de cálculo
+        amount_field = "base_amount" if self.calculation_mode == self.BASE else "total_amount"
+        total_int = queryset.aggregate(total=models.Sum(amount_field))["total"] or 0
+
+        # Las transacciones usan enteros; asumimos que representan centavos.
+        total_decimal = (Decimal(total_int) / Decimal("100")).quantize(Decimal("0.01"))
+        return total_decimal

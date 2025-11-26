@@ -262,6 +262,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",
     "http://localhost:5173",  # Vite/React
     "http://127.0.0.1:5173",
+    "http://localhost:5174",  # Vite/React - Puerto alternativo
+    "http://127.0.0.1:5174",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -301,4 +303,5 @@ if not DEBUG:
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://localhost:3000',
     'http://localhost:5173',
+    'http://localhost:5174',  # Vite/React - Puerto alternativo
 ])

@@ -7,36 +7,82 @@ from transactions.models import Transaction
 
 @receiver(post_save, sender=Transaction)
 def check_budget_after_transaction(sender, instance, **kwargs):
-    """Crea una alerta si una transacción hace que se alcance o exceda un presupuesto."""
-    if instance.type != "Expense":
+    """
+    Crea una alerta de presupuesto cuando una transacción de gasto hace que se
+    alcance el 80 % (o el umbral configurado) o se exceda el 100 % del límite.
+
+    Reglas importantes (HU-08):
+    - Solo se consideran transacciones de gasto (type = 2).
+    - Una alerta por presupuesto / nivel (warning o exceeded) y por mes.
+    - Se apoya en created_at para identificar el mes de la alerta.
+    """
+    # Solo procesar en creación (no en actualización)
+    if kwargs.get('created', False) is False:
+        return
+    
+    # Solo gastos
+    if instance.type != 2:
+        return
+
+    # Debe tener categoría para poder asociarla a un presupuesto
+    if not instance.category:
         return
 
     category = instance.category
     user = instance.user
+    
+    # Obtener la moneda de la cuenta de origen de la transacción
+    transaction_currency = instance.origin_account.currency if instance.origin_account else None
+    
+    if not transaction_currency:
+        return
 
-    budgets = Budget.objects.filter(category=category, user=user, is_active=True)
+    # Presupuestos activos del usuario para esa categoría y moneda
+    budgets = Budget.objects.filter(
+        category=category,
+        user=user,
+        is_active=True,
+        currency=transaction_currency  # Solo presupuestos con la misma moneda
+    )
 
     for budget in budgets:
-        percentage = budget.get_spent_percentage()
+        # Usar la fecha de la transacción como referencia del período
+        percentage = budget.get_spent_percentage(reference_date=instance.date)
 
-        # Already exceeded
-        if percentage > 100:
-            Alert.objects.get_or_create(
-                user=user,
-                budget=budget,
-                alert_type=Alert.EXCEEDED,
-                message=f"Has excedido el presupuesto de {category.name}.",
-            )
+        # Determinar tipo de alerta a generar, si aplica
+        alert_type = None
+        if percentage >= 100:
+            alert_type = "exceeded"
+        elif percentage >= budget.alert_threshold:
+            alert_type = "warning"
+
+        if not alert_type:
             continue
 
-        # Passed the alert threshold (e.g., 80%)
-        if percentage >= budget.alert_threshold:
-            Alert.objects.get_or_create(
-                user=user,
-                budget=budget,
-                alert_type=Alert.WARNING,
-                message=(
-                    f"Has alcanzado el {percentage}% del presupuesto en "
-                    f"{category.name}."
-                ),
-            )
+        # Evitar repetir alertas para el mismo presupuesto / tipo / mes
+        # Usamos la fecha de la transacción para determinar el mes de la alerta
+        transaction_year = instance.date.year
+        transaction_month = instance.date.month
+        
+        # Buscar si ya existe una alerta para este presupuesto/tipo/mes
+        # usando los campos transaction_year y transaction_month
+        existing = Alert.objects.filter(
+            user=user,
+            budget=budget,
+            alert_type=alert_type,
+            transaction_year=transaction_year,
+            transaction_month=transaction_month,
+        ).exists()
+
+        if existing:
+            # Ya existe una alerta para este mes, no crear otra
+            continue
+
+        # Crear nueva alerta para este mes
+        Alert.objects.create(
+            user=user,
+            budget=budget,
+            alert_type=alert_type,
+            transaction_year=transaction_year,
+            transaction_month=transaction_month,
+        )

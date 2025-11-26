@@ -135,6 +135,57 @@ class TransactionSerializer(serializers.ModelSerializer):
         total_amount = data.get('total_amount')
         tax_percentage = data.get('tax_percentage')
         
+        # Convertir de pesos a centavos si los valores vienen como Decimal, float o integer grande
+        # El frontend envía valores en pesos (ej: 5000000.00), pero el backend almacena en centavos (IntegerField)
+        # Si el valor es > 100,000, asumimos que está en pesos y convertimos a centavos
+        THRESHOLD_FOR_PESOS = 100000  # Valores mayores a este umbral se asumen en pesos
+        
+        if base_amount is not None:
+            if isinstance(base_amount, (float, Decimal)):
+                # Si viene como decimal/float, asumir que es en pesos y convertir a centavos
+                data['base_amount'] = int(Decimal(str(base_amount)) * Decimal('100'))
+            elif isinstance(base_amount, str):
+                # Si viene como string, intentar convertir
+                try:
+                    decimal_val = Decimal(base_amount)
+                    # Si el valor es grande, asumir que está en pesos
+                    if decimal_val > THRESHOLD_FOR_PESOS:
+                        data['base_amount'] = int(decimal_val * Decimal('100'))
+                    else:
+                        data['base_amount'] = int(decimal_val)
+                except (ValueError, TypeError):
+                    pass  # Dejar que Django valide
+            elif isinstance(base_amount, int):
+                # Si viene como integer y es mayor al umbral, asumir que está en pesos
+                if base_amount > THRESHOLD_FOR_PESOS:
+                    data['base_amount'] = base_amount * 100
+                # Si es menor, asumir que ya está en centavos (no convertir)
+        
+        if total_amount is not None:
+            if isinstance(total_amount, (float, Decimal)):
+                # Si viene como decimal/float, asumir que es en pesos y convertir a centavos
+                data['total_amount'] = int(Decimal(str(total_amount)) * Decimal('100'))
+            elif isinstance(total_amount, str):
+                # Si viene como string, intentar convertir
+                try:
+                    decimal_val = Decimal(total_amount)
+                    # Si el valor es grande, asumir que está en pesos
+                    if decimal_val > THRESHOLD_FOR_PESOS:
+                        data['total_amount'] = int(decimal_val * Decimal('100'))
+                    else:
+                        data['total_amount'] = int(decimal_val)
+                except (ValueError, TypeError):
+                    pass  # Dejar que Django valide
+            elif isinstance(total_amount, int):
+                # Si viene como integer y es mayor al umbral, asumir que está en pesos
+                if total_amount > THRESHOLD_FOR_PESOS:
+                    data['total_amount'] = total_amount * 100
+                # Si es menor, asumir que ya está en centavos (no convertir)
+        
+        # Actualizar las variables después de la conversión
+        base_amount = data.get('base_amount')
+        total_amount = data.get('total_amount')
+        
         # Detectar modo de cálculo
         has_base = base_amount is not None
         has_total = total_amount is not None
@@ -459,6 +510,57 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
         base_amount = data.get('base_amount')
         total_amount = data.get('total_amount')
         tax_percentage = data.get('tax_percentage')
+        
+        # Convertir de pesos a centavos si los valores vienen como Decimal, float o integer grande
+        # El frontend envía valores en pesos (ej: 5000000.00), pero el backend almacena en centavos (IntegerField)
+        # Si el valor es > 100,000, asumimos que está en pesos y convertimos a centavos
+        THRESHOLD_FOR_PESOS = 100000  # Valores mayores a este umbral se asumen en pesos
+        
+        if base_amount is not None:
+            if isinstance(base_amount, (float, Decimal)):
+                # Si viene como decimal/float, asumir que es en pesos y convertir a centavos
+                data['base_amount'] = int(Decimal(str(base_amount)) * Decimal('100'))
+            elif isinstance(base_amount, str):
+                # Si viene como string, intentar convertir
+                try:
+                    decimal_val = Decimal(base_amount)
+                    # Si el valor es grande, asumir que está en pesos
+                    if decimal_val > THRESHOLD_FOR_PESOS:
+                        data['base_amount'] = int(decimal_val * Decimal('100'))
+                    else:
+                        data['base_amount'] = int(decimal_val)
+                except (ValueError, TypeError):
+                    pass  # Dejar que Django valide
+            elif isinstance(base_amount, int):
+                # Si viene como integer y es mayor al umbral, asumir que está en pesos
+                if base_amount > THRESHOLD_FOR_PESOS:
+                    data['base_amount'] = base_amount * 100
+                # Si es menor, asumir que ya está en centavos (no convertir)
+        
+        if total_amount is not None:
+            if isinstance(total_amount, (float, Decimal)):
+                # Si viene como decimal/float, asumir que es en pesos y convertir a centavos
+                data['total_amount'] = int(Decimal(str(total_amount)) * Decimal('100'))
+            elif isinstance(total_amount, str):
+                # Si viene como string, intentar convertir
+                try:
+                    decimal_val = Decimal(total_amount)
+                    # Si el valor es grande, asumir que está en pesos
+                    if decimal_val > THRESHOLD_FOR_PESOS:
+                        data['total_amount'] = int(decimal_val * Decimal('100'))
+                    else:
+                        data['total_amount'] = int(decimal_val)
+                except (ValueError, TypeError):
+                    pass  # Dejar que Django valide
+            elif isinstance(total_amount, int):
+                # Si viene como integer y es mayor al umbral, asumir que está en pesos
+                if total_amount > THRESHOLD_FOR_PESOS:
+                    data['total_amount'] = total_amount * 100
+                # Si es menor, asumir que ya está en centavos (no convertir)
+        
+        # Actualizar las variables después de la conversión
+        base_amount = data.get('base_amount')
+        total_amount = data.get('total_amount')
         
         # Si no se proporcionan en data, usar valores de la instancia actual
         if base_amount is None and hasattr(self, 'instance') and self.instance:

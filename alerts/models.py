@@ -47,7 +47,20 @@ class Alert(models.Model):
     # Timestamps
     created_at = models.DateTimeField(
         auto_now_add=True,
-        help_text="Fecha de creación de la transacción",
+        help_text="Fecha de creación de la alerta",
+    )
+    
+    # Campos para identificar el mes/año de la transacción que generó la alerta
+    # Esto permite tener alertas únicas por mes incluso si se crean en diferentes días
+    transaction_year = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Año de la transacción que generó la alerta",
+    )
+    transaction_month = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Mes de la transacción que generó la alerta",
     )
 
     updated_at = models.DateTimeField(
