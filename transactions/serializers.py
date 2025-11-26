@@ -86,12 +86,29 @@ class TransactionSerializer(serializers.ModelSerializer):
             'category': {'required': False},
             'capital_amount': {'required': False},
             'interest_amount': {'required': False},
+            'base_amount': {'required': False},  # Opcional si viene total_amount + tax_percentage
+            'tax_percentage': {'required': False},
+            'total_amount': {'required': False},  # Opcional si viene base_amount
+            'taxed_amount': {'read_only': True},  # Siempre calculado
         }
 
     def validate_base_amount(self, value):
         """Validar que el monto base sea positivo"""
-        if value <= 0:
+        if value is not None and value <= 0:
             raise serializers.ValidationError("El monto base debe ser un valor positivo mayor que cero.")
+        return value
+    
+    def validate_tax_percentage(self, value):
+        """Validar que la tasa de IVA esté entre 0 y 30"""
+        if value is not None:
+            if value < 0 or value > 30:
+                raise serializers.ValidationError("La tasa de IVA debe estar entre 0 y 30%.")
+        return value
+    
+    def validate_total_amount(self, value):
+        """Validar que el monto total sea positivo"""
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("El monto total debe ser un valor positivo mayor que cero.")
         return value
     
     def validate_category(self, value):
@@ -112,6 +129,64 @@ class TransactionSerializer(serializers.ModelSerializer):
         
         if not user or not user.is_authenticated:
             raise serializers.ValidationError("El usuario debe estar autenticado para crear una transacción.")
+        
+        # HU-15: Validar y calcular desglose de IVA
+        base_amount = data.get('base_amount')
+        total_amount = data.get('total_amount')
+        tax_percentage = data.get('tax_percentage')
+        
+        # Detectar modo de cálculo
+        has_base = base_amount is not None
+        has_total = total_amount is not None
+        has_tax = tax_percentage is not None
+        
+        if has_base and has_total:
+            raise serializers.ValidationError({
+                'base_amount': 'No se puede proporcionar base_amount y total_amount simultáneamente. Use uno u otro.',
+                'total_amount': 'No se puede proporcionar base_amount y total_amount simultáneamente. Use uno u otro.'
+            })
+        
+        # Modo nuevo (HU-15): total_amount + tax_percentage → calcular base_amount
+        if has_total and has_tax:
+            # Calcular base_amount desde total_amount
+            # base = total / (1 + tax_percentage/100)
+            tax_rate = Decimal(str(tax_percentage)) / Decimal('100')
+            calculated_base = Decimal(str(total_amount)) / (Decimal('1') + tax_rate)
+            calculated_taxed = Decimal(str(total_amount)) - calculated_base
+            
+            # Convertir a enteros (centavos)
+            data['base_amount'] = int(calculated_base)
+            data['taxed_amount'] = int(calculated_taxed)
+            # Guardar el total original para validaciones (sin GMF aún)
+            original_total = int(total_amount)
+            # NO incluir total_amount en data, el modelo lo calculará incluyendo GMF
+            data.pop('total_amount', None)
+            # Guardar temporalmente para validaciones
+            data['_original_total_for_validation'] = original_total
+        
+        # Modo tradicional: base_amount + tax_percentage → calcular taxed_amount y total_amount
+        elif has_base and has_tax:
+            # El modelo calculará taxed_amount y total_amount en save()
+            pass
+        
+        # Modo sin impuestos: solo base_amount o total_amount
+        elif has_base or has_total:
+            if has_tax:
+                raise serializers.ValidationError({
+                    'tax_percentage': 'Para usar IVA, debe proporcionar total_amount junto con tax_percentage (modo nuevo) o base_amount junto con tax_percentage (modo tradicional).'
+                })
+            # Si solo viene base_amount, el modelo calculará total_amount sin impuestos
+            # Si solo viene total_amount, asumimos que es el total final (sin IVA)
+            if has_total:
+                data['base_amount'] = total_amount
+                data['taxed_amount'] = 0
+        
+        # Validar que al menos uno de base_amount o total_amount esté presente
+        if not has_base and not has_total:
+            raise serializers.ValidationError({
+                'base_amount': 'Debe proporcionar base_amount o total_amount.',
+                'total_amount': 'Debe proporcionar base_amount o total_amount.'
+            })
 
         # Validaciones para transferencias (type = 3)
         if transaction_type == 3:  # Transferencia
@@ -192,11 +267,22 @@ class TransactionSerializer(serializers.ModelSerializer):
                     })
         
         # Validar límites de cuentas ANTES de crear la transacción
-        total_amount = data.get('total_amount', Decimal('0.00'))
+        # Usar el total_amount calculado o el base_amount si no hay total
+        final_total = data.get('total_amount')
+        if final_total is None:
+            # Si viene del modo nuevo (HU-15), usar el total original guardado
+            if '_original_total_for_validation' in data:
+                final_total = data['_original_total_for_validation']
+            else:
+                # Si no hay total_amount, usar base_amount + taxed_amount (si existe)
+                base = data.get('base_amount', 0)
+                taxed = data.get('taxed_amount', 0)
+                final_total = base + taxed
+        
         if origin_account:
             TransactionSerializer._validate_account_limits(
                 origin_account,
-                total_amount,
+                final_total,
                 transaction_type,
                 is_decrease=True  # Gastos y transferencias disminuyen el saldo
             )
@@ -204,7 +290,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         if destination_account and transaction_type == 3:
             TransactionSerializer._validate_account_limits(
                 destination_account,
-                total_amount,
+                final_total,
                 transaction_type,
                 is_decrease=False  # Transferencias aumentan el saldo destino
             )
@@ -288,6 +374,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         """Crear transacción asignando el usuario del request"""
         user = self.context['request'].user
         validated_data['user'] = user
+        # Eliminar campo temporal usado para validaciones
+        validated_data.pop('_original_total_for_validation', None)
         return Transaction.objects.create(**validated_data)
 
 
@@ -302,6 +390,7 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
             'category',
             'type',
             'base_amount',
+            'tax_percentage',
             'taxed_amount',
             'gmf_amount',
             'capital_amount',
@@ -321,12 +410,29 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
             'gmf_amount': {'read_only': True},  # Se calcula automáticamente
             'capital_amount': {'required': False},
             'interest_amount': {'required': False},
+            'base_amount': {'required': False},  # Opcional si viene total_amount + tax_percentage
+            'tax_percentage': {'required': False},
+            'total_amount': {'required': False},  # Opcional si viene base_amount
+            'taxed_amount': {'read_only': True},  # Siempre calculado
         }
     
     def validate_base_amount(self, value):
         """Validar que el monto base sea positivo"""
-        if value <= 0:
+        if value is not None and value <= 0:
             raise serializers.ValidationError("El monto base debe ser un valor positivo mayor que cero.")
+        return value
+    
+    def validate_tax_percentage(self, value):
+        """Validar que la tasa de IVA esté entre 0 y 30"""
+        if value is not None:
+            if value < 0 or value > 30:
+                raise serializers.ValidationError("La tasa de IVA debe estar entre 0 y 30%.")
+        return value
+    
+    def validate_total_amount(self, value):
+        """Validar que el monto total sea positivo"""
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("El monto total debe ser un valor positivo mayor que cero.")
         return value
     
     def validate_category(self, value):
@@ -348,6 +454,66 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
         origin_account = data.get('origin_account', self.instance.origin_account if hasattr(self, 'instance') and self.instance else None)
         destination_account = data.get('destination_account', self.instance.destination_account if hasattr(self, 'instance') and self.instance else None)
         category = data.get('category', self.instance.category if hasattr(self, 'instance') and self.instance else None)
+        
+        # HU-15: Validar y calcular desglose de IVA
+        base_amount = data.get('base_amount')
+        total_amount = data.get('total_amount')
+        tax_percentage = data.get('tax_percentage')
+        
+        # Si no se proporcionan en data, usar valores de la instancia actual
+        if base_amount is None and hasattr(self, 'instance') and self.instance:
+            base_amount = self.instance.base_amount
+        if total_amount is None and hasattr(self, 'instance') and self.instance:
+            total_amount = self.instance.total_amount
+        if tax_percentage is None and hasattr(self, 'instance') and self.instance:
+            tax_percentage = self.instance.tax_percentage
+        
+        # Detectar modo de cálculo
+        has_base = base_amount is not None
+        has_total = total_amount is not None
+        has_tax = tax_percentage is not None
+        
+        # Validar que no se envíen ambos modos simultáneamente (solo si ambos están en data)
+        if 'base_amount' in data and 'total_amount' in data:
+            raise serializers.ValidationError({
+                'base_amount': 'No se puede proporcionar base_amount y total_amount simultáneamente. Use uno u otro.',
+                'total_amount': 'No se puede proporcionar base_amount y total_amount simultáneamente. Use uno u otro.'
+            })
+        
+        # Modo nuevo (HU-15): total_amount + tax_percentage → calcular base_amount
+        if has_total and has_tax and ('total_amount' in data or 'tax_percentage' in data):
+            # Calcular base_amount desde total_amount
+            # base = total / (1 + tax_percentage/100)
+            tax_rate = Decimal(str(tax_percentage)) / Decimal('100')
+            calculated_base = Decimal(str(total_amount)) / (Decimal('1') + tax_rate)
+            calculated_taxed = Decimal(str(total_amount)) - calculated_base
+            
+            # Convertir a enteros (centavos)
+            data['base_amount'] = int(calculated_base)
+            data['taxed_amount'] = int(calculated_taxed)
+            # Guardar el total original para validaciones (sin GMF aún)
+            original_total = int(total_amount)
+            # NO incluir total_amount en data, el modelo lo calculará incluyendo GMF
+            data.pop('total_amount', None)
+            # Guardar temporalmente para validaciones
+            data['_original_total_for_validation'] = original_total
+        
+        # Modo tradicional: base_amount + tax_percentage → calcular taxed_amount y total_amount
+        elif has_base and has_tax and ('base_amount' in data or 'tax_percentage' in data):
+            # El modelo calculará taxed_amount y total_amount en save()
+            pass
+        
+        # Modo sin impuestos: solo base_amount o total_amount
+        elif (has_base or has_total) and ('base_amount' in data or 'total_amount' in data):
+            if has_tax and 'tax_percentage' in data:
+                raise serializers.ValidationError({
+                    'tax_percentage': 'Para usar IVA, debe proporcionar total_amount junto con tax_percentage (modo nuevo) o base_amount junto con tax_percentage (modo tradicional).'
+                })
+            # Si solo viene base_amount, el modelo calculará total_amount sin impuestos
+            # Si solo viene total_amount, asumimos que es el total final (sin IVA)
+            if has_total and 'total_amount' in data:
+                data['base_amount'] = total_amount
+                data['taxed_amount'] = 0
         
         if transaction_type == 3:  # Transferencia
             if not destination_account:

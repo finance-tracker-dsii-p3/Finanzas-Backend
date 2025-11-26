@@ -160,11 +160,15 @@ class Transaction(models.Model):
 
 
     def save(self, *args, **kwargs):
-        # Calcular impuestos si se proporciona tax_percentage
-        if self.tax_percentage:
-            self.taxed_amount = int(self.base_amount * (self.tax_percentage / 100))
-        else:
-            self.taxed_amount = 0
+        # HU-15: Calcular impuestos si no están ya calculados
+        # Si taxed_amount ya viene calculado desde el serializer (modo total_amount + tax_percentage),
+        # respetarlo. Si no, calcular desde base_amount + tax_percentage (modo tradicional)
+        if self.taxed_amount is None:
+            # Modo tradicional: calcular impuestos desde base_amount
+            if self.tax_percentage:
+                self.taxed_amount = int(self.base_amount * (self.tax_percentage / 100))
+            else:
+                self.taxed_amount = 0
         
         # Calcular GMF (4x1000 = 0.4%) si aplica
         # El GMF se aplica a:
@@ -184,6 +188,7 @@ class Transaction(models.Model):
                     self.gmf_amount = int(amount_for_gmf * Decimal('0.004'))  # 0.4% = 4/1000
         
         # Calcular total: base + impuestos + GMF
+        # El total_amount final siempre incluye GMF si aplica
         self.total_amount = self.base_amount + self.taxed_amount + self.gmf_amount
         
         # Para pagos a tarjetas de crédito (transferencias donde destino es tarjeta de crédito)
