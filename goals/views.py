@@ -1,7 +1,3 @@
-"""
-Views para gestión de metas de ahorro
-"""
-
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 import logging
@@ -17,23 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 class GoalViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet completo para gestión de metas de ahorro
-
-    Proporciona operaciones CRUD completas más acciones adicionales
-    para activar/desactivar, reordenar y obtener estadísticas.
-    """
 
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Filtrar metas por usuario autenticado"""
         return Goal.objects.filter(user=self.request.user).order_by(
-            "order", "name"
+            "-date", "name"
         )
 
     def get_serializer_class(self):
-        """Seleccionar serializer según la acción"""
         if self.action == "create":
             return GoalSerializer
         elif self.action in ["retrieve", "list"]:
@@ -44,9 +32,6 @@ class GoalViewSet(viewsets.ModelViewSet):
             return GoalDetailSerializer
 
     def list(self, request, *args, **kwargs):
-        """
-        Listar metas del usuario
-        """
         queryset = self.get_queryset()
 
         serializer = self.get_serializer(queryset, many=True)
@@ -56,7 +41,6 @@ class GoalViewSet(viewsets.ModelViewSet):
             f"Usuario {request.user.id} listó transacciones: {count} encontradas"
         )
 
-        # Si no hay metas, devolver mensaje informativo
         if count == 0:
             return Response(
                 {
@@ -70,7 +54,6 @@ class GoalViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
-        """Crear una meta asignando el usuario autenticado"""
         try:
             goal = serializer.save()
 
@@ -85,7 +68,6 @@ class GoalViewSet(viewsets.ModelViewSet):
             raise e
 
     def perform_update(self, serializer):
-        """Actualizar una meta existente"""
         try:
             goal = serializer.save()
             logger.info(f"Usuario {self.request.user.id} actualizó la meta {goal.name}")
@@ -97,7 +79,6 @@ class GoalViewSet(viewsets.ModelViewSet):
             raise e
 
     def perform_destroy(self, instance):
-        """Eliminar meta existente"""
         try:
             instance.delete()
 

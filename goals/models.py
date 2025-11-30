@@ -1,11 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from accounts.models import Account
 
 
 class Goal(models.Model):
-    """
-    Modelo para gestionar metas de ahorro
-    """
 
     User = get_user_model()
 
@@ -23,19 +21,21 @@ class Goal(models.Model):
         help_text="Nombre descriptivo de la meta de ahorro",
     )
 
-    target_ammount = models.IntegerField(
+    target_amount = models.IntegerField(
         verbose_name="Monto objetivo",
         help_text="Monto objetivo de la meta de ahorro",
     )
 
-    saved_ammount = models.IntegerField(
+    saved_amount = models.IntegerField(
+        default=0,
         verbose_name="Monto ahorrado",
         help_text="Monto actualmente ahorrado hacia la meta",
     )
 
     date = models.DateField(
-        verbose_name="Fecha", 
-        help_text="Fecha de la meta de ahorro")
+        verbose_name="Fecha meta",
+        help_text="Fecha objetivo para alcanzar la meta de ahorro"
+    )
 
     description = models.TextField(
         null=True,
@@ -44,27 +44,33 @@ class Goal(models.Model):
         help_text="Descripción adicional de la meta de ahorro (opcional)",
     )
 
-    # Timestamps
+    currency = models.CharField(
+        max_length=3,
+        choices=Account.CURRENCY_CHOICES,
+        default='COP',
+        verbose_name='Moneda',
+        help_text='Moneda de la meta de ahorro'
+    )
+
     created_at = models.DateTimeField(
-        auto_now_add=True, help_text="Fecha de creación de la transacción"
+        auto_now_add=True, help_text="Fecha de creación de la meta"
     )
 
     updated_at = models.DateTimeField(
         auto_now=True, help_text="Fecha de última actualización"
     )
 
-    def save(self, *args, **kwargs):
-        # If tax_percentage is provided, compute taxed_amount
-        if self.tax_percentage:
-            self.taxed_amount = self.base_amount * (self.tax_percentage / 100)
-            self.total_amount = self.base_amount + self.taxed_amount
-        else:
-            self.taxed_amount = 0
-            self.total_amount = self.base_amount
+    def get_progress_percentage(self):
+        if self.target_amount == 0:
+            return 0.0
+        return round((self.saved_amount / self.target_amount) * 100, 2)
 
-        super().save(*args, **kwargs)
+    def get_remaining_amount(self):
+        remaining = self.target_amount - self.saved_amount
+        return max(0, remaining)
+
+    def is_completed(self):
+        return self.saved_amount >= self.target_amount
 
     def __str__(self):
-        return (
-            f"Transacción {self.id} - {self.get_type_display()} - {self.total_amount}"
-        )
+        return f"Meta: {self.name} - {self.saved_amount}/{self.target_amount}"

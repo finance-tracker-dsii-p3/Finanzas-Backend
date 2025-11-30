@@ -147,6 +147,43 @@ class Transaction(models.Model):
         help_text='Regla automática que se aplicó a esta transacción'
     )
 
+    # HU-11: Relación con metas de ahorro
+    goal = models.ForeignKey(
+        'goals.Goal',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transactions',
+        verbose_name='Meta de ahorro',
+        help_text='Meta de ahorro a la que se asigna esta transacción (solo para transacciones tipo Saving)'
+    )
+
+    # Campos para conversión de moneda
+    transaction_currency = models.CharField(
+        max_length=3,
+        choices=Account.CURRENCY_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name='Moneda de la transacción',
+        help_text='Moneda en que se realizó la transacción (si difiere de la cuenta de origen)'
+    )
+    
+    exchange_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name='Tasa de cambio',
+        help_text='Tasa de cambio aplicada si hubo conversión de moneda'
+    )
+    
+    original_amount = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Monto original',
+        help_text='Monto original antes de conversión (en centavos de la moneda original)'
+    )
+
     # Timestamps
     created_at = models.DateTimeField(
         auto_now_add=True,
