@@ -23,11 +23,14 @@ urlpatterns = [
 #
 # Filtros disponibles (query parameters):
 # ?type=1 - Filtrar por tipo (1=Income, 2=Expense, 3=Transfer, 4=Saving)
-# ?category={id} - Filtrar por categoría (HU-12)
-# ?applied_rule={id} - Filtrar por regla aplicada (HU-12)
-# ?date_from=YYYY-MM-DD - Desde fecha
-# ?date_to=YYYY-MM-DD - Hasta fecha
-# ?min_amount=1000 - Monto mínimo
-# ?max_amount=50000 - Monto máximo
-# ?search=texto - Buscar en descripción (HU-12)
+# ?category={id} - Filtrar por categoría (HU-10)
+# ?origin_account={id} - Filtrar por cuenta origen
+# ?destination_account={id} - Filtrar por cuenta destino
+# ?start_date=YYYY-MM-DD - Desde fecha
+# ?end_date=YYYY-MM-DD - Hasta fecha
+# ?search=texto - Buscar en tag, description, note y nombre de categoría (HU-10)
 # ?ordering=date,-total_amount - Ordenar por campos
+#
+# Acciones adicionales:
+# POST /api/transactions/bulk_delete/ - Eliminar múltiples transacciones (HU-10)
+# Body: {"ids": [1, 2, 3, ...]}

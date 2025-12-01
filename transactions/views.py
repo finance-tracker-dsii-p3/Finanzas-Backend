@@ -89,10 +89,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
             # Actualizar saldos de cuentas automáticamente
             TransactionService.handle_transaction_creation(transaction)
             
+            desc = ""
+            if hasattr(transaction, 'description') and transaction.description:
+                desc = f" - Descripción: {transaction.description}"
             logger.info(
                 f"Usuario {self.request.user.id} creó transacción ID: {transaction.id} "
-                f"({transaction.get_type_display()}) - Monto: {transaction.total_amount}"
-                + (f" - Descripción: {transaction.description}" if hasattr(transaction, 'description') and transaction.description else "")
+                f"({transaction.get_type_display()}) - Monto: {transaction.total_amount}{desc}"
             )
 
         except Exception as e:
@@ -182,7 +184,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             TransactionService.handle_transaction_creation(duplicated_transaction)
             
             logger.info(
-                f"Usuario {request.user.id} duplicó transacción {original_transaction.id} -> {duplicated_transaction.id}"
+                f"Usuario {request.user.id} duplicó transacción "
+                f"{original_transaction.id} -> {duplicated_transaction.id}"
             )
             
             detail_serializer = TransactionDetailSerializer(duplicated_transaction)
@@ -196,13 +199,83 @@ class TransactionViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        transaction_ids = request.data.get('ids', [])
+        
+        if not transaction_ids:
+            return Response(
+                {'error': 'Debe proporcionar una lista de IDs en el campo "ids".'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not isinstance(transaction_ids, list):
+            return Response(
+                {'error': 'El campo "ids" debe ser una lista.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = self.get_queryset().filter(id__in=transaction_ids)
+        
+        if queryset.count() != len(transaction_ids):
+            found_ids = list(queryset.values_list('id', flat=True))
+            missing_ids = [tid for tid in transaction_ids if tid not in found_ids]
+            return Response(
+                {
+                    'error': (
+                        'Algunas transacciones no fueron encontradas '
+                        'o no pertenecen al usuario.'
+                    ),
+                    'missing_ids': missing_ids,
+                    'found_ids': found_ids
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        deleted_count = 0
+        errors = []
+        
+        for transaction in queryset:
+            try:
+                TransactionService.handle_transaction_deletion(transaction)
+                transaction.delete()
+                deleted_count += 1
+                logger.info(
+                    f"Usuario {request.user.id} eliminó transacción {transaction.id} (bulk delete)"
+                )
+            except Exception as e:
+                errors.append({
+                    'transaction_id': transaction.id,
+                    'error': str(e)
+                })
+                logger.error(
+                    f"Error al eliminar transacción {transaction.id} en bulk delete: {str(e)}"
+                )
+        
+        if errors:
+            return Response(
+                {
+                    'message': (
+                        f'Se eliminaron {deleted_count} transacciones, '
+                        f'pero hubo {len(errors)} errores.'
+                    ),
+                    'deleted_count': deleted_count,
+                    'errors': errors
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(
+            {
+                'message': f'Se eliminaron {deleted_count} transacciones exitosamente.',
+                'deleted_count': deleted_count
+            },
+            status=status.HTTP_200_OK
+        )
+
     def perform_destroy(self, instance):
-        """Eliminar transacción existente y revertir cambios en saldos"""
         try:
-            # Revertir cambios en saldos antes de eliminar
             TransactionService.handle_transaction_deletion(instance)
-            
-            # Eliminar la transacción
             instance.delete()
 
             logger.info(
