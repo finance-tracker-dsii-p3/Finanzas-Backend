@@ -19,8 +19,8 @@ class TransactionFilter(django_filters.FilterSet):
 
     def filter_search(self, queryset, name, value):
         return queryset.filter(
-            models.Q(tag__icontains=value) |
-            models.Q(description__icontains=value) |
-            models.Q(note__icontains=value) |
-            models.Q(category__name__icontains=value)
+            models.Q(tag__icontains=value)
+            | models.Q(description__icontains=value)
+            | models.Q(note__icontains=value)
+            | models.Q(category__name__icontains=value)
         )

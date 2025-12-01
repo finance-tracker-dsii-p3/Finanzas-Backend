@@ -1,18 +1,19 @@
 """URLs para la app accounts"""
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
 # Configurar router para ViewSet
 router = DefaultRouter()
-router.register(r'', views.AccountViewSet, basename='account')
+router.register(r"", views.AccountViewSet, basename="account")
 
 urlpatterns = [
     # Endpoint para opciones de cuentas (bancos, billeteras, etc.)
     # IMPORTANTE: Debe ir ANTES del router para que no sea capturado por el router
-    path('options/', views.get_account_options, name='account-options'),
+    path("options/", views.get_account_options, name="account-options"),
     # Incluir rutas del router
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
 
 # URLs disponibles:
@@ -22,7 +23,7 @@ urlpatterns = [
 # PUT /api/accounts/{id}/ - Actualizar cuenta completa
 # PATCH /api/accounts/{id}/ - Actualizar parcialmente
 # DELETE /api/accounts/{id}/ - Eliminar cuenta
-# 
+#
 # Acciones adicionales:
 # GET /api/accounts/summary/ - Resumen financiero del usuario
 # GET /api/accounts/by_currency/?currency=COP - Filtrar cuentas por moneda

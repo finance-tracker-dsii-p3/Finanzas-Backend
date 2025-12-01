@@ -4,7 +4,6 @@ from accounts.models import Account
 
 
 class Goal(models.Model):
-
     User = get_user_model()
 
     user = models.ForeignKey(
@@ -33,8 +32,7 @@ class Goal(models.Model):
     )
 
     date = models.DateField(
-        verbose_name="Fecha meta",
-        help_text="Fecha objetivo para alcanzar la meta de ahorro"
+        verbose_name="Fecha meta", help_text="Fecha objetivo para alcanzar la meta de ahorro"
     )
 
     description = models.TextField(
@@ -47,18 +45,14 @@ class Goal(models.Model):
     currency = models.CharField(
         max_length=3,
         choices=Account.CURRENCY_CHOICES,
-        default='COP',
-        verbose_name='Moneda',
-        help_text='Moneda de la meta de ahorro'
+        default="COP",
+        verbose_name="Moneda",
+        help_text="Moneda de la meta de ahorro",
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True, help_text="Fecha de creación de la meta"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Fecha de creación de la meta")
 
-    updated_at = models.DateTimeField(
-        auto_now=True, help_text="Fecha de última actualización"
-    )
+    updated_at = models.DateTimeField(auto_now=True, help_text="Fecha de última actualización")
 
     def get_progress_percentage(self):
         if self.target_amount == 0:

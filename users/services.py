@@ -1,11 +1,12 @@
 from .email_utils import send_email_unified
 
+
 def send_password_reset_email(user, reset_url: str) -> str:
     """
     Envía email de restablecimiento de contraseña
     En desarrollo, también devuelve el enlace para mostrar en consola
     """
-    subject = '[DS2] Restablece tu contraseña'
+    subject = "[DS2] Restablece tu contraseña"
     text = (
         f"Hola {user.get_full_name() or user.username},\n\n"
         f"Recibimos una solicitud para restablecer tu contraseña.\n"
@@ -31,12 +32,7 @@ def send_password_reset_email(user, reset_url: str) -> str:
   </body>
 </html>
 """
-    send_email_unified(
-        to=user.email,
-        subject=subject,
-        text_content=text,
-        html_content=html
-    )
-    
+    send_email_unified(to=user.email, subject=subject, text_content=text, html_content=html)
+
     # En desarrollo, devolver el enlace para mostrar en consola
     return reset_url

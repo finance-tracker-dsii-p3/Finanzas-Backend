@@ -11,6 +11,7 @@ def main() -> int:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 
     import django  # type: ignore
+
     django.setup()
 
     from django.conf import settings  # type: ignore
@@ -27,5 +28,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-

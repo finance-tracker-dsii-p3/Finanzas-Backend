@@ -1,16 +1,17 @@
 """
 URLs para la API de presupuestos
 """
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import BudgetViewSet
 
 # Router para el ViewSet
 router = DefaultRouter()
-router.register(r'', BudgetViewSet, basename='budget')
+router.register(r"", BudgetViewSet, basename="budget")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
 
 """ 

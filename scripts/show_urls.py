@@ -8,27 +8,29 @@ import django
 from django.urls import get_resolver
 
 # Configurar Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'finanzas_back.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
+
 
 def show_urls(urllist, depth=0):
     """Mostrar todas las URLs recursivamente"""
     for entry in urllist:
         print("  " * depth, entry.regex.pattern)
-        if hasattr(entry, 'url_patterns'):
+        if hasattr(entry, "url_patterns"):
             show_urls(entry.url_patterns, depth + 1)
+
 
 def main():
     print("URLs disponibles en el proyecto:")
     print("=" * 50)
-    
+
     resolver = get_resolver()
     show_urls(resolver.url_patterns)
-    
+
     print("\n" + "=" * 50)
     print("Endpoints de notificaciones específicos:")
     print("-" * 30)
-    
+
     # URLs específicas de notificaciones
     notification_urls = [
         "GET  /api/notifications/",
@@ -46,9 +48,10 @@ def main():
         "GET  /api/notifications/excessive-hours-summary/",
         "POST /api/notifications/hours-exceeded/",
     ]
-    
+
     for url in notification_urls:
         print(url)
+
 
 if __name__ == "__main__":
     main()

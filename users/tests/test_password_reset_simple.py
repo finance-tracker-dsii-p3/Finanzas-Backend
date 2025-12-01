@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 User = get_user_model()
 
 
-@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class PasswordResetSimpleTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -27,18 +27,16 @@ class PasswordResetSimpleTests(TestCase):
         """Test solicitud exitosa de restablecimiento de contraseña"""
         url = "/api/auth/password/reset-request/"
         data = {"email": self.user.email}
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 200)
         msg = response.json()["message"]
-        self.assertTrue(
-            ("Enlace de restablecimiento" in msg) or ("Si el email existe" in msg)
-        )
-        
+        self.assertTrue(("Enlace de restablecimiento" in msg) or ("Si el email existe" in msg))
+
         # Verificar que se creó el registro en la base de datos
         self.assertTrue(PasswordReset.objects.filter(user=self.user).exists())
-        
+
         # Verificar que se envió el email
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("Restablece tu contraseña", mail.outbox[0].subject)
@@ -47,13 +45,13 @@ class PasswordResetSimpleTests(TestCase):
         """Test solicitud con email que no existe"""
         url = "/api/auth/password/reset-request/"
         data = {"email": "nonexistent@example.com"}
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 200)
         # Nuevo comportamiento: mensaje explícito
-        self.assertIn("no existe en la base de datos", response.json()["message"]) 
-        
+        self.assertIn("no existe en la base de datos", response.json()["message"])
+
         # No debería crear registro ni enviar email
         self.assertFalse(PasswordReset.objects.exists())
         self.assertEqual(len(mail.outbox), 0)
@@ -63,17 +61,15 @@ class PasswordResetSimpleTests(TestCase):
         # Generar token real
         raw_token = generate_raw_token()
         token_hash = hash_token(raw_token)
-        
+
         # Crear token válido
         PasswordReset.objects.create(
-            user=self.user,
-            token_hash=token_hash,
-            expires_at=timezone.now() + timedelta(hours=2)
+            user=self.user, token_hash=token_hash, expires_at=timezone.now() + timedelta(hours=2)
         )
-        
+
         url = "/api/auth/password/reset-confirm/"
         response = self.client.get(url, {"token": raw_token})
-        
+
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["valid"])
@@ -84,7 +80,7 @@ class PasswordResetSimpleTests(TestCase):
         """Test GET con token inválido"""
         url = "/api/auth/password/reset-confirm/"
         response = self.client.get(url, {"token": "invalid_token"})
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Token inválido", response.json()["error"])
 
@@ -92,7 +88,7 @@ class PasswordResetSimpleTests(TestCase):
         """Test GET sin token"""
         url = "/api/auth/password/reset-confirm/"
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Token no proporcionado", response.json()["error"])
 
@@ -101,17 +97,15 @@ class PasswordResetSimpleTests(TestCase):
         # Generar token real
         raw_token = generate_raw_token()
         token_hash = hash_token(raw_token)
-        
+
         # Crear token expirado
         PasswordReset.objects.create(
-            user=self.user,
-            token_hash=token_hash,
-            expires_at=timezone.now() - timedelta(hours=1)
+            user=self.user, token_hash=token_hash, expires_at=timezone.now() - timedelta(hours=1)
         )
-        
+
         url = "/api/auth/password/reset-confirm/"
         response = self.client.get(url, {"token": raw_token})
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Token expirado o ya usado", response.json()["error"])
 
@@ -120,30 +114,28 @@ class PasswordResetSimpleTests(TestCase):
         # Generar token real
         raw_token = generate_raw_token()
         token_hash = hash_token(raw_token)
-        
+
         # Crear token válido
         password_reset = PasswordReset.objects.create(
-            user=self.user,
-            token_hash=token_hash,
-            expires_at=timezone.now() + timedelta(hours=2)
+            user=self.user, token_hash=token_hash, expires_at=timezone.now() + timedelta(hours=2)
         )
-        
+
         url = "/api/auth/password/reset-confirm/"
         data = {
             "token": raw_token,
             "new_password": "newpass123",
-            "new_password_confirm": "newpass123"
+            "new_password_confirm": "newpass123",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertIn("Contraseña actualizada", response.json()["message"])
-        
+
         # Verificar que la contraseña cambió
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("newpass123"))
-        
+
         # Verificar que el token fue marcado como usado
         password_reset.refresh_from_db()
         self.assertTrue(password_reset.is_used())
@@ -153,22 +145,20 @@ class PasswordResetSimpleTests(TestCase):
         # Generar token real
         raw_token = generate_raw_token()
         token_hash = hash_token(raw_token)
-        
+
         PasswordReset.objects.create(
-            user=self.user,
-            token_hash=token_hash,
-            expires_at=timezone.now() + timedelta(hours=2)
+            user=self.user, token_hash=token_hash, expires_at=timezone.now() + timedelta(hours=2)
         )
-        
+
         url = "/api/auth/password/reset-confirm/"
         data = {
             "token": raw_token,
             "new_password": "newpass123",
-            "new_password_confirm": "differentpass"
+            "new_password_confirm": "differentpass",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Las contraseñas no coinciden", str(response.json()))
 
@@ -178,11 +168,11 @@ class PasswordResetSimpleTests(TestCase):
         data = {
             "token": "invalid_token",
             "new_password": "newpass123",
-            "new_password_confirm": "newpass123"
+            "new_password_confirm": "newpass123",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Token inválido", str(response.json()))
 
@@ -191,22 +181,20 @@ class PasswordResetSimpleTests(TestCase):
         # Generar token real
         raw_token = generate_raw_token()
         token_hash = hash_token(raw_token)
-        
+
         PasswordReset.objects.create(
-            user=self.user,
-            token_hash=token_hash,
-            expires_at=timezone.now() - timedelta(hours=1)
+            user=self.user, token_hash=token_hash, expires_at=timezone.now() - timedelta(hours=1)
         )
-        
+
         url = "/api/auth/password/reset-confirm/"
         data = {
             "token": raw_token,
             "new_password": "newpass123",
-            "new_password_confirm": "newpass123"
+            "new_password_confirm": "newpass123",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Token expirado", str(response.json()))
 
@@ -215,45 +203,39 @@ class PasswordResetSimpleTests(TestCase):
         # Generar token real
         raw_token = generate_raw_token()
         token_hash = hash_token(raw_token)
-        
+
         password_reset = PasswordReset.objects.create(
-            user=self.user,
-            token_hash=token_hash,
-            expires_at=timezone.now() + timedelta(hours=2)
+            user=self.user, token_hash=token_hash, expires_at=timezone.now() + timedelta(hours=2)
         )
         password_reset.mark_as_used()
-        
+
         url = "/api/auth/password/reset-confirm/"
         data = {
             "token": raw_token,
             "new_password": "newpass123",
-            "new_password_confirm": "newpass123"
+            "new_password_confirm": "newpass123",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         self.assertIn("Token ya fue usado", str(response.json()))
 
     def test_password_reset_token_expiration(self):
         """Test que los tokens expiran correctamente"""
         password_reset = PasswordReset.objects.create(
-            user=self.user,
-            token_hash="test_hash",
-            expires_at=timezone.now() - timedelta(hours=1)
+            user=self.user, token_hash="test_hash", expires_at=timezone.now() - timedelta(hours=1)
         )
-        
+
         self.assertTrue(password_reset.is_expired())
         self.assertFalse(password_reset.is_valid())
 
     def test_password_reset_token_usage_tracking(self):
         """Test que se puede marcar un token como usado"""
         password_reset = PasswordReset.objects.create(
-            user=self.user,
-            token_hash="test_hash",
-            expires_at=timezone.now() + timedelta(hours=2)
+            user=self.user, token_hash="test_hash", expires_at=timezone.now() + timedelta(hours=2)
         )
-        
+
         self.assertFalse(password_reset.is_used())
         password_reset.mark_as_used()
         self.assertTrue(password_reset.is_used())

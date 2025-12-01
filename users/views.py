@@ -14,14 +14,13 @@ from .serializers import (
     AdminUserListSerializer,
     AdminUserVerificationSerializer,
     ChangePasswordSerializer,
-    DeleteOwnAccountSerializer
+    DeleteOwnAccountSerializer,
 )
 from .permissions import IsAdminUser, IsVerifiedUser
 from django.utils import timezone
 
 from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
 
 
 def _html_message(text: str, ok: bool) -> str:
@@ -41,9 +40,8 @@ def _html_message(text: str, ok: bool) -> str:
 </body></html>"""
 
 
-
 @csrf_exempt
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def register_view(request):
     """
@@ -52,29 +50,32 @@ def register_view(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        
+
         # Mensaje diferenciado según el rol
-        if user.role == 'user':
-            message = 'Usuario registrado y verificado exitosamente. Ya puedes iniciar sesión.'
+        if user.role == "user":
+            message = "Usuario registrado y verificado exitosamente. Ya puedes iniciar sesión."
         else:
-            message = 'Administrador registrado y verificado exitosamente.'
-        
-        return Response({
-            'message': message,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role,
-                'is_verified': user.is_verified
-            }
-        }, status=status.HTTP_201_CREATED)
-    
+            message = "Administrador registrado y verificado exitosamente."
+
+        return Response(
+            {
+                "message": message,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "is_verified": user.is_verified,
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @csrf_exempt
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def login_view(request):
     """
@@ -82,26 +83,29 @@ def login_view(request):
     """
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
-        user = serializer.validated_data['user']
-        
+        user = serializer.validated_data["user"]
+
         # Crear o obtener token
         token, created = Token.objects.get_or_create(user=user)
-        
+
         # Login del usuario
         login(request, user)
-        
-        return Response({
-            'message': 'Login exitoso',
-            'token': token.key,
-            'user': UserProfileCompleteSerializer(user).data
-        }, status=status.HTTP_200_OK)
-    
+
+        return Response(
+            {
+                "message": "Login exitoso",
+                "token": token.key,
+                "user": UserProfileCompleteSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @csrf_exempt
 @csrf_exempt
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
     """
@@ -111,16 +115,15 @@ def logout_view(request):
         # Eliminar el token del usuario
         Token.objects.filter(user=request.user).delete()
         logout(request)
-        return Response({
-            'message': 'Logout exitoso'
-        }, status=status.HTTP_200_OK)
+        return Response({"message": "Logout exitoso"}, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({
-            'error': f'Error durante el logout: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"error": f"Error durante el logout: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsVerifiedUser])
 def profile_view(request):
@@ -132,70 +135,64 @@ def profile_view(request):
 
 
 @csrf_exempt
-@api_view(['PUT', 'PATCH'])
+@api_view(["PUT", "PATCH"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsVerifiedUser])
 def update_profile_view(request):
     """
     Vista para actualizar el perfil del usuario
     """
-    serializer = UserProfileSerializer(
-        request.user, 
-        data=request.data, 
-        partial=True
-    )
+    serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
-        return Response({
-            'message': 'Perfil actualizado exitosamente',
-            'user': serializer.data
-        }, status=status.HTTP_200_OK)
-    
+        return Response(
+            {"message": "Perfil actualizado exitosamente", "user": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @csrf_exempt
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsVerifiedUser])
 def change_password_view(request):
     """
     Vista para cambiar contraseña
     """
-    serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+    serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
     if serializer.is_valid():
         serializer.save()
         update_session_auth_hash(request, request.user)  # Mantener la sesión activa
-        return Response({
-            'message': 'Contraseña cambiada exitosamente'
-        }, status=status.HTTP_200_OK)
-    
+        return Response({"message": "Contraseña cambiada exitosamente"}, status=status.HTTP_200_OK)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_users_list_view(request):
     """
     Vista para que los administradores vean la lista de usuarios
     """
-    users = User.objects.all().order_by('-created_at')
-    
+    users = User.objects.all().order_by("-created_at")
+
     # Filtros opcionales
-    role = request.query_params.get('role')
-    is_verified = request.query_params.get('is_verified')
-    
+    role = request.query_params.get("role")
+    is_verified = request.query_params.get("is_verified")
+
     if role:
         users = users.filter(role=role)
     if is_verified is not None:
-        users = users.filter(is_verified=is_verified.lower() == 'true')
-    
+        users = users.filter(is_verified=is_verified.lower() == "true")
+
     serializer = AdminUserListSerializer(users, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
-@api_view(['PATCH'])
+@api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_verify_user_view(request, user_id):
@@ -205,35 +202,35 @@ def admin_verify_user_view(request, user_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({
-            'error': f'Usuario con ID {user_id} no encontrado'
-        }, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": f"Usuario con ID {user_id} no encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
     except ValueError:
-        return Response({
-            'error': f'ID de usuario inválido: {user_id}'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(
+            {"error": f"ID de usuario inválido: {user_id}"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
     serializer = AdminUserVerificationSerializer(
-        user, 
-        data=request.data, 
-        context={'request': request},
-        partial=True
+        user, data=request.data, context={"request": request}, partial=True
     )
-    
+
     if serializer.is_valid():
         # Marcar que la verificación cambió para activar el signal
         user._verification_changed = True
         serializer.save()
-        
-        return Response({
-            'message': f'Usuario {user.username} actualizado exitosamente',
-            'user': AdminUserListSerializer(user).data
-        }, status=status.HTTP_200_OK)
-    
+
+        return Response(
+            {
+                "message": f"Usuario {user.username} actualizado exitosamente",
+                "user": AdminUserListSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_promote_user_view(request, user_id):
@@ -247,32 +244,38 @@ def admin_promote_user_view(request, user_id):
     try:
         target_user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({
-            'error': f'Usuario con ID {user_id} no encontrado'
-        }, status=status.HTTP_404_NOT_FOUND)
-    
+        return Response(
+            {"error": f"Usuario con ID {user_id} no encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
+
     # Validar que el usuario objetivo sea usuario regular
-    if target_user.role != 'user':
-        return Response({
-            'error': f'Solo se pueden ascender usuarios regulares a administradores. Usuario actual: {target_user.role}'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
+    if target_user.role != "user":
+        return Response(
+            {
+                "error": f"Solo se pueden ascender usuarios regulares a administradores. Usuario actual: {target_user.role}"
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     # Ascender a admin
-    target_user.role = 'admin'
+    target_user.role = "admin"
     target_user.save()
-    
-    return Response({
-        'message': f'Usuario {target_user.username} ascendido a administrador exitosamente',
-        'user': {
-            'id': target_user.id,
-            'username': target_user.username,
-            'role': target_user.role,
-            'is_verified': target_user.is_verified
-        }
-    }, status=status.HTTP_200_OK)
+
+    return Response(
+        {
+            "message": f"Usuario {target_user.username} ascendido a administrador exitosamente",
+            "user": {
+                "id": target_user.id,
+                "username": target_user.username,
+                "role": target_user.role,
+                "is_verified": target_user.is_verified,
+            },
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
-@api_view(['PATCH'])
+@api_view(["PATCH"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_edit_user_view(request, user_id):
@@ -283,118 +286,126 @@ def admin_edit_user_view(request, user_id):
     try:
         target_user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({
-            'error': f'Usuario con ID {user_id} no encontrado'
-        }, status=status.HTTP_404_NOT_FOUND)
-    
+        return Response(
+            {"error": f"Usuario con ID {user_id} no encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
+
     # Prevenir que un admin edite otro admin (excepto a sí mismo)
-    if target_user.role == 'admin' and target_user != request.user:
-        return Response({
-            'error': 'No se puede editar información de otros administradores'
-        }, status=status.HTTP_403_FORBIDDEN)
-    
+    if target_user.role == "admin" and target_user != request.user:
+        return Response(
+            {"error": "No se puede editar información de otros administradores"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     # Campos editables básicos
-    basic_fields = ['first_name', 'last_name', 'email', 'phone', 'identification']
+    basic_fields = ["first_name", "last_name", "email", "phone", "identification"]
     update_data = {k: v for k, v in request.data.items() if k in basic_fields}
-    
+
     # Campos administrativos especiales
     admin_fields = {}
     changes_made = []
-    
+
     # Manejo de cambio de rol
-    if 'role' in request.data:
-        new_role = request.data['role']
-        if new_role in ['admin', 'user']:
+    if "role" in request.data:
+        new_role = request.data["role"]
+        if new_role in ["admin", "user"]:
             if target_user.role != new_role:
                 # Solo permitir ascender usuarios regulares a admins
-                if target_user.role == 'user' and new_role == 'admin':
-                    admin_fields['role'] = new_role
-                    changes_made.append(f'ascendido a {new_role}')
+                if target_user.role == "user" and new_role == "admin":
+                    admin_fields["role"] = new_role
+                    changes_made.append(f"ascendido a {new_role}")
                 # Permitir degradar admins a usuarios regulares (solo para casos especiales)
-                elif target_user.role == 'admin' and new_role == 'user':
-                    admin_fields['role'] = new_role
-                    changes_made.append(f'cambiado a {new_role}')
+                elif target_user.role == "admin" and new_role == "user":
+                    admin_fields["role"] = new_role
+                    changes_made.append(f"cambiado a {new_role}")
                 else:
-                    return Response({
-                        'error': f'Cambio de rol inválido: de {target_user.role} a {new_role}'
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"error": f"Cambio de rol inválido: de {target_user.role} a {new_role}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
         else:
-            return Response({
-                'error': 'Rol inválido. Solo se permite "admin" o "user"'
-            }, status=status.HTTP_400_BAD_REQUEST)
-    
+            return Response(
+                {"error": 'Rol inválido. Solo se permite "admin" o "user"'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
     # Manejo de verificación
-    if 'is_verified' in request.data:
-        new_verification = request.data['is_verified']
+    if "is_verified" in request.data:
+        new_verification = request.data["is_verified"]
         # Convertir string a boolean si es necesario
         if isinstance(new_verification, str):
-            if new_verification.lower() == 'true':
+            if new_verification.lower() == "true":
                 new_verification = True
-            elif new_verification.lower() == 'false':
+            elif new_verification.lower() == "false":
                 new_verification = False
             else:
-                return Response({
-                    'error': 'is_verified debe ser true o false'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "is_verified debe ser true o false"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         elif not isinstance(new_verification, bool):
-            return Response({
-                'error': 'is_verified debe ser true o false'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "is_verified debe ser true o false"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         if target_user.is_verified != new_verification:
-            admin_fields['is_verified'] = new_verification
-            admin_fields['verified_by'] = request.user if new_verification else None
+            admin_fields["is_verified"] = new_verification
+            admin_fields["verified_by"] = request.user if new_verification else None
             # Marcar que la verificación cambió para activar el signal
             target_user._verification_changed = True
-            changes_made.append('verificado' if new_verification else 'desverificado')
-    
+            changes_made.append("verificado" if new_verification else "desverificado")
+
     # Verificar que al menos hay algo que actualizar
     if not update_data and not admin_fields:
-        return Response({
-            'error': 'No se proporcionaron campos válidos para actualizar'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(
+            {"error": "No se proporcionaron campos válidos para actualizar"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     # Actualizar campos básicos
     for field, value in update_data.items():
         if getattr(target_user, field) != value:
             setattr(target_user, field, value)
-            changes_made.append(f'{field} actualizado')
-    
+            changes_made.append(f"{field} actualizado")
+
     # Actualizar campos administrativos
     for field, value in admin_fields.items():
         setattr(target_user, field, value)
-    
+
     try:
         target_user.save()
     except Exception as e:
-        return Response({
-            'error': f'Error al actualizar usuario: {str(e)}'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(
+            {"error": f"Error al actualizar usuario: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
     # Mensaje de respuesta descriptivo
     if changes_made:
-        changes_text = ', '.join(changes_made)
-        message = f'Usuario {target_user.username} actualizado exitosamente: {changes_text}'
+        changes_text = ", ".join(changes_made)
+        message = f"Usuario {target_user.username} actualizado exitosamente: {changes_text}"
     else:
-        message = f'Usuario {target_user.username} - sin cambios realizados'
-    
-    return Response({
-        'message': message,
-        'user': {
-            'id': target_user.id,
-            'username': target_user.username,
-            'first_name': target_user.first_name,
-            'last_name': target_user.last_name,
-            'email': target_user.email,
-            'phone': target_user.phone,
-            'identification': target_user.identification,
-            'role': target_user.role,
-            'is_verified': target_user.is_verified
-        }
-    }, status=status.HTTP_200_OK)
+        message = f"Usuario {target_user.username} - sin cambios realizados"
+
+    return Response(
+        {
+            "message": message,
+            "user": {
+                "id": target_user.id,
+                "username": target_user.username,
+                "first_name": target_user.first_name,
+                "last_name": target_user.last_name,
+                "email": target_user.email,
+                "phone": target_user.phone,
+                "identification": target_user.identification,
+                "role": target_user.role,
+                "is_verified": target_user.is_verified,
+            },
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_user_detail_view(request, user_id):
@@ -404,29 +415,32 @@ def admin_user_detail_view(request, user_id):
     try:
         target_user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({
-            'error': f'Usuario con ID {user_id} no encontrado'
-        }, status=status.HTTP_404_NOT_FOUND)
-    
-    return Response({
-        'user': {
-            'id': target_user.id,
-            'username': target_user.username,
-            'first_name': target_user.first_name,
-            'last_name': target_user.last_name,
-            'email': target_user.email,
-            'phone': target_user.phone,
-            'identification': target_user.identification,
-            'role': target_user.role,
-            'is_verified': target_user.is_verified,
-            'date_joined': target_user.date_joined,
-            'last_login': target_user.last_login,
-            'is_active': target_user.is_active
-        }
-    }, status=status.HTTP_200_OK)
+        return Response(
+            {"error": f"Usuario con ID {user_id} no encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    return Response(
+        {
+            "user": {
+                "id": target_user.id,
+                "username": target_user.username,
+                "first_name": target_user.first_name,
+                "last_name": target_user.last_name,
+                "email": target_user.email,
+                "phone": target_user.phone,
+                "identification": target_user.identification,
+                "role": target_user.role,
+                "is_verified": target_user.is_verified,
+                "date_joined": target_user.date_joined,
+                "last_login": target_user.last_login,
+                "is_active": target_user.is_active,
+            }
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_users_search_view(request):
@@ -434,83 +448,90 @@ def admin_users_search_view(request):
     Vista para buscar usuarios con filtros múltiples
     """
     queryset = User.objects.all()
-    
+
     # Filtro por rol
-    role = request.query_params.get('role')
-    if role in ['admin', 'user']:
+    role = request.query_params.get("role")
+    if role in ["admin", "user"]:
         queryset = queryset.filter(role=role)
-    
+
     # Filtro por estado de verificación
-    is_verified = request.query_params.get('is_verified')
-    if is_verified in ['true', 'false']:
-        queryset = queryset.filter(is_verified=is_verified.lower() == 'true')
-    
+    is_verified = request.query_params.get("is_verified")
+    if is_verified in ["true", "false"]:
+        queryset = queryset.filter(is_verified=is_verified.lower() == "true")
+
     # Filtro por estado activo
-    is_active = request.query_params.get('is_active')
-    if is_active in ['true', 'false']:
-        queryset = queryset.filter(is_active=is_active.lower() == 'true')
-    
+    is_active = request.query_params.get("is_active")
+    if is_active in ["true", "false"]:
+        queryset = queryset.filter(is_active=is_active.lower() == "true")
+
     # Búsqueda por texto (username, email, nombre)
-    search = request.query_params.get('search')
+    search = request.query_params.get("search")
     if search:
         from django.db.models import Q
+
         queryset = queryset.filter(
-            Q(username__icontains=search) |
-            Q(email__icontains=search) |
-            Q(first_name__icontains=search) |
-            Q(last_name__icontains=search) |
-            Q(identification__icontains=search)
+            Q(username__icontains=search)
+            | Q(email__icontains=search)
+            | Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(identification__icontains=search)
         )
-    
+
     # Ordenamiento
-    order_by = request.query_params.get('order_by', 'date_joined')
-    if order_by.startswith('-'):
+    order_by = request.query_params.get("order_by", "date_joined")
+    if order_by.startswith("-"):
         order_field = order_by[1:]
     else:
         order_field = order_by
-    
-    valid_order_fields = ['username', 'email', 'role', 'is_verified', 'date_joined']
+
+    valid_order_fields = ["username", "email", "role", "is_verified", "date_joined"]
     if order_field in valid_order_fields:
         queryset = queryset.order_by(order_by)
-    
+
     # Paginación básica
-    page_size = min(int(request.query_params.get('page_size', 20)), 100)  # Max 100
-    page = int(request.query_params.get('page', 1))
+    page_size = min(int(request.query_params.get("page_size", 20)), 100)  # Max 100
+    page = int(request.query_params.get("page", 1))
     start = (page - 1) * page_size
     end = start + page_size
-    
+
     total_count = queryset.count()
     users = queryset[start:end]
-    
-    return Response({
-        'users': [{
-            'id': user.id,
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email,
-            'role': user.role,
-            'is_verified': user.is_verified,
-            'is_active': user.is_active,
-            'date_joined': user.date_joined
-        } for user in users],
-        'pagination': {
-            'total_count': total_count,
-            'page': page,
-            'page_size': page_size,
-            'total_pages': (total_count + page_size - 1) // page_size
+
+    return Response(
+        {
+            "users": [
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "role": user.role,
+                    "is_verified": user.is_verified,
+                    "is_active": user.is_active,
+                    "date_joined": user.date_joined,
+                }
+                for user in users
+            ],
+            "pagination": {
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": (total_count + page_size - 1) // page_size,
+            },
+            "filters_applied": {
+                "role": role,
+                "is_verified": is_verified,
+                "is_active": is_active,
+                "search": search,
+                "order_by": order_by,
+            },
         },
-        'filters_applied': {
-            'role': role,
-            'is_verified': is_verified,
-            'is_active': is_active,
-            'search': search,
-            'order_by': order_by
-        }
-    }, status=status.HTTP_200_OK)
+        status=status.HTTP_200_OK,
+    )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsVerifiedUser])
 def dashboard_view(request):
@@ -518,100 +539,108 @@ def dashboard_view(request):
     Vista básica del dashboard según el rol del usuario
     """
     user = request.user
-    
+
     if user.is_admin:
         # Dashboard para administradores
         total_users = User.objects.count()
-        pending_verifications = User.objects.filter(is_verified=False, role='user').count()
-        total_users_regular = User.objects.filter(role='user').count()
-        verified_users = User.objects.filter(role='user', is_verified=True).count()
-        
-        return Response({
-            'user': UserProfileCompleteSerializer(user).data,
-            'dashboard_type': 'admin',
-            'stats': {
-                'total_users': total_users,
-                'pending_verifications': pending_verifications,
-                'total_users_regular': total_users_regular,
-                'verified_users': verified_users,
-            },
-            'message': f'Bienvenido al panel de administrador, {user.get_full_name()}'
-        })
-    
+        pending_verifications = User.objects.filter(is_verified=False, role="user").count()
+        total_users_regular = User.objects.filter(role="user").count()
+        verified_users = User.objects.filter(role="user", is_verified=True).count()
+
+        return Response(
+            {
+                "user": UserProfileCompleteSerializer(user).data,
+                "dashboard_type": "admin",
+                "stats": {
+                    "total_users": total_users,
+                    "pending_verifications": pending_verifications,
+                    "total_users_regular": total_users_regular,
+                    "verified_users": verified_users,
+                },
+                "message": f"Bienvenido al panel de administrador, {user.get_full_name()}",
+            }
+        )
+
     else:
         # Dashboard para usuarios regulares
-        return Response({
-            'user': UserProfileCompleteSerializer(user).data,
-            'dashboard_type': 'user',
-            'stats': {
-                'account_status': 'verified' if user.is_verified else 'pending',
-                'verification_date': user.verification_date,
-            },
-            'message': f'Bienvenido, {user.get_full_name()}'
-        })
+        return Response(
+            {
+                "user": UserProfileCompleteSerializer(user).data,
+                "dashboard_type": "user",
+                "stats": {
+                    "account_status": "verified" if user.is_verified else "pending",
+                    "verification_date": user.verification_date,
+                },
+                "message": f"Bienvenido, {user.get_full_name()}",
+            }
+        )
 
-@api_view(['DELETE'])
+
+@api_view(["DELETE"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])  # usa tu permiso de admin
 def admin_delete_user_view(request, user_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return Response({'error': f'Usuario con ID {user_id} no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": f"Usuario con ID {user_id} no encontrado"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     user.delete()  # esto dispara post_delete y enviará el correo
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_own_account_view(request):
     """
     Permite a los usuarios autenticados eliminar su propia cuenta.
     Requiere confirmación mediante contraseña por seguridad.
-    
+
     Body parameters:
     - password (string): Contraseña actual del usuario para confirmar la eliminación
-    
+
     Returns:
     - 200: Cuenta eliminada exitosamente
     - 400: Datos inválidos o faltantes
     - 401: Contraseña incorrecta
     - 403: Usuario administrador (no permitido)
     """
-    serializer = DeleteOwnAccountSerializer(data=request.data, context={'request': request})
-    
+    serializer = DeleteOwnAccountSerializer(data=request.data, context={"request": request})
+
     if not serializer.is_valid():
-        return Response({
-            'error': 'Datos inválidos',
-            'details': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(
+            {"error": "Datos inválidos", "details": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     try:
         # Guardar información antes de eliminar para la respuesta
         user_info = {
-            'id': request.user.id,
-            'username': request.user.username,
-            'email': request.user.email,
-            'deleted_at': timezone.now().isoformat()
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+            "deleted_at": timezone.now().isoformat(),
         }
-        
+
         # Eliminar la cuenta - esto dispara las señales post_delete
         request.user.delete()
-        
-        return Response({
-            'message': 'Tu cuenta ha sido eliminada exitosamente',
-            'user_info': user_info
-        }, status=status.HTTP_200_OK)
-        
+
+        return Response(
+            {"message": "Tu cuenta ha sido eliminada exitosamente", "user_info": user_info},
+            status=status.HTTP_200_OK,
+        )
+
     except Exception as e:
-        return Response({
-            'error': f'Error interno al eliminar la cuenta: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"error": f"Error interno al eliminar la cuenta: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def password_reset_request_view(request):
     serializer = PasswordResetRequestSerializer(data=request.data)
@@ -619,58 +648,66 @@ def password_reset_request_view(request):
         result = serializer.save()
         # Respuesta explícita según existencia
         # Mantener mensaje genérico esperado por los tests
-        if not result.get('exists'):
-            return Response({
-                'message': 'El email no existe en la base de datos',
-                'exists': False
-            }, status=status.HTTP_200_OK)
+        if not result.get("exists"):
+            return Response(
+                {"message": "El email no existe en la base de datos", "exists": False},
+                status=status.HTTP_200_OK,
+            )
 
         response_payload = {
-            'message': 'Si el email existe, recibirás un enlace de restablecimiento',
-            'exists': True
+            "message": "Si el email existe, recibirás un enlace de restablecimiento",
+            "exists": True,
         }
-        if 'reset_url' in result:
-            response_payload['reset_url'] = result['reset_url']
-            response_payload['note'] = 'Enlace de desarrollo - copia y pega en el navegador'
+        if "reset_url" in result:
+            response_payload["reset_url"] = result["reset_url"]
+            response_payload["note"] = "Enlace de desarrollo - copia y pega en el navegador"
         return Response(response_payload, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'POST'])
+
+@api_view(["GET", "POST"])
 @permission_classes([AllowAny])
 def password_reset_confirm_view(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         # Validar token y devolver datos del usuario
-        token = request.query_params.get('token')
+        token = request.query_params.get("token")
         if not token:
-            return Response({'error': 'Token no proporcionado'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"error": "Token no proporcionado"}, status=status.HTTP_400_BAD_REQUEST)
+
         # Verificar que el token existe y es válido
         from users.models import PasswordReset
         import hashlib
-        
+
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         try:
             password_reset = PasswordReset.objects.get(token_hash=token_hash)
             if not password_reset.is_valid():
-                return Response({'error': 'Token expirado o ya usado'}, status=status.HTTP_400_BAD_REQUEST)
-            
+                return Response(
+                    {"error": "Token expirado o ya usado"}, status=status.HTTP_400_BAD_REQUEST
+                )
+
             # Devolver datos del usuario para el frontend
-            return Response({
-                'valid': True,
-                'user': {
-                    'id': password_reset.user.id,
-                    'username': password_reset.user.username,
-                    'email': password_reset.user.email,
-                    'full_name': password_reset.user.get_full_name()
-                }
-            }, status=status.HTTP_200_OK)
-            
+            return Response(
+                {
+                    "valid": True,
+                    "user": {
+                        "id": password_reset.user.id,
+                        "username": password_reset.user.username,
+                        "email": password_reset.user.email,
+                        "full_name": password_reset.user.get_full_name(),
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+
         except PasswordReset.DoesNotExist:
-            return Response({'error': 'Token inválido'}, status=status.HTTP_400_BAD_REQUEST)
-    
+            return Response({"error": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
+
     else:  # POST
         serializer = PasswordResetConfirmSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Contraseña actualizada correctamente'}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Contraseña actualizada correctamente"}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

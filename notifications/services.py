@@ -12,7 +12,7 @@ class NotificationService:
     """
     Servicio básico para manejar notificaciones - versión simplificada
     """
-    
+
     @staticmethod
     def create_notification(user, notification_type, title, message, related_object_id=None):
         """
@@ -24,16 +24,16 @@ class NotificationService:
                 notification_type=notification_type,
                 title=title,
                 message=message,
-                related_object_id=related_object_id
+                related_object_id=related_object_id,
             )
-            
+
             logger.info(f"Notificación creada: {notification.id} para usuario {user.username}")
             return notification
-            
+
         except Exception as e:
             logger.error(f"Error creando notificación: {str(e)}")
             return None
-    
+
     @staticmethod
     def mark_as_read(notification_id, user):
         """
@@ -44,17 +44,19 @@ class NotificationService:
             notification.read = True
             notification.read_timestamp = timezone.now()
             notification.save()
-            
+
             logger.info(f"Notificación {notification_id} marcada como leída")
             return True
-            
+
         except Notification.DoesNotExist:
-            logger.warning(f"Notificación {notification_id} no encontrada para usuario {user.username}")
+            logger.warning(
+                f"Notificación {notification_id} no encontrada para usuario {user.username}"
+            )
             return False
         except Exception as e:
             logger.error(f"Error marcando notificación como leída: {str(e)}")
             return False
-    
+
     @staticmethod
     def get_user_notifications(user, unread_only=False, limit=None):
         """
@@ -62,21 +64,21 @@ class NotificationService:
         """
         try:
             queryset = Notification.objects.filter(user=user)
-            
+
             if unread_only:
                 queryset = queryset.filter(read=False)
-            
-            queryset = queryset.order_by('-created_at')
-            
+
+            queryset = queryset.order_by("-created_at")
+
             if limit:
                 queryset = queryset[:limit]
-            
+
             return queryset
-            
+
         except Exception as e:
             logger.error(f"Error obteniendo notificaciones: {str(e)}")
             return Notification.objects.none()
-    
+
     @staticmethod
     def send_system_notification(title, message, user_ids=None):
         """
@@ -87,21 +89,21 @@ class NotificationService:
                 users = User.objects.filter(id__in=user_ids, is_active=True)
             else:
                 users = User.objects.filter(is_active=True)
-            
+
             notifications_created = 0
             for user in users:
                 notification = NotificationService.create_notification(
                     user=user,
                     notification_type=Notification.SYSTEM_ALERT,
                     title=title,
-                    message=message
+                    message=message,
                 )
                 if notification:
                     notifications_created += 1
-            
+
             logger.info(f"Enviadas {notifications_created} notificaciones del sistema")
             return notifications_created
-            
+
         except Exception as e:
             logger.error(f"Error enviando notificaciones del sistema: {str(e)}")
             return 0
@@ -111,7 +113,7 @@ class BasicCheckerService:
     """
     Servicio básico para verificaciones del sistema - versión simplificada
     """
-    
+
     @staticmethod
     def check_unread_notifications():
         """
@@ -120,23 +122,27 @@ class BasicCheckerService:
         try:
             # Usuarios con más de 10 notificaciones no leídas
             users_with_many_unread = User.objects.annotate(
-                unread_count=models.Count('notifications_received', filter=models.Q(notifications_received__read=False))
+                unread_count=models.Count(
+                    "notifications_received", filter=models.Q(notifications_received__read=False)
+                )
             ).filter(unread_count__gt=10)
-            
+
             alerts = []
             for user in users_with_many_unread:
-                alerts.append({
-                    'user': user,
-                    'unread_count': user.unread_count,
-                    'severity': 'warning' if user.unread_count < 20 else 'critical'
-                })
-            
+                alerts.append(
+                    {
+                        "user": user,
+                        "unread_count": user.unread_count,
+                        "severity": "warning" if user.unread_count < 20 else "critical",
+                    }
+                )
+
             return alerts
-            
+
         except Exception as e:
             logger.error(f"Error verificando notificaciones no leídas: {str(e)}")
             return []
-    
+
     @staticmethod
     def check_inactive_users():
         """
@@ -146,25 +152,24 @@ class BasicCheckerService:
             # Usuarios que no han hecho login en 30 días
             thirty_days_ago = timezone.now() - timedelta(days=30)
             inactive_users = User.objects.filter(
-                is_active=True,
-                last_login__lt=thirty_days_ago
+                is_active=True, last_login__lt=thirty_days_ago
             ) | User.objects.filter(
-                is_active=True,
-                last_login__isnull=True,
-                date_joined__lt=thirty_days_ago
+                is_active=True, last_login__isnull=True, date_joined__lt=thirty_days_ago
             )
-            
+
             alerts = []
             for user in inactive_users:
                 days_inactive = (timezone.now() - (user.last_login or user.date_joined)).days
-                alerts.append({
-                    'user': user,
-                    'days_inactive': days_inactive,
-                    'severity': 'warning' if days_inactive < 60 else 'critical'
-                })
-            
+                alerts.append(
+                    {
+                        "user": user,
+                        "days_inactive": days_inactive,
+                        "severity": "warning" if days_inactive < 60 else "critical",
+                    }
+                )
+
             return alerts
-            
+
         except Exception as e:
             logger.error(f"Error verificando usuarios inactivos: {str(e)}")
             return []

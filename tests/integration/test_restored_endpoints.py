@@ -6,25 +6,23 @@ Script para probar todos los endpoints restaurados
 import requests
 import json
 
+
 def test_restored_endpoints():
     """Probar endpoints restaurados"""
     base_url = "http://localhost:8000"
-    
+
     print("Probando endpoints restaurados...")
     print("=" * 60)
-    
+
     # 1. Login para obtener token
     print("1. Obteniendo token...")
-    login_data = {
-        "username": "admin",
-        "password": "admin123456"
-    }
-    
+    login_data = {"username": "admin", "password": "admin123456"}
+
     try:
         response = requests.post(f"{base_url}/api/auth/login/", json=login_data)
         if response.status_code == 200:
             data = response.json()
-            token = data.get('token')
+            token = data.get("token")
             print(f"OK - Token obtenido: {token[:20]}...")
         else:
             print(f"Error en login: {response.text}")
@@ -32,9 +30,9 @@ def test_restored_endpoints():
     except Exception as e:
         print(f"Error: {e}")
         return
-    
+
     headers = {"Authorization": f"Token {token}"}
-    
+
     # 2. Probar notificaciones
     print("\n2. Probando notificaciones:")
     endpoints = [
@@ -43,7 +41,7 @@ def test_restored_endpoints():
         "/api/notifications/unread-count/",
         "/api/notifications/summary/",
     ]
-    
+
     for endpoint in endpoints:
         try:
             response = requests.get(f"{base_url}{endpoint}", headers=headers)
@@ -53,7 +51,7 @@ def test_restored_endpoints():
                 print(f"  -> Response keys: {list(data.keys())}")
         except Exception as e:
             print(f"  -> Error: {e}")
-    
+
     # 3. Probar salas
     print("\n3. Probando salas:")
     try:
@@ -64,7 +62,7 @@ def test_restored_endpoints():
             print(f"  -> Rooms count: {len(data)}")
     except Exception as e:
         print(f"  -> Error: {e}")
-    
+
     # 4. Probar entradas de admin
     print("\n4. Probando entradas de admin:")
     try:
@@ -76,7 +74,7 @@ def test_restored_endpoints():
             print(f"  -> Response keys: {list(data.keys())}")
     except Exception as e:
         print(f"  -> Error: {e}")
-    
+
     # 5. Probar estadísticas de admin
     print("\n5. Probando estadísticas de admin:")
     try:
@@ -87,7 +85,7 @@ def test_restored_endpoints():
             print(f"  -> Stats keys: {list(data.keys())}")
     except Exception as e:
         print(f"  -> Error: {e}")
-    
+
     print("\n" + "=" * 60)
     print("RESUMEN:")
     print("✅ Endpoints de notificaciones restaurados")
@@ -95,8 +93,10 @@ def test_restored_endpoints():
     print("✅ Sistema de paginación implementado")
     print("✅ Estructura de respuestas verificada")
 
+
 def main():
     test_restored_endpoints()
+
 
 if __name__ == "__main__":
     main()

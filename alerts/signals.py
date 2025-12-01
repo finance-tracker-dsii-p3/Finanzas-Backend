@@ -17,9 +17,9 @@ def check_budget_after_transaction(sender, instance, **kwargs):
     - Se apoya en created_at para identificar el mes de la alerta.
     """
     # Solo procesar en creación (no en actualización)
-    if kwargs.get('created', False) is False:
+    if kwargs.get("created", False) is False:
         return
-    
+
     # Solo gastos
     if instance.type != 2:
         return
@@ -30,10 +30,10 @@ def check_budget_after_transaction(sender, instance, **kwargs):
 
     category = instance.category
     user = instance.user
-    
+
     # Obtener la moneda de la cuenta de origen de la transacción
     transaction_currency = instance.origin_account.currency if instance.origin_account else None
-    
+
     if not transaction_currency:
         return
 
@@ -42,7 +42,7 @@ def check_budget_after_transaction(sender, instance, **kwargs):
         category=category,
         user=user,
         is_active=True,
-        currency=transaction_currency  # Solo presupuestos con la misma moneda
+        currency=transaction_currency,  # Solo presupuestos con la misma moneda
     )
 
     for budget in budgets:
@@ -63,7 +63,7 @@ def check_budget_after_transaction(sender, instance, **kwargs):
         # Usamos la fecha de la transacción para determinar el mes de la alerta
         transaction_year = instance.date.year
         transaction_month = instance.date.month
-        
+
         # Buscar si ya existe una alerta para este presupuesto/tipo/mes
         # usando los campos transaction_year y transaction_month
         existing = Alert.objects.filter(

@@ -3,11 +3,10 @@ from goals.models import Goal
 
 
 class GoalDetailSerializer(serializers.ModelSerializer):
-    
     progress_percentage = serializers.SerializerMethodField()
     remaining_amount = serializers.SerializerMethodField()
     is_completed = serializers.SerializerMethodField()
-    currency_display = serializers.CharField(source='get_currency_display', read_only=True)
+    currency_display = serializers.CharField(source="get_currency_display", read_only=True)
 
     class Meta:
         model = Goal
@@ -49,7 +48,6 @@ class GoalDetailSerializer(serializers.ModelSerializer):
 
 
 class GoalSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Goal
         fields = [
@@ -89,7 +87,6 @@ class GoalSerializer(serializers.ModelSerializer):
 
 
 class GoalUpdateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Goal
         fields = [

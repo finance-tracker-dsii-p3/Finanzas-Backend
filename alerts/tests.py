@@ -51,7 +51,7 @@ class BudgetAlertsTests(TestCase):
             user=self.user,
             category=self.category,
             amount=Decimal("400000.00"),
-            currency='COP',  # Misma moneda que la cuenta
+            currency="COP",  # Misma moneda que la cuenta
             calculation_mode=Budget.BASE,
             period=Budget.MONTHLY,
             start_date=date(2025, 11, 1),

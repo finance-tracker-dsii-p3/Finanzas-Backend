@@ -69,4 +69,3 @@ class NotificationsApiTests(TestCase):
         }
         resp = self.client.post("/api/notifications/notifications/", bad_payload, format="json")
         self.assertEqual(resp.status_code, 400)
-

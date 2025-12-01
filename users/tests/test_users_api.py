@@ -61,4 +61,3 @@ class UsersApiTests(TestCase):
         url = "/api/auth/admin/users/"
         response = self.client.get(url, HTTP_AUTHORIZATION=f"Token {token.key}")
         self.assertEqual(response.status_code, 200)
-

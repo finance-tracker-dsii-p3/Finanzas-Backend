@@ -3,11 +3,13 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'reports', views.ReportViewSet, basename='report')  # CRUD de reportes generales
+router.register(r"reports", views.ReportViewSet, basename="report")  # CRUD de reportes generales
 
 urlpatterns = [
-    path('', include(router.urls)),                                     # GET/POST/PUT/PATCH/DELETE - CRUD de reportes
-    path('generate/', views.generate_report, name='generate-report'),   # POST - Generar nuevo reporte
+    path("", include(router.urls)),  # GET/POST/PUT/PATCH/DELETE - CRUD de reportes
+    path(
+        "generate/", views.generate_report, name="generate-report"
+    ),  # POST - Generar nuevo reporte
     # Rutas generadas automáticamente:
     # GET /reports/ - Listar reportes
     # POST /reports/ - Crear reporte

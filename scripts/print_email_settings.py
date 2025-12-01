@@ -13,6 +13,7 @@ def main() -> int:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
     try:
         import django  # type: ignore
+
         django.setup()
     except Exception as exc:  # pragma: no cover
         print(f"ERROR: No se pudo inicializar Django: {exc}")
@@ -31,7 +32,9 @@ def main() -> int:
 
     recipient = os.environ.get("TEST_EMAIL_RECIPIENT") or getattr(settings, "EMAIL_HOST_USER", None)
     if not recipient:
-        print("ADVERTENCIA: No hay destinatario para prueba (TEST_EMAIL_RECIPIENT ni EMAIL_HOST_USER). Saltando envío.")
+        print(
+            "ADVERTENCIA: No hay destinatario para prueba (TEST_EMAIL_RECIPIENT ni EMAIL_HOST_USER). Saltando envío."
+        )
         return 0
 
     print(f"\nIntentando envío de prueba a: {recipient}")
@@ -52,5 +55,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-

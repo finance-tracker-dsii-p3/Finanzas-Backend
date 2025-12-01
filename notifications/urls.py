@@ -3,10 +3,10 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'notifications', views.NotificationViewSet, basename='notification')
+router.register(r"notifications", views.NotificationViewSet, basename="notification")
 
 urlpatterns = [
-    path('', include(router.urls)),  # CRUD de notificaciones
+    path("", include(router.urls)),  # CRUD de notificaciones
     # Rutas del ViewSet generadas automáticamente:
     # GET /notifications/ - Listar notificaciones
     # POST /notifications/ - Crear notificación (solo admins)

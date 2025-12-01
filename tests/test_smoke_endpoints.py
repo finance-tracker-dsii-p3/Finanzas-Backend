@@ -13,4 +13,3 @@ class SmokeEndpointsTests(TestCase):
         response = self.client.get("/api/auth/login/")
         # If it's POST-only it may be 405, but not 404
         self.assertNotEqual(response.status_code, 404)
-

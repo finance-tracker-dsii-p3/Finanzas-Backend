@@ -8,139 +8,131 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-oqquaff+@v#nz5%0ujbfzn0k7z=&%^&&zgnz#x9^203qc-ej_!')
+SECRET_KEY = env(
+    "SECRET_KEY", default="django-insecure-oqquaff+@v#nz5%0ujbfzn0k7z=&%^&&zgnz#x9^203qc-ej_!"
+)
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # Third party apps
-    'rest_framework',
-    'rest_framework.authtoken',
-    'corsheaders',
-    
-    # Local apps 
-    'users.apps.UsersConfig',
-    'notifications',
-    'dashboard',
-    'reports',
-    'export',
-    
+    "rest_framework",
+    "rest_framework.authtoken",
+    "corsheaders",
+    # Local apps
+    "users.apps.UsersConfig",
+    "notifications",
+    "dashboard",
+    "reports",
+    "export",
     # HU-04 - Cuentas financieras
-    'accounts',
-    
+    "accounts",
     # HU-05 - Categorías de ingresos y gastos
-    'categories',
-    
+    "categories",
     # HU-07 - Presupuestos por categoría
-    'budgets',
-
+    "budgets",
     # HU-08 - Alertas de presupuestos
-    'alerts.apps.AlertsConfig',
-
+    "alerts.apps.AlertsConfig",
     # HU-09 - Movimientos
-    'transactions.apps.TransactionsConfig',
-
+    "transactions.apps.TransactionsConfig",
     # HU-11 - Metas de ahorro
-    'goals',
-
+    "goals",
     # HU-12 - Reglas automáticas
-    'rules.apps.RulesConfig',
-
+    "rules.apps.RulesConfig",
     # HU-13 - Indicadores y gráficos del período, y HU-14 - Comparación básica entre períodos (ingresos vs. gastos)
-    'analytics.apps.AnalyticsConfig',
+    "analytics.apps.AnalyticsConfig",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'finanzas_back.middleware.APIErrorHandlerMiddleware',  # HU-12 - Mejor manejo de errores
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "finanzas_back.middleware.APIErrorHandlerMiddleware",  # HU-12 - Mejor manejo de errores
 ]
 
-ROOT_URLCONF = 'finanzas_back.urls'
+ROOT_URLCONF = "finanzas_back.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'finanzas_back.wsgi.application'
+WSGI_APPLICATION = "finanzas_back.wsgi.application"
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'es-co'
-TIME_ZONE = 'America/Bogota'
+LANGUAGE_CODE = "es-co"
+TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
     ],
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'EXCEPTION_HANDLER': 'finanzas_back.middleware.custom_exception_handler',  # HU-12 - Mejor manejo de errores
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    "EXCEPTION_HANDLER": "finanzas_back.middleware.custom_exception_handler",  # HU-12 - Mejor manejo de errores
 }
 
 # Media files configuration
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

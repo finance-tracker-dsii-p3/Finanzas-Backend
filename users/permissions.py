@@ -5,11 +5,12 @@ class IsAdminUser(BasePermission):
     """
     Permiso para verificar si el usuario es administrador
     """
+
     def has_permission(self, request, view):
         return (
-            request.user.is_authenticated and 
-            request.user.role == 'admin' and 
-            request.user.is_verified
+            request.user.is_authenticated
+            and request.user.role == "admin"
+            and request.user.is_verified
         )
 
 
@@ -17,12 +18,13 @@ class IsVerifiedUser(BasePermission):
     """
     Permiso para verificar si el usuario está verificado
     """
+
     def has_permission(self, request, view):
-        user = getattr(request, 'user', None)
+        user = getattr(request, "user", None)
         return bool(
-            user is not None and
-            getattr(user, 'is_authenticated', False) and
-            getattr(user, 'is_verified', False)
+            user is not None
+            and getattr(user, "is_authenticated", False)
+            and getattr(user, "is_verified", False)
         )
 
 
@@ -30,13 +32,14 @@ class IsRegularUser(BasePermission):
     """
     Permiso para verificar si el usuario es un usuario regular verificado
     """
+
     def has_permission(self, request, view):
-        user = getattr(request, 'user', None)
+        user = getattr(request, "user", None)
         return bool(
-            user is not None and
-            getattr(user, 'is_authenticated', False) and 
-            getattr(user, 'role', None) == 'user' and 
-            getattr(user, 'is_verified', False)
+            user is not None
+            and getattr(user, "is_authenticated", False)
+            and getattr(user, "role", None) == "user"
+            and getattr(user, "is_verified", False)
         )
 
 
@@ -44,14 +47,15 @@ class CanManageUsers(BasePermission):
     """
     Permiso para gestionar usuarios (solo administradores de la plataforma financiera)
     """
+
     def has_permission(self, request, view):
-        user = getattr(request, 'user', None)
-        if not (user is not None and getattr(user, 'is_authenticated', False)):
+        user = getattr(request, "user", None)
+        if not (user is not None and getattr(user, "is_authenticated", False)):
             return False
-        
+
         # Solo administradores pueden gestionar usuarios
-        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            return getattr(user, 'is_admin', False) and getattr(user, 'is_verified', False)
-        
+        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+            return getattr(user, "is_admin", False) and getattr(user, "is_verified", False)
+
         # Para GET, cualquier usuario verificado puede ver la lista
-        return getattr(user, 'is_verified', False)
+        return getattr(user, "is_verified", False)

@@ -49,7 +49,7 @@ class Alert(models.Model):
         auto_now_add=True,
         help_text="Fecha de creación de la alerta",
     )
-    
+
     # Campos para identificar el mes/año de la transacción que generó la alerta
     # Esto permite tener alertas únicas por mes incluso si se crean en diferentes días
     transaction_year = models.IntegerField(

@@ -6,25 +6,26 @@ Script para probar el envio de emails reales (sin emojis)
 import requests
 import json
 
+
 def test_real_email():
     """Probar el envio de emails reales"""
     base_url = "http://localhost:8000"
-    
+
     print("Probando envio de emails reales...")
     print("=" * 60)
-    
+
     # 1. Probar restablecimiento de contraseña
     print("1. PROBAR RESTABLECIMIENTO DE CONTRASEÑA")
     reset_data = {"email": "admin@ejemplo.com"}
-    
+
     try:
         response = requests.post(f"{base_url}/api/auth/password/reset-request/", json=reset_data)
         print(f"   Status: {response.status_code}")
         print(f"   Response: {response.json()}")
-        
+
         if response.status_code == 200:
             data = response.json()
-            if 'reset_url' in data:
+            if "reset_url" in data:
                 print("   MODO DESARROLLO: Se devolvio enlace en respuesta")
             else:
                 print("   MODO PRODUCCION: Email enviado por SMTP")
@@ -33,14 +34,15 @@ def test_real_email():
             print(f"   ERROR: {response.text}")
     except Exception as e:
         print(f"   ERROR: {e}")
-    
+
     print("\n" + "=" * 60)
-    
+
     # 2. Probar registro de usuario
     print("2. PROBAR REGISTRO DE USUARIO")
     import random
+
     random_id = random.randint(1000, 9999)
-    
+
     user_data = {
         "username": f"testuser_{random_id}",
         "email": f"testuser_{random_id}@example.com",
@@ -50,14 +52,14 @@ def test_real_email():
         "last_name": "User",
         "identification": f"12345678{random_id}",
         "phone": "3001234567",
-        "role": "monitor"
+        "role": "monitor",
     }
-    
+
     try:
         response = requests.post(f"{base_url}/api/auth/register/", json=user_data)
         print(f"   Status: {response.status_code}")
         print(f"   Response: {response.json()}")
-        
+
         if response.status_code == 201:
             print("   USUARIO REGISTRADO EXITOSAMENTE")
             print("   Email de activacion enviado a los administradores")
@@ -66,7 +68,7 @@ def test_real_email():
             print(f"   ERROR AL REGISTRAR: {response.text}")
     except Exception as e:
         print(f"   ERROR: {e}")
-    
+
     print("\n" + "=" * 60)
     print("RESUMEN:")
     print("Configuracion de email real activada")
@@ -75,8 +77,10 @@ def test_real_email():
     print("No se muestran enlaces en consola")
     print("Revisa las bandejas de entrada de los destinatarios")
 
+
 def main():
     test_real_email()
+
 
 if __name__ == "__main__":
     main()

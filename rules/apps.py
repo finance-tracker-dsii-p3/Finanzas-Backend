@@ -2,6 +2,6 @@ from django.apps import AppConfig
 
 
 class RulesConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'rules'
-    verbose_name = 'Reglas Automáticas (HU-12)'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "rules"
+    verbose_name = "Reglas Automáticas (HU-12)"

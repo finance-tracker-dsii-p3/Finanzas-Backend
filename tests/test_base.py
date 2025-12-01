@@ -18,4 +18,3 @@ class BaseProjectTests(TestCase):
     def test_404_for_unknown_route(self):
         response = self.client.get("/definitely-not-found/")
         self.assertEqual(response.status_code, 404)
-

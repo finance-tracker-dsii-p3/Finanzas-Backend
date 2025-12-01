@@ -1,17 +1,18 @@
 """
 URLs para reglas automáticas (HU-12)
 """
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import AutomaticRuleViewSet
 
 # Configurar router para ViewSet
 router = DefaultRouter()
-router.register(r'', AutomaticRuleViewSet, basename='automaticRule')
+router.register(r"", AutomaticRuleViewSet, basename="automaticRule")
 
 urlpatterns = [
     # Incluir rutas del router
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
 
 # URLs disponibles:

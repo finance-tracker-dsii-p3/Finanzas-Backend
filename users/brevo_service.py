@@ -3,16 +3,17 @@ from django.conf import settings
 
 BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
+
 def send_email_via_brevo(to, subject, html_content, text_content=None):
     """
     Envía un correo usando Brevo API HTTP.
     """
-    brevo_api_key = getattr(settings, 'BREVO_API_KEY', None)
+    brevo_api_key = getattr(settings, "BREVO_API_KEY", None)
     if not brevo_api_key:
         raise ValueError("BREVO_API_KEY no está configurado en las settings.")
-    
+
     # En entorno de testing, simular envío exitoso
-    if brevo_api_key == 'test-key':
+    if brevo_api_key == "test-key":
         print("[BREVO_DEBUG] Modo testing - simulando envío exitoso")
         print(f"[BREVO_DEBUG] To: {to}")
         print(f"[BREVO_DEBUG] Subject: {subject}")
@@ -21,7 +22,7 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
     headers = {
         "accept": "application/json",
         "api-key": brevo_api_key,
-        "content-type": "application/json"
+        "content-type": "application/json",
     }
 
     # Usar sender autorizado en Brevo
@@ -29,20 +30,17 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
     from_name = "Soporte DS2"
 
     payload = {
-        "sender": {
-            "name": from_name,
-            "email": from_email_clean
-        },
+        "sender": {"name": from_name, "email": from_email_clean},
         "to": [
             {
                 "email": to,
-                "name": to.split('@')[0]  # Usar parte antes del @ como nombre
+                "name": to.split("@")[0],  # Usar parte antes del @ como nombre
             }
         ],
         "subject": subject,
-        "htmlContent": html_content
+        "htmlContent": html_content,
     }
-    
+
     if text_content:
         payload["textContent"] = text_content
 
@@ -57,7 +55,7 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
         print(f"[BREVO_DEBUG] Status Code: {response.status_code}")
         print(f"[BREVO_DEBUG] Response Headers: {dict(response.headers)}")
         print(f"[BREVO_DEBUG] Response: {response.text}")
-        
+
         if response.status_code != 201:
             print(f"[BREVO_ERROR] Error en Brevo API - Status: {response.status_code}")
             print(f"[BREVO_ERROR] Response: {response.text}")

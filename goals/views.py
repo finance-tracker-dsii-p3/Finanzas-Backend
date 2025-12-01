@@ -13,13 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class GoalViewSet(viewsets.ModelViewSet):
-
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Goal.objects.filter(user=self.request.user).order_by(
-            "-date", "name"
-        )
+        return Goal.objects.filter(user=self.request.user).order_by("-date", "name")
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -37,9 +34,7 @@ class GoalViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
 
         count = queryset.count()
-        logger.info(
-            f"Usuario {request.user.id} listó transacciones: {count} encontradas"
-        )
+        logger.info(f"Usuario {request.user.id} listó transacciones: {count} encontradas")
 
         if count == 0:
             return Response(
@@ -57,14 +52,10 @@ class GoalViewSet(viewsets.ModelViewSet):
         try:
             goal = serializer.save()
 
-            logger.info(
-                f"Usuario {self.request.user.id} creó una meta: {goal.name} "
-            )
+            logger.info(f"Usuario {self.request.user.id} creó una meta: {goal.name} ")
 
         except Exception as e:
-            logger.warning(
-                f"Error al crear meta para usuario {self.request.user.id}: {str(e)}"
-            )
+            logger.warning(f"Error al crear meta para usuario {self.request.user.id}: {str(e)}")
             raise e
 
     def perform_update(self, serializer):
@@ -73,9 +64,7 @@ class GoalViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} actualizó la meta {goal.name}")
 
         except Exception as e:
-            logger.warning(
-                f"Error al actualizar meta {self.get_object().id}: {str(e)}"
-            )
+            logger.warning(f"Error al actualizar meta {self.get_object().id}: {str(e)}")
             raise e
 
     def perform_destroy(self, instance):

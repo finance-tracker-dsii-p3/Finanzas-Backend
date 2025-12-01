@@ -1,12 +1,13 @@
 """
 Serializers para API de Analytics Financieros (HU-13)
 """
+
 from rest_framework import serializers
 
 
 class PeriodIndicatorsSerializer(serializers.Serializer):
     """Serializer para indicadores del período (ingresos, gastos, balance)"""
-    
+
     income = serializers.DictField()
     expenses = serializers.DictField()
     balance = serializers.DictField()
@@ -18,7 +19,7 @@ class PeriodIndicatorsSerializer(serializers.Serializer):
 
 class CategoryExpenseSerializer(serializers.Serializer):
     """Serializer para datos de categorías en gráfico de dona"""
-    
+
     category_id = serializers.CharField()
     name = serializers.CharField()
     amount = serializers.FloatField()
@@ -32,7 +33,7 @@ class CategoryExpenseSerializer(serializers.Serializer):
 
 class ExpensesCategoryChartSerializer(serializers.Serializer):
     """Serializer para gráfico de dona de gastos por categoría"""
-    
+
     chart_data = CategoryExpenseSerializer(many=True)
     others_data = CategoryExpenseSerializer(many=True)
     total_expenses = serializers.FloatField()
@@ -45,7 +46,7 @@ class ExpensesCategoryChartSerializer(serializers.Serializer):
 
 class ChartSeriesSerializer(serializers.Serializer):
     """Serializer para series de datos de gráficos"""
-    
+
     name = serializers.CharField()
     data = serializers.ListField(child=serializers.FloatField())
     color = serializers.CharField()
@@ -55,7 +56,7 @@ class ChartSeriesSerializer(serializers.Serializer):
 
 class DailyFlowChartSerializer(serializers.Serializer):
     """Serializer para gráfico de flujo diario"""
-    
+
     dates = serializers.ListField(child=serializers.CharField())
     series = serializers.DictField()
     summary = serializers.DictField()
@@ -65,7 +66,7 @@ class DailyFlowChartSerializer(serializers.Serializer):
 
 class TransactionDetailSerializer(serializers.Serializer):
     """Serializer para detalles de transacciones en drill-down"""
-    
+
     id = serializers.IntegerField()
     date = serializers.CharField()
     description = serializers.CharField()
@@ -78,7 +79,7 @@ class TransactionDetailSerializer(serializers.Serializer):
 
 class CategoryTransactionsSerializer(serializers.Serializer):
     """Serializer para transacciones filtradas por categoría"""
-    
+
     transactions = TransactionDetailSerializer(many=True)
     total_count = serializers.IntegerField()
     showing_count = serializers.IntegerField()
@@ -92,7 +93,7 @@ class CategoryTransactionsSerializer(serializers.Serializer):
 
 class AnalyticsDashboardSerializer(serializers.Serializer):
     """Serializer completo para dashboard de analytics"""
-    
+
     indicators = PeriodIndicatorsSerializer()
     expenses_chart = ExpensesCategoryChartSerializer()
     daily_flow_chart = DailyFlowChartSerializer()
@@ -101,7 +102,7 @@ class AnalyticsDashboardSerializer(serializers.Serializer):
 
 class AnalyticsErrorSerializer(serializers.Serializer):
     """Serializer para errores de analytics"""
-    
+
     error = serializers.CharField()
     code = serializers.CharField()
     details = serializers.DictField(required=False)
@@ -110,7 +111,7 @@ class AnalyticsErrorSerializer(serializers.Serializer):
 
 class PeriodComparisonSummarySerializer(serializers.Serializer):
     """Serializer para resumen de períodos en comparación"""
-    
+
     name = serializers.CharField()
     date_range = serializers.CharField()
     has_data = serializers.BooleanField()
@@ -119,7 +120,7 @@ class PeriodComparisonSummarySerializer(serializers.Serializer):
 
 class ComparisonSummarySerializer(serializers.Serializer):
     """Serializer para resumen general de comparación"""
-    
+
     period1 = PeriodComparisonSummarySerializer()
     period2 = PeriodComparisonSummarySerializer()
     can_compare = serializers.BooleanField()
@@ -128,7 +129,7 @@ class ComparisonSummarySerializer(serializers.Serializer):
 
 class MetricDifferenceSerializer(serializers.Serializer):
     """Serializer para diferencias de un métrico específico"""
-    
+
     absolute = serializers.FloatField()
     percentage = serializers.FloatField()
     is_increase = serializers.BooleanField()
@@ -141,7 +142,7 @@ class MetricDifferenceSerializer(serializers.Serializer):
 
 class ComparisonDifferencesSerializer(serializers.Serializer):
     """Serializer para todas las diferencias entre períodos"""
-    
+
     income = MetricDifferenceSerializer()
     expenses = MetricDifferenceSerializer()
     balance = MetricDifferenceSerializer()
@@ -149,7 +150,7 @@ class ComparisonDifferencesSerializer(serializers.Serializer):
 
 class ComparisonInsightsSerializer(serializers.Serializer):
     """Serializer para insights automáticos de comparación"""
-    
+
     messages = serializers.ListField(child=serializers.CharField())
     alert_level = serializers.CharField()
     has_significant_changes = serializers.BooleanField()
@@ -157,14 +158,14 @@ class ComparisonInsightsSerializer(serializers.Serializer):
 
 class PeriodDataSerializer(serializers.Serializer):
     """Serializer para datos completos de ambos períodos"""
-    
+
     period1 = PeriodIndicatorsSerializer()
     period2 = PeriodIndicatorsSerializer()
 
 
 class PeriodComparisonSerializer(serializers.Serializer):
     """Serializer completo para comparación entre períodos (HU-14)"""
-    
+
     comparison_summary = ComparisonSummarySerializer()
     period_data = PeriodDataSerializer()
     differences = ComparisonDifferencesSerializer()

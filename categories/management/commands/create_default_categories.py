@@ -1,6 +1,7 @@
 """
 Management command para crear categorías por defecto para usuarios
 """
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from categories.services import CategoryService
@@ -10,29 +11,29 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Crea categorías por defecto para usuarios especificados o para todos los usuarios'
+    help = "Crea categorías por defecto para usuarios especificados o para todos los usuarios"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--user-id',
+            "--user-id",
             type=int,
-            help='ID de usuario específico para crear categorías',
+            help="ID de usuario específico para crear categorías",
         )
         parser.add_argument(
-            '--all-users',
-            action='store_true',
-            help='Crear categorías para todos los usuarios que no tengan',
+            "--all-users",
+            action="store_true",
+            help="Crear categorías para todos los usuarios que no tengan",
         )
         parser.add_argument(
-            '--force',
-            action='store_true',
-            help='Forzar creación incluso si el usuario ya tiene categorías',
+            "--force",
+            action="store_true",
+            help="Forzar creación incluso si el usuario ya tiene categorías",
         )
 
     def handle(self, *args, **options):
-        user_id = options.get('user_id')
-        all_users = options.get('all_users')
-        force = options.get('force')
+        user_id = options.get("user_id")
+        all_users = options.get("all_users")
+        force = options.get("force")
 
         if user_id:
             # Crear para un usuario específico
@@ -40,9 +41,7 @@ class Command(BaseCommand):
                 user = User.objects.get(pk=user_id)
                 self.create_categories_for_user(user, force)
             except User.DoesNotExist:
-                self.stdout.write(
-                    self.style.ERROR(f'Usuario con ID {user_id} no existe')
-                )
+                self.stdout.write(self.style.ERROR(f"Usuario con ID {user_id} no existe"))
                 return
 
         elif all_users:
@@ -60,27 +59,23 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'\nResumen:\n'
-                    f'- Usuarios procesados: {created_count}\n'
-                    f'- Usuarios omitidos: {skipped_count}'
+                    f"\nResumen:\n"
+                    f"- Usuarios procesados: {created_count}\n"
+                    f"- Usuarios omitidos: {skipped_count}"
                 )
             )
 
         else:
-            self.stdout.write(
-                self.style.ERROR(
-                    'Debes especificar --user-id <ID> o --all-users'
-                )
-            )
+            self.stdout.write(self.style.ERROR("Debes especificar --user-id <ID> o --all-users"))
 
     def create_categories_for_user(self, user, force=False):
         """
         Crear categorías por defecto para un usuario específico
-        
+
         Args:
             user: Usuario para el que crear categorías
             force: Si True, crea categorías incluso si ya tiene
-            
+
         Returns:
             bool: True si se crearon categorías, False si se omitió
         """
@@ -90,8 +85,8 @@ class Command(BaseCommand):
         if existing_count > 0 and not force:
             self.stdout.write(
                 self.style.WARNING(
-                    f'Usuario {user.username} (ID: {user.id}) ya tiene '
-                    f'{existing_count} categorías. Omitiendo...'
+                    f"Usuario {user.username} (ID: {user.id}) ya tiene "
+                    f"{existing_count} categorías. Omitiendo..."
                 )
             )
             return False
@@ -99,8 +94,8 @@ class Command(BaseCommand):
         if existing_count > 0 and force:
             self.stdout.write(
                 self.style.WARNING(
-                    f'Usuario {user.username} (ID: {user.id}) ya tiene '
-                    f'{existing_count} categorías, pero se forzará la creación...'
+                    f"Usuario {user.username} (ID: {user.id}) ya tiene "
+                    f"{existing_count} categorías, pero se forzará la creación..."
                 )
             )
 
@@ -110,8 +105,8 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'✓ Creadas {len(created_categories)} categorías por defecto '
-                    f'para usuario {user.username} (ID: {user.id})'
+                    f"✓ Creadas {len(created_categories)} categorías por defecto "
+                    f"para usuario {user.username} (ID: {user.id})"
                 )
             )
 
@@ -119,20 +114,16 @@ class Command(BaseCommand):
             income_count = sum(1 for cat in created_categories if cat.type == Category.INCOME)
             expense_count = sum(1 for cat in created_categories if cat.type == Category.EXPENSE)
 
-            self.stdout.write(
-                f'  - Categorías de ingresos: {income_count}'
-            )
-            self.stdout.write(
-                f'  - Categorías de gastos: {expense_count}'
-            )
+            self.stdout.write(f"  - Categorías de ingresos: {income_count}")
+            self.stdout.write(f"  - Categorías de gastos: {expense_count}")
 
             return True
 
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(
-                    f'✗ Error al crear categorías para usuario {user.username} '
-                    f'(ID: {user.id}): {str(e)}'
+                    f"✗ Error al crear categorías para usuario {user.username} "
+                    f"(ID: {user.id}): {str(e)}"
                 )
             )
             return False

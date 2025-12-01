@@ -5,7 +5,7 @@ from django.core import mail
 User = get_user_model()
 
 
-@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class RegistrationUpdatedTests(TestCase):
     def setUp(self):
         # Crear admin para recibir notificaciones
@@ -17,7 +17,7 @@ class RegistrationUpdatedTests(TestCase):
             role="admin",
             is_verified=True,
             is_staff=True,
-            is_superuser=True
+            is_superuser=True,
         )
 
     def test_user_registration_returns_json_response(self):
@@ -31,21 +31,21 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "userpass123",
             "first_name": "New",
             "last_name": "User",
-            "role": "user"
+            "role": "user",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 201)
         response_data = response.json()
-        
+
         # Verificar estructura de respuesta
         self.assertIn("message", response_data)
         self.assertIn("user", response_data)
-        
+
         # Verificar mensaje específico para usuario (ahora auto-verificado)
         self.assertIn("Usuario registrado y verificado exitosamente", response_data["message"])
-        
+
         # Verificar datos del usuario
         user_data = response_data["user"]
         self.assertEqual(user_data["username"], "newuser")
@@ -64,17 +64,17 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "adminpass123",
             "first_name": "New",
             "last_name": "Admin",
-            "role": "admin"
+            "role": "admin",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 201)
         response_data = response.json()
-        
+
         # Verificar mensaje específico para admin
         self.assertIn("Administrador registrado y verificado", response_data["message"])
-        
+
         # Verificar datos del usuario
         user_data = response_data["user"]
         self.assertEqual(user_data["username"], "newadmin")
@@ -92,16 +92,16 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "monitorpass123",
             "first_name": "user",
             "last_name": "User",
-            "role": "user"
+            "role": "user",
         }
-        
+
         # Limpiar outbox antes del test
         mail.outbox.clear()
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 201)
-        
+
         # Verificar que NO se envió email al admin (ahora es auto-verificación)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -116,16 +116,16 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "adminpass123",
             "first_name": "Admin",
             "last_name": "User",
-            "role": "admin"
+            "role": "admin",
         }
-        
+
         # Limpiar outbox antes del test
         mail.outbox.clear()
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 201)
-        
+
         # Verificar que NO se envió email de verificación
         self.assertEqual(len(mail.outbox), 0)
 
@@ -140,14 +140,14 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "different",  # Contraseñas no coinciden
             "first_name": "Test",
             "last_name": "User",
-            "role": "user"
+            "role": "user",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         response_data = response.json()
-        
+
         # Verificar que se devuelven errores específicos
         self.assertIn("email", response_data)
         self.assertIn("password", response_data)
@@ -164,9 +164,9 @@ class RegistrationUpdatedTests(TestCase):
             email="existing@example.com",
             password="existingpass123",
             role="user",
-            is_verified=True
+            is_verified=True,
         )
-        
+
         url = "/api/auth/register/"
         data = {
             "identification": "MO-004",
@@ -176,11 +176,11 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "newpass123",
             "first_name": "New",
             "last_name": "User",
-            "role": "user"
+            "role": "user",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         response_data = response.json()
         self.assertIn("username", response_data)
@@ -194,9 +194,9 @@ class RegistrationUpdatedTests(TestCase):
             email="existing2@example.com",
             password="existingpass123",
             role="user",
-            is_verified=True
+            is_verified=True,
         )
-        
+
         url = "/api/auth/register/"
         data = {
             "identification": "MO-005",
@@ -206,11 +206,11 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "newpass123",
             "first_name": "New",
             "last_name": "User",
-            "role": "user"
+            "role": "user",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         response_data = response.json()
         self.assertIn("email", response_data)
@@ -224,9 +224,9 @@ class RegistrationUpdatedTests(TestCase):
             email="existing3@example.com",
             password="existingpass123",
             role="user",
-            is_verified=True
+            is_verified=True,
         )
-        
+
         url = "/api/auth/register/"
         data = {
             "identification": "EX-003",  # Identificación duplicada
@@ -236,11 +236,11 @@ class RegistrationUpdatedTests(TestCase):
             "password_confirm": "newpass123",
             "first_name": "New",
             "last_name": "User",
-            "role": "user"
+            "role": "user",
         }
-        
+
         response = self.client.post(url, data)
-        
+
         self.assertEqual(response.status_code, 400)
         response_data = response.json()
         self.assertIn("identification", response_data)

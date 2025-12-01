@@ -10,7 +10,7 @@ register_data = {
     "email": "test@example.com",
     "password": "Test123456!",
     "first_name": "Test",
-    "last_name": "User"
+    "last_name": "User",
 }
 
 response = requests.post(f"{BASE_URL}/api/auth/register/", json=register_data)
@@ -18,10 +18,7 @@ print(f"   Status: {response.status_code}")
 
 # 2. Login
 print("\n2. Haciendo login...")
-login_data = {
-    "email": "test@example.com",
-    "password": "Test123456!"
-}
+login_data = {"email": "test@example.com", "password": "Test123456!"}
 
 response = requests.post(f"{BASE_URL}/api/auth/login/", json=login_data)
 print(f"   Status: {response.status_code}")
@@ -29,12 +26,9 @@ print(f"   Status: {response.status_code}")
 if response.status_code == 200:
     token = response.json().get("token")
     print(f"   Token obtenido: {token[:20]}...")
-    
-    headers = {
-        "Authorization": f"Token {token}",
-        "Content-Type": "application/json"
-    }
-    
+
+    headers = {"Authorization": f"Token {token}", "Content-Type": "application/json"}
+
     # 3. Crear cuenta
     print("\n3. Creando cuenta de ahorros...")
     account_data = {
@@ -43,16 +37,16 @@ if response.status_code == 200:
         "account_type": "asset",
         "category": "savings_account",
         "current_balance": "1000000.00",
-        "currency": "COP"
+        "currency": "COP",
     }
-    
+
     response = requests.post(f"{BASE_URL}/api/accounts/", json=account_data, headers=headers)
     print(f"   Status: {response.status_code}")
     if response.status_code == 201:
         print(f"   Cuenta creada: {json.dumps(response.json(), indent=2)}")
     else:
         print(f"   Error: {response.text}")
-    
+
     # 4. Listar cuentas
     print("\n4. Listando cuentas...")
     response = requests.get(f"{BASE_URL}/api/accounts/", headers=headers)
@@ -62,7 +56,7 @@ if response.status_code == 200:
         print(f"   Total de cuentas: {len(accounts)}")
         for acc in accounts:
             print(f"   - {acc['name']}: {acc['current_balance']} {acc['currency']}")
-    
+
     # 5. Resumen financiero
     print("\n5. Obteniendo resumen financiero...")
     response = requests.get(f"{BASE_URL}/api/accounts/summary/", headers=headers)

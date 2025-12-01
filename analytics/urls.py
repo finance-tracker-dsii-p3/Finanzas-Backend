@@ -1,26 +1,27 @@
 """
 URLs para Analytics Financieros (HU-13)
 """
+
 from django.urls import path
 from . import views
 
 urlpatterns = [
     # Dashboard principal de analytics
-    path('dashboard/', views.analytics_dashboard, name='analytics_dashboard'),
-    
+    path("dashboard/", views.analytics_dashboard, name="analytics_dashboard"),
     # Componentes individuales
-    path('indicators/', views.period_indicators, name='period_indicators'),
-    path('expenses-chart/', views.expenses_by_category, name='expenses_by_category'),
-    path('daily-flow-chart/', views.daily_flow_chart, name='daily_flow_chart'),
-    
+    path("indicators/", views.period_indicators, name="period_indicators"),
+    path("expenses-chart/", views.expenses_by_category, name="expenses_by_category"),
+    path("daily-flow-chart/", views.daily_flow_chart, name="daily_flow_chart"),
     # Drill-down de categorías
-    path('category/<str:category_id>/transactions/', views.category_transactions, name='category_transactions'),
-    
+    path(
+        "category/<str:category_id>/transactions/",
+        views.category_transactions,
+        name="category_transactions",
+    ),
     # Utilidades
-    path('periods/', views.available_periods, name='available_periods'),
-    
+    path("periods/", views.available_periods, name="available_periods"),
     # HU-14: Comparación entre períodos
-    path('compare-periods/', views.compare_periods, name='compare_periods'),
+    path("compare-periods/", views.compare_periods, name="compare_periods"),
 ]
 
 # URLs disponibles para HU-13:
