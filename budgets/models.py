@@ -158,13 +158,13 @@ class Budget(models.Model):
         Obtener las fechas de inicio y fin del período actual.
 
         Args:
-            reference_date: Fecha de referencia (default: hoy)
+            reference_date: Fecha de referencia (default: start_date del presupuesto o hoy)
 
         Returns:
             tuple: (start_date, end_date)
         """
         if reference_date is None:
-            reference_date = date.today()
+            reference_date = self.start_date if self.start_date else date.today()
 
         if self.period == self.MONTHLY:
             # Primer y último día del mes de la fecha de referencia

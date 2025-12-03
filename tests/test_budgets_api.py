@@ -165,6 +165,8 @@ class BudgetsApiTests(TestCase):
             period="monthly",
             start_date=date(2025, 11, 1),
         )
+        # Refrescar desde la base de datos para asegurar que start_date está guardado
+        budget.refresh_from_db()
 
         start_date, end_date = budget.get_period_dates()
         self.assertEqual(start_date.month, 11)
