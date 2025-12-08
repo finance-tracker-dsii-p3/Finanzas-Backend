@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "rules.apps.RulesConfig",
     # HU-13 - Indicadores y gráficos del período, y HU-14 - Comparación básica entre períodos (ingresos vs. gastos)
     "analytics.apps.AnalyticsConfig",
+    # HU-17 - Moneda base y tipos de cambio (integrado en utils)
+    "utils",
     # HU-16 - Planes de cuotas de tarjetas de crédito
     "credit_cards.apps.CreditCardsConfig",
 ]
