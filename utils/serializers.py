@@ -17,8 +17,11 @@ class BaseCurrencySerializer(serializers.ModelSerializer):
 
     def validate_base_currency(self, value):
         """Valida que la moneda esté soportada"""
-        FxService.ensure_supported(value.upper())
-        return value.upper()
+        try:
+            FxService.ensure_supported(value.upper())
+            return value.upper()
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
 
     def create(self, validated_data):
         user = self.context["request"].user
