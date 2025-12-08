@@ -11,6 +11,8 @@ from categories.models import Category
 from typing import Dict, Tuple
 import calendar
 
+from utils.currency_converter import FxService
+
 
 class FinancialAnalyticsService:
     """
@@ -32,38 +34,45 @@ class FinancialAnalyticsService:
         Returns:
             Dict con ingresos, gastos, balance y metadata
         """
-        # Definir campo de monto según modo
         amount_field = "base_amount" if mode == "base" else "total_amount"
+        base_currency = FxService.get_base_currency(user)
 
-        # Filtro base por usuario y período, excluyendo transferencias
-        base_filter = Q(user=user, date__gte=start_date, date__lte=end_date) & ~Q(
-            type=3
-        )  # Excluir transferencias (type=3)
+        base_filter = Q(user=user, date__gte=start_date, date__lte=end_date) & ~Q(type=3)
 
-        # Calcular ingresos (type=1)
-        income_data = Transaction.objects.filter(base_filter & Q(type=1)).aggregate(
-            total=Sum(amount_field), count=Count("id")
+        def _sum_by_currency(qs):
+            rows = (
+                qs.values("transaction_currency", "origin_account__currency")
+                .annotate(total=Sum(amount_field), count=Count("id"))
+            )
+            total_base = Decimal("0")
+            total_count = 0
+            for r in rows:
+                curr = r["transaction_currency"] or r["origin_account__currency"] or base_currency
+                amount = r["total"] or Decimal("0")
+                converted, _, _ = FxService.convert_to_base(
+                    int(amount), curr, base_currency, end_date
+                ) if amount is not None else (0, Decimal("1"), None)
+                total_base += Decimal(str(converted))
+                total_count += r["count"]
+            return total_base, total_count
+
+        income_total, income_count = _sum_by_currency(
+            Transaction.objects.filter(base_filter & Q(type=1))
         )
-
-        # Calcular gastos (type=2)
-        expense_data = Transaction.objects.filter(base_filter & Q(type=2)).aggregate(
-            total=Sum(amount_field), count=Count("id")
+        expense_total, expense_count = _sum_by_currency(
+            Transaction.objects.filter(base_filter & Q(type=2))
         )
-
-        # Valores seguros
-        income_total = income_data["total"] or Decimal("0")
-        expense_total = expense_data["total"] or Decimal("0")
         balance = income_total - expense_total
 
         return {
             "income": {
                 "amount": float(income_total),
-                "count": income_data["count"],
+                "count": income_count,
                 "formatted": f"${income_total:,.0f}",
             },
             "expenses": {
                 "amount": float(expense_total),
-                "count": expense_data["count"],
+                "count": expense_count,
                 "formatted": f"${expense_total:,.0f}",
             },
             "balance": {
@@ -77,7 +86,7 @@ class FinancialAnalyticsService:
                 "days": (end_date - start_date).days + 1,
             },
             "mode": mode,
-            "currency": "COP",
+            "currency": base_currency,
         }
 
     @staticmethod
@@ -98,29 +107,61 @@ class FinancialAnalyticsService:
             Dict con datos del gráfico de dona y metadata
         """
         amount_field = "base_amount" if mode == "base" else "total_amount"
+        base_currency = FxService.get_base_currency(user)
 
-        # Obtener gastos por categoría
-        expenses_by_category = (
+        rows = (
             Transaction.objects.filter(
                 user=user,
-                type=2,  # Solo gastos
+                type=2,
                 date__gte=start_date,
                 date__lte=end_date,
-                category__isnull=False,  # Solo transacciones con categoría
+                category__isnull=False,
             )
-            .values("category__id", "category__name", "category__color", "category__icon")
+            .values(
+                "category__id",
+                "category__name",
+                "category__color",
+                "category__icon",
+                "transaction_currency",
+                "origin_account__currency",
+            )
             .annotate(amount=Sum(amount_field), count=Count("id"))
-            .order_by("-amount")
         )
 
-        # Gastos sin categoría
-        uncategorized_amount = Transaction.objects.filter(
-            user=user, type=2, date__gte=start_date, date__lte=end_date, category__isnull=True
-        ).aggregate(total=Sum(amount_field))["total"] or Decimal("0")
+        category_totals = {}
+        for item in rows:
+            cat_id = item["category__id"]
+            currency = item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            amount = item["amount"] or Decimal("0")
+            converted, _, _ = FxService.convert_to_base(int(amount), currency, base_currency, end_date)
+            if cat_id not in category_totals:
+                category_totals[cat_id] = {
+                    "amount": Decimal("0"),
+                    "count": 0,
+                    "name": item["category__name"],
+                    "color": item["category__color"],
+                    "icon": item["category__icon"],
+                }
+            category_totals[cat_id]["amount"] += Decimal(str(converted))
+            category_totals[cat_id]["count"] += item["count"]
 
-        # Calcular total de gastos
-        total_expenses = sum([item["amount"] for item in expenses_by_category])
-        total_expenses += uncategorized_amount
+        uncategorized_rows = (
+            Transaction.objects.filter(
+                user=user, type=2, date__gte=start_date, date__lte=end_date, category__isnull=True
+            )
+            .values("transaction_currency", "origin_account__currency")
+            .annotate(amount=Sum(amount_field), count=Count("id"))
+        )
+        uncategorized_amount = Decimal("0")
+        uncategorized_count = 0
+        for item in uncategorized_rows:
+            currency = item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            amount = item["amount"] or Decimal("0")
+            converted, _, _ = FxService.convert_to_base(int(amount), currency, base_currency, end_date)
+            uncategorized_amount += Decimal(str(converted))
+            uncategorized_count += item["count"]
+
+        total_expenses = sum([v["amount"] for v in category_totals.values()]) + uncategorized_amount
 
         if total_expenses == 0:
             return {
@@ -138,17 +179,17 @@ class FinancialAnalyticsService:
         others_categories = []
         others_total = Decimal("0")
 
-        for item in expenses_by_category:
+        for cat_id, item in category_totals.items():
             percentage = float(item["amount"] / total_expenses)
 
             category_data = {
-                "category_id": item["category__id"],
-                "name": item["category__name"],
+                "category_id": cat_id,
+                "name": item["name"],
                 "amount": float(item["amount"]),
                 "count": item["count"],
                 "percentage": percentage * 100,
-                "color": item["category__color"],
-                "icon": item["category__icon"],
+                "color": item["color"],
+                "icon": item["icon"],
                 "formatted_amount": f"${item['amount']:,.0f}",
             }
 
@@ -185,13 +226,7 @@ class FinancialAnalyticsService:
                     "category_id": "uncategorized",
                     "name": "Sin categoría",
                     "amount": float(uncategorized_amount),
-                    "count": Transaction.objects.filter(
-                        user=user,
-                        type=2,
-                        date__gte=start_date,
-                        date__lte=end_date,
-                        category__isnull=True,
-                    ).count(),
+                    "count": uncategorized_count,
                     "percentage": float(uncategorized_amount / total_expenses) * 100,
                     "color": "#6B7280",
                     "icon": "fa-question-circle",

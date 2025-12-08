@@ -5,6 +5,8 @@ from accounts.models import Account
 from decimal import Decimal
 import logging
 
+from utils.currency_converter import FxService
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,9 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     applied_rule_name = serializers.CharField(
         source="applied_rule.name", read_only=True, allow_null=True
     )
+    base_currency = serializers.SerializerMethodField()
+    base_equivalent_amount = serializers.SerializerMethodField()
+    base_exchange_rate = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
@@ -57,6 +62,9 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "exchange_rate",  # Tasa de cambio
             "original_amount",  # Monto original
             "origin_account_currency",  # Moneda de la cuenta (para mostrar)
+            "base_currency",
+            "base_equivalent_amount",
+            "base_exchange_rate",
             "created_at",
             "updated_at",
         ]
@@ -66,6 +74,40 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def _resolve_base(self):
+        req = self.context.get("request") if self.context else None
+        user = getattr(req, "user", None)
+        return FxService.get_base_currency(user)
+
+    def get_base_currency(self, obj):
+        return self._resolve_base()
+
+    def get_base_equivalent_amount(self, obj):
+        base_currency = self._resolve_base()
+        txn_currency = obj.transaction_currency or (obj.origin_account.currency if obj.origin_account else base_currency)
+        try:
+            logger.info(f"Converting {obj.total_amount} {txn_currency} -> {base_currency} on {obj.date}")
+            converted, rate, warning = FxService.convert_to_base(
+                obj.total_amount, txn_currency, base_currency, obj.date
+            )
+            logger.info(f"Conversion result: {converted} (rate: {rate}, warning: {warning})")
+            return converted
+        except Exception as e:
+            logger.error(f"Conversion failed: {e}")
+            return None
+
+    def get_base_exchange_rate(self, obj):
+        base_currency = self._resolve_base()
+        txn_currency = obj.transaction_currency or (obj.origin_account.currency if obj.origin_account else base_currency)
+        if txn_currency == base_currency:
+            return 1.0
+        try:
+            _, rate, _ = FxService.convert_to_base(obj.total_amount, txn_currency, base_currency, obj.date)
+            return float(rate)
+        except Exception as e:
+            logger.error(f"Rate lookup failed: {e}")
+            return None
 
 
 class TransactionSerializer(serializers.ModelSerializer):

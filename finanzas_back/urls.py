@@ -73,5 +73,5 @@ urlpatterns = [
     path(
         "api/analytics/", include("analytics.urls")
     ),  # HU-13: Indicadores y gráficos del período, y HU-14: Comparación básica entre períodos (ingresos vs. gastos)
-    path("api/utils/", include("utils.urls")),  # Utilidades: conversión de monedas
+    path("api/utils/", include("utils.urls")),  # HU-17: Moneda base, tipos de cambio y utilidades
 ]
