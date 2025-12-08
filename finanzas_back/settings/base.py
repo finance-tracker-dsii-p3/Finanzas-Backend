@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "utils",
     # HU-16 - Planes de cuotas de tarjetas de crédito
     "credit_cards.apps.CreditCardsConfig",
+    # HU-21 - SOAT: vigencia, alertas y pago programado
+    "vehicles.apps.VehiclesConfig",
 ]
 
 MIDDLEWARE = [
