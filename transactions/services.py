@@ -122,21 +122,17 @@ class TransactionService:
 
                 elif account.account_type == Account.LIABILITY:
                     if account.category == Account.CREDIT_CARD:
-                        if account.credit_limit is None:
-                            raise ValueError(
-                                "La tarjeta de crédito no tiene límite de crédito definido."
-                            )
+                        if account.credit_limit is not None:
+                            current_debt = abs(current_balance)
+                            new_debt = abs(new_balance) if new_balance < 0 else Decimal("0.00")
 
-                        current_debt = abs(current_balance)
-                        new_debt = abs(new_balance) if new_balance < 0 else Decimal("0.00")
-
-                        if new_debt > account.credit_limit:
-                            available_credit = account.credit_limit - current_debt
-                            raise ValueError(
-                                f"No se puede realizar esta transacción. Se excedería el límite de crédito. "
-                                f"Límite: ${account.credit_limit:,.2f}, Deuda actual: ${current_debt:,.2f}, "
-                                f"Crédito disponible: ${available_credit:,.2f}, Monto: ${amount:,.2f}"
-                            )
+                            if new_debt > account.credit_limit:
+                                available_credit = account.credit_limit - current_debt
+                                raise ValueError(
+                                    f"No se puede realizar esta transacción. Se excedería el límite de crédito. "
+                                    f"Límite: ${account.credit_limit:,.2f}, Deuda actual: ${current_debt:,.2f}, "
+                                    f"Crédito disponible: ${available_credit:,.2f}, Monto: ${amount:,.2f}"
+                                )
 
                         if new_balance > 0:
                             raise ValueError(

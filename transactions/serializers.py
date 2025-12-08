@@ -446,31 +446,19 @@ class TransactionSerializer(serializers.ModelSerializer):
         elif account.account_type == Account.LIABILITY:
             # Para tarjetas de crédito, validar límite de crédito
             if account.category == Account.CREDIT_CARD:
-                if account.credit_limit is None:
-                    raise serializers.ValidationError(
-                        {
-                            "origin_account"
-                            if is_decrease
-                            else "destination_account": "La tarjeta de crédito no tiene límite de crédito definido."
-                        }
-                    )
+                if account.credit_limit is not None:
+                    current_debt = abs(current_balance)
+                    new_debt = abs(new_balance) if new_balance < 0 else Decimal("0.00")
 
-                # El saldo de tarjetas de crédito es negativo (deuda)
-                # Si tiene -$100 y límite $1000, puede gastar hasta $900 más
-                # abs(current_balance) es la deuda actual
-                # abs(new_balance) sería la nueva deuda
-                current_debt = abs(current_balance)
-                new_debt = abs(new_balance) if new_balance < 0 else Decimal("0.00")
-
-                if is_decrease and new_debt > account.credit_limit:
-                    available_credit = account.credit_limit - current_debt
-                    raise serializers.ValidationError(
-                        {
-                            "origin_account": f"No se puede realizar esta transacción. Se excedería el límite de crédito. "
-                            f"Límite: ${account.credit_limit:,.2f}, Deuda actual: ${current_debt:,.2f}, "
-                            f"Crédito disponible: ${available_credit:,.2f}, Monto: ${amount_decimal:,.2f}"
-                        }
-                    )
+                    if is_decrease and new_debt > account.credit_limit:
+                        available_credit = account.credit_limit - current_debt
+                        raise serializers.ValidationError(
+                            {
+                                "origin_account": f"No se puede realizar esta transacción. Se excedería el límite de crédito. "
+                                f"Límite: ${account.credit_limit:,.2f}, Deuda actual: ${current_debt:,.2f}, "
+                                f"Crédito disponible: ${available_credit:,.2f}, Monto: ${amount_decimal:,.2f}"
+                            }
+                        )
 
                 # Las tarjetas de crédito no pueden tener saldo positivo
                 if new_balance > 0:
@@ -822,31 +810,19 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
         elif account.account_type == Account.LIABILITY:
             # Para tarjetas de crédito, validar límite de crédito
             if account.category == Account.CREDIT_CARD:
-                if account.credit_limit is None:
-                    raise serializers.ValidationError(
-                        {
-                            "origin_account"
-                            if is_decrease
-                            else "destination_account": "La tarjeta de crédito no tiene límite de crédito definido."
-                        }
-                    )
+                if account.credit_limit is not None:
+                    current_debt = abs(current_balance)
+                    new_debt = abs(new_balance) if new_balance < 0 else Decimal("0.00")
 
-                # El saldo de tarjetas de crédito es negativo (deuda)
-                # Si tiene -$100 y límite $1000, puede gastar hasta $900 más
-                # abs(current_balance) es la deuda actual
-                # abs(new_balance) sería la nueva deuda
-                current_debt = abs(current_balance)
-                new_debt = abs(new_balance) if new_balance < 0 else Decimal("0.00")
-
-                if is_decrease and new_debt > account.credit_limit:
-                    available_credit = account.credit_limit - current_debt
-                    raise serializers.ValidationError(
-                        {
-                            "origin_account": f"No se puede realizar esta transacción. Se excedería el límite de crédito. "
-                            f"Límite: ${account.credit_limit:,.2f}, Deuda actual: ${current_debt:,.2f}, "
-                            f"Crédito disponible: ${available_credit:,.2f}, Monto: ${amount_decimal:,.2f}"
-                        }
-                    )
+                    if is_decrease and new_debt > account.credit_limit:
+                        available_credit = account.credit_limit - current_debt
+                        raise serializers.ValidationError(
+                            {
+                                "origin_account": f"No se puede realizar esta transacción. Se excedería el límite de crédito. "
+                                f"Límite: ${account.credit_limit:,.2f}, Deuda actual: ${current_debt:,.2f}, "
+                                f"Crédito disponible: ${available_credit:,.2f}, Monto: ${amount_decimal:,.2f}"
+                            }
+                        )
 
                 # Las tarjetas de crédito no pueden tener saldo positivo
                 if new_balance > 0:
