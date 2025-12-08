@@ -75,4 +75,5 @@ urlpatterns = [
     ),  # HU-13: Indicadores y gráficos del período, y HU-14: Comparación básica entre períodos (ingresos vs. gastos)
     path("api/utils/", include("utils.urls")),  # HU-17: Moneda base, tipos de cambio y utilidades
     path("api/", include("vehicles.urls")),  # HU-21: SOAT: vigencia, alertas y pago programado
+    path("api/", include("bills.urls")),  # HU-22: Facturas personales (pendientes/pagas/atrasadas)
 ]

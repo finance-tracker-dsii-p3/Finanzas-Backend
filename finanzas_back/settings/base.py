@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     "credit_cards.apps.CreditCardsConfig",
     # HU-21 - SOAT: vigencia, alertas y pago programado
     "vehicles.apps.VehiclesConfig",
+    # HU-22 - Facturas personales (pendientes/pagas/atrasadas)
+    "bills.apps.BillsConfig",
 ]
 
 MIDDLEWARE = [
