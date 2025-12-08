@@ -1,14 +1,15 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Notification
-from .serializers import NotificationSerializer
+from .models import Notification, CustomReminder
+from .serializers import NotificationSerializer, CustomReminderSerializer, CustomReminderListSerializer
 from .services import NotificationService
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """
-    API endpoint para gestionar notificaciones - adaptado para proyecto financiero
+    API endpoint para gestionar notificaciones - HU-18
+    Soporta notificaciones de presupuesto, facturas, SOAT, fin de mes y personalizadas
     """
 
     serializer_class = NotificationSerializer
@@ -17,13 +18,27 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Retorna las notificaciones según el rol del usuario
+        Con filtros por tipo, leídas/no leídas
         """
-        if self.request.user.role == "admin":
-            # Los admins ven todas las notificaciones
-            return Notification.objects.all().order_by("-created_at")
-        else:
-            # Los usuarios normales solo ven sus propias notificaciones
-            return Notification.objects.filter(user=self.request.user).order_by("-created_at")
+        queryset = Notification.objects.filter(user=self.request.user).order_by("-created_at")
+        
+        # Filtro por tipo
+        notification_type = self.request.query_params.get('type')
+        if notification_type:
+            queryset = queryset.filter(notification_type=notification_type)
+        
+        # Filtro por leídas
+        read = self.request.query_params.get('read')
+        if read is not None:
+            is_read = read.lower() == 'true'
+            queryset = queryset.filter(read=is_read)
+        
+        # Filtro por tipo de objeto relacionado
+        related_type = self.request.query_params.get('related_type')
+        if related_type:
+            queryset = queryset.filter(related_object_type=related_type)
+        
+        return queryset
 
     def create(self, request, *args, **kwargs):
         """
@@ -246,3 +261,107 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomReminderViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para recordatorios personalizados del usuario
+    
+    Endpoints:
+    - list: Listar recordatorios del usuario
+    - create: Crear recordatorio personalizado
+    - retrieve: Ver detalle de recordatorio
+    - update/partial_update: Actualizar recordatorio
+    - destroy: Eliminar recordatorio
+    - mark_read: Marcar recordatorio como leído
+    - mark_all_read: Marcar todos como leídos
+    - pending: Listar recordatorios pendientes
+    - sent: Listar recordatorios enviados
+    """
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Retorna solo los recordatorios del usuario autenticado"""
+        queryset = CustomReminder.objects.filter(user=self.request.user)
+        
+        # Filtro por enviados
+        is_sent = self.request.query_params.get('is_sent')
+        if is_sent is not None:
+            queryset = queryset.filter(is_sent=is_sent.lower() == 'true')
+        
+        # Filtro por leídos
+        is_read = self.request.query_params.get('is_read')
+        if is_read is not None:
+            queryset = queryset.filter(is_read=is_read.lower() == 'true')
+        
+        return queryset.order_by('reminder_date', 'reminder_time')
+    
+    def get_serializer_class(self):
+        """Usar serializer simplificado para list"""
+        if self.action == 'list':
+            return CustomReminderListSerializer
+        return CustomReminderSerializer
+    
+    def perform_create(self, serializer):
+        """Asociar recordatorio al usuario autenticado"""
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """
+        Marca un recordatorio como leído
+        
+        POST /api/notifications/custom-reminders/{id}/mark_read/
+        """
+        reminder = self.get_object()
+        reminder.mark_as_read()
+        
+        # También marcar la notificación asociada como leída
+        if reminder.notification:
+            reminder.notification.mark_as_read()
+        
+        serializer = self.get_serializer(reminder)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """
+        Marca todos los recordatorios del usuario como leídos
+        
+        POST /api/notifications/custom-reminders/mark_all_read/
+        """
+        reminders = self.get_queryset().filter(is_read=False)
+        count = reminders.count()
+        
+        for reminder in reminders:
+            reminder.mark_as_read()
+            if reminder.notification:
+                reminder.notification.mark_as_read()
+        
+        return Response({
+            'message': f'{count} recordatorios marcados como leídos',
+            'updated_count': count
+        })
+    
+    @action(detail=False, methods=['get'])
+    def pending(self, request):
+        """
+        Lista recordatorios pendientes de enviar
+        
+        GET /api/notifications/custom-reminders/pending/
+        """
+        reminders = self.get_queryset().filter(is_sent=False)
+        serializer = CustomReminderListSerializer(reminders, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def sent(self, request):
+        """
+        Lista recordatorios ya enviados
+        
+        GET /api/notifications/custom-reminders/sent/
+        """
+        reminders = self.get_queryset().filter(is_sent=True)
+        serializer = CustomReminderListSerializer(reminders, many=True)
+        return Response(serializer.data)

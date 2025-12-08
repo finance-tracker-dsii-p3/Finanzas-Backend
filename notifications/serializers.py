@@ -1,11 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Notification
+from .models import Notification, CustomReminder
+from django.utils import timezone as dj_timezone
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     """
-    Serializer básico para notificaciones - adaptado para proyecto financiero
+    Serializer para notificaciones del sistema financiero
+    Soporta todos los tipos de notificaciones: presupuesto, facturas, SOAT, fin de mes, personalizadas
     """
 
     recipient_name = serializers.CharField(source="user.get_full_name", read_only=True)
@@ -13,6 +15,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     is_read = serializers.BooleanField(source="read", read_only=True)
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     user_name = serializers.CharField(source="user.get_full_name", read_only=True)
+    notification_type_display = serializers.CharField(source="get_notification_type_display", read_only=True)
 
     # Permitir creación desde API para admins
     user = serializers.PrimaryKeyRelatedField(
@@ -27,19 +30,24 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "notification_type",
+            "notification_type_display",
             "title",
             "message",
             "read",
             "is_read",
+            "read_timestamp",
+            "related_object_id",
+            "related_object_type",
+            "scheduled_for",
+            "sent_at",
             "created_at",
             "recipient_name",
             "recipient_username",
             "user_id",
             "user_name",
             "user",
-            "related_object_id",
         ]
-        read_only_fields = ["created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at", "sent_at", "read_timestamp"]
 
     def create(self, validated_data):
         """Crear notificación asignando usuario apropiado"""
@@ -59,6 +67,7 @@ class SystemAlertSerializer(serializers.ModelSerializer):
 
     recipient_name = serializers.CharField(source="user.get_full_name", read_only=True)
     recipient_username = serializers.CharField(source="user.username", read_only=True)
+    notification_type_display = serializers.CharField(source="get_notification_type_display", read_only=True)
 
     class Meta:
         model = Notification
@@ -67,10 +76,98 @@ class SystemAlertSerializer(serializers.ModelSerializer):
             "title",
             "message",
             "notification_type",
+            "notification_type_display",
             "read",
             "created_at",
             "recipient_name",
             "recipient_username",
             "related_object_id",
+            "related_object_type",
         ]
         read_only_fields = ["created_at"]
+
+
+class CustomReminderSerializer(serializers.ModelSerializer):
+    """
+    Serializer para recordatorios personalizados del usuario
+    """
+    
+    is_past_due_display = serializers.BooleanField(source="is_past_due", read_only=True)
+    user_username = serializers.CharField(source="user.username", read_only=True)
+    notification_id = serializers.IntegerField(source="notification.id", read_only=True, allow_null=True)
+    
+    class Meta:
+        model = CustomReminder
+        fields = [
+            "id",
+            "title",
+            "message",
+            "reminder_date",
+            "reminder_time",
+            "is_sent",
+            "sent_at",
+            "notification_id",
+            "is_read",
+            "read_at",
+            "is_past_due_display",
+            "user_username",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "is_sent", "sent_at", "notification_id", "is_read", "read_at", "created_at", "updated_at"]
+    
+    def validate(self, data):
+        """Validar que la fecha/hora del recordatorio sea futura"""
+        if 'reminder_date' in data and 'reminder_time' in data:
+            from datetime import datetime
+            import pytz
+            
+            reminder_datetime = datetime.combine(data['reminder_date'], data['reminder_time'])
+            
+            # Obtener timezone del usuario (o usar default)
+            request = self.context.get('request')
+            user_tz = pytz.timezone("America/Bogota")  # Default timezone
+            
+            if request and hasattr(request.user, 'notification_preferences'):
+                try:
+                    user_tz = request.user.notification_preferences.timezone_object
+                except:
+                    pass
+            
+            # Siempre hacer el datetime timezone-aware
+            reminder_datetime = dj_timezone.make_aware(reminder_datetime, user_tz)
+            
+            if reminder_datetime < dj_timezone.now():
+                raise serializers.ValidationError(
+                    "La fecha y hora del recordatorio debe ser futura"
+                )
+        
+        return data
+    
+    def create(self, validated_data):
+        """Crear recordatorio asociado al usuario autenticado"""
+        request = self.context.get('request')
+        if request:
+            validated_data['user'] = request.user
+        return super().create(validated_data)
+
+
+class CustomReminderListSerializer(serializers.ModelSerializer):
+    """
+    Serializer simplificado para listar recordatorios personalizados
+    """
+    
+    is_past_due_display = serializers.BooleanField(source="is_past_due", read_only=True)
+    
+    class Meta:
+        model = CustomReminder
+        fields = [
+            "id",
+            "title",
+            "reminder_date",
+            "reminder_time",
+            "is_sent",
+            "is_read",
+            "is_past_due_display",
+            "created_at",
+        ]

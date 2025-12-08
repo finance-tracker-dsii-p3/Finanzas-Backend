@@ -8,6 +8,7 @@ from vehicles.models import SOAT, SOATAlert
 from transactions.models import Transaction
 from accounts.models import Account
 from categories.models import Category
+from notifications.engine import NotificationEngine
 from decimal import Decimal
 
 
@@ -147,6 +148,34 @@ class SOATService:
                     message=message
                 )
                 created_alerts.append(alert)
+                
+                # Crear notificación (HU-18)
+                try:
+                    # Mapear tipo de alerta a formato de NotificationEngine
+                    if alert_type in ["atrasada", "vencida"]:
+                        NotificationEngine.create_soat_reminder(
+                            user=user,
+                            soat=soat,
+                            alert_type="expired",
+                            days=abs(days) if days else 0
+                        )
+                    elif alert_type in ["pendiente_pago", "proxima_vencer"]:
+                        if days is not None and days <= 7:
+                            NotificationEngine.create_soat_reminder(
+                                user=user,
+                                soat=soat,
+                                alert_type="due_soon",
+                                days=days
+                            )
+                        else:
+                            NotificationEngine.create_soat_reminder(
+                                user=user,
+                                soat=soat,
+                                alert_type="upcoming",
+                                days=days
+                            )
+                except:
+                    pass
         
         return created_alerts
     

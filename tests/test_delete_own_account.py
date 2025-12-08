@@ -2,7 +2,6 @@
 Tests para el endpoint de eliminación de cuenta propia
 """
 
-import pytest
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient

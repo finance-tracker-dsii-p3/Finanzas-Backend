@@ -8,6 +8,7 @@ from bills.models import Bill, BillReminder
 from accounts.models import Account
 from categories.models import Category
 from transactions.models import Transaction
+from notifications.engine import NotificationEngine
 
 
 class BillService:
@@ -116,6 +117,17 @@ class BillService:
                         message=f"La factura de {bill.provider} vence en {days_until_due} día{'s' if days_until_due > 1 else ''} (${bill.amount:,.0f})"
                     )
                     created_reminders.append(reminder)
+                    
+                    # Crear notificación (HU-18)
+                    try:
+                        NotificationEngine.create_bill_reminder(
+                            user=bill.user,
+                            bill=bill,
+                            reminder_type="upcoming",
+                            days=days_until_due
+                        )
+                    except:
+                        pass
             
             # Recordatorio: Vence hoy
             elif days_until_due == 0:
@@ -127,6 +139,16 @@ class BillService:
                         message=f"La factura de {bill.provider} vence hoy (${bill.amount:,.0f})"
                     )
                     created_reminders.append(reminder)
+                    
+                    # Crear notificación (HU-18)
+                    try:
+                        NotificationEngine.create_bill_reminder(
+                            user=bill.user,
+                            bill=bill,
+                            reminder_type="due_today"
+                        )
+                    except:
+                        pass
             
             # Recordatorio: Atrasada
             elif days_until_due < 0 and bill.status != Bill.PAID:
@@ -139,6 +161,17 @@ class BillService:
                         message=f"La factura de {bill.provider} está atrasada {days_overdue} día{'s' if days_overdue > 1 else ''} (${bill.amount:,.0f})"
                     )
                     created_reminders.append(reminder)
+                    
+                    # Crear notificación (HU-18)
+                    try:
+                        NotificationEngine.create_bill_reminder(
+                            user=bill.user,
+                            bill=bill,
+                            reminder_type="overdue",
+                            days=days_overdue
+                        )
+                    except:
+                        pass
                     
                     # Actualizar estado a overdue si no lo está
                     if bill.status != Bill.OVERDUE:
