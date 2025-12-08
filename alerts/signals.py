@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from alerts.models import Alert
 from budgets.models import Budget
 from transactions.models import Transaction
+from notifications.engine import NotificationEngine
 
 
 @receiver(post_save, sender=Transaction)
@@ -15,6 +16,8 @@ def check_budget_after_transaction(sender, instance, **kwargs):
     - Solo se consideran transacciones de gasto (type = 2).
     - Una alerta por presupuesto / nivel (warning o exceeded) y por mes.
     - Se apoya en created_at para identificar el mes de la alerta.
+    
+    Además genera notificaciones respetando preferencias del usuario (HU-18).
     """
     # Solo procesar en creación (no en actualización)
     if kwargs.get("created", False) is False:
@@ -48,6 +51,8 @@ def check_budget_after_transaction(sender, instance, **kwargs):
     for budget in budgets:
         # Usar la fecha de la transacción como referencia del período
         percentage = budget.get_spent_percentage(reference_date=instance.date)
+        spent = budget.get_spent_amount(reference_date=instance.date)
+        limit = budget.amount
 
         # Determinar tipo de alerta a generar, si aplica
         alert_type = None
@@ -86,3 +91,25 @@ def check_budget_after_transaction(sender, instance, **kwargs):
             transaction_year=transaction_year,
             transaction_month=transaction_month,
         )
+        
+        # Crear notificación respetando preferencias del usuario (HU-18)
+        try:
+            if alert_type == "exceeded":
+                NotificationEngine.create_budget_exceeded(
+                    user=user,
+                    budget=budget,
+                    spent=spent,
+                    limit=limit
+                )
+            else:  # warning
+                NotificationEngine.create_budget_warning(
+                    user=user,
+                    budget=budget,
+                    percentage=percentage,
+                    spent=spent,
+                    limit=limit
+                )
+        except Exception as e:
+            # No fallar la transacción si hay error en la notificación
+            pass
+
