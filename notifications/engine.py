@@ -4,9 +4,7 @@ Motor de notificaciones que respeta preferencias del usuario, timezone y evita d
 """
 
 from django.utils import timezone
-from django.db.models import Q
 from datetime import datetime, timedelta
-from decimal import Decimal
 
 from notifications.models import Notification, CustomReminder
 from users.models import UserNotificationPreferences
@@ -354,9 +352,8 @@ class NotificationEngine:
                 # Verificar si ya es hora de enviar
                 if now >= reminder_datetime:
                     pending_reminders.append(reminder)
-            except Exception as e:
+            except Exception:
                 # Si hay error, usar lógica simple
-                reminder_date = datetime.combine(reminder.reminder_date, reminder.reminder_time)
                 if now.date() >= reminder.reminder_date:
                     pending_reminders.append(reminder)
         

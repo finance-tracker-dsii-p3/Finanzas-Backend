@@ -34,9 +34,9 @@ class UserNotificationPreferencesSerializer(serializers.ModelSerializer):
     def get_timezone_display(self, obj):
         """Retorna el nombre completo de la zona horaria"""
         try:
-            tz = pytz.timezone(obj.timezone)
+            pytz.timezone(obj.timezone)
             return obj.timezone
-        except:
+        except Exception:
             return "America/Bogota"
     
     def validate_timezone(self, value):
@@ -44,7 +44,7 @@ class UserNotificationPreferencesSerializer(serializers.ModelSerializer):
         try:
             pytz.timezone(value)
             return value
-        except:
+        except Exception:
             raise serializers.ValidationError("Zona horaria inválida")
 
 

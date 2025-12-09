@@ -9,7 +9,6 @@ from transactions.models import Transaction
 from accounts.models import Account
 from categories.models import Category
 from notifications.engine import NotificationEngine
-from decimal import Decimal
 
 
 class SOATService:
@@ -87,7 +86,6 @@ class SOATService:
         Verifica todos los SOATs y crea alertas necesarias
         (Para ejecutar con cron job)
         """
-        today = timezone.now().date()
         created_alerts = []
         
         # Obtener todos los SOATs activos
@@ -174,7 +172,7 @@ class SOATService:
                                 alert_type="upcoming",
                                 days=days
                             )
-                except:
+                except Exception:
                     pass
         
         return created_alerts

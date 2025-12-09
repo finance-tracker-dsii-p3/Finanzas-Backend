@@ -4,9 +4,7 @@ Serializers para vehículos y SOAT
 
 from rest_framework import serializers
 from vehicles.models import Vehicle, SOAT, SOATAlert
-from transactions.models import Transaction
 from accounts.models import Account
-from categories.models import Category
 from django.utils import timezone
 
 
@@ -144,7 +142,7 @@ class SOATPaymentSerializer(serializers.Serializer):
         """Validar que la cuenta exista y pertenezca al usuario"""
         user = self.context["request"].user
         try:
-            account = Account.objects.get(id=value, user=user)
+            Account.objects.get(id=value, user=user)
         except Account.DoesNotExist:
             raise serializers.ValidationError("La cuenta no existe o no te pertenece")
         return value

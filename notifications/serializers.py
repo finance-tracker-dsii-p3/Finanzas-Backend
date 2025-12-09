@@ -131,7 +131,7 @@ class CustomReminderSerializer(serializers.ModelSerializer):
             if request and hasattr(request.user, 'notification_preferences'):
                 try:
                     user_tz = request.user.notification_preferences.timezone_object
-                except:
+                except Exception:
                     pass
             
             # Siempre hacer el datetime timezone-aware

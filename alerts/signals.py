@@ -109,7 +109,7 @@ def check_budget_after_transaction(sender, instance, **kwargs):
                     spent=spent,
                     limit=limit
                 )
-        except Exception as e:
+        except Exception:
             # No fallar la transacción si hay error en la notificación
             pass
 

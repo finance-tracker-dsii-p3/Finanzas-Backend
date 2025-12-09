@@ -178,44 +178,6 @@ class Budget(models.Model):
 
         return start, end
 
-    def get_spent_amount(self, reference_date=None):
-        """
-        Calcular el monto gastado en el período actual según el modo de cálculo.
-
-        Args:
-            reference_date: Fecha de referencia (default: hoy)
-
-        Returns:
-            Decimal: Monto gastado
-        """
-        from transactions.models import Transaction
-        from django.db.models import Sum
-
-        start_date, end_date = self.get_period_dates(reference_date)
-
-        # Filtrar transacciones de gasto en el período, categoría y moneda
-        # La moneda se obtiene de la cuenta de origen de la transacción
-        transactions = Transaction.objects.filter(
-            user=self.user,
-            category=self.category,
-            date__gte=start_date,
-            date__lte=end_date,
-            type=2,  # Expense
-            origin_account__currency=self.currency,  # Filtrar por moneda del presupuesto
-        )
-
-        # Calcular según modo: base o total
-        if self.calculation_mode == self.BASE:
-            # Sumar base_amount (en centavos, convertir a Decimal)
-            total_cents = transactions.aggregate(total=Sum("base_amount"))["total"] or 0
-            # Convertir centavos a Decimal (dividir por 100)
-            return Decimal(str(total_cents)) / Decimal("100")
-        else:  # TOTAL
-            # Sumar total_amount (en centavos, convertir a Decimal)
-            total_cents = transactions.aggregate(total=Sum("total_amount"))["total"] or 0
-            # Convertir centavos a Decimal (dividir por 100)
-            return Decimal(str(total_cents)) / Decimal("100")
-
     def get_spent_percentage(self, reference_date=None):
         """
         Calcular el porcentaje gastado del presupuesto.

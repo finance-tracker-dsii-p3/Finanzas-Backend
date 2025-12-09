@@ -98,7 +98,6 @@ class BillService:
         Returns:
             dict: Estadísticas de recordatorios creados
         """
-        today = timezone.now().date()
         created_reminders = []
         
         # Obtener todas las facturas no pagadas
@@ -126,7 +125,7 @@ class BillService:
                             reminder_type="upcoming",
                             days=days_until_due
                         )
-                    except:
+                    except Exception:
                         pass
             
             # Recordatorio: Vence hoy
@@ -147,7 +146,7 @@ class BillService:
                             bill=bill,
                             reminder_type="due_today"
                         )
-                    except:
+                    except Exception:
                         pass
             
             # Recordatorio: Atrasada
@@ -170,7 +169,7 @@ class BillService:
                             reminder_type="overdue",
                             days=days_overdue
                         )
-                    except:
+                    except Exception:
                         pass
                     
                     # Actualizar estado a overdue si no lo está

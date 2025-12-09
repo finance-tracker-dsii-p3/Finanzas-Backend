@@ -9,7 +9,7 @@ from rest_framework import status
 from datetime import date
 from decimal import Decimal
 
-from utils.models import BaseCurrencySetting, ExchangeRate
+from utils.models import ExchangeRate
 from utils.currency_converter import FxService
 
 User = get_user_model()

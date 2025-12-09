@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 from datetime import date, timedelta
 from django.db import transaction as db_transaction
 from django.core.exceptions import ValidationError
@@ -79,7 +79,6 @@ class InstallmentPlanService:
 
         schedule = plan.get_payment_schedule()
         payments = []
-        today = date.today()
         for item in schedule:
             # Si keep_completed=True, saltar cuotas ya pagadas
             if keep_completed and item["installment_number"] in completed_numbers:

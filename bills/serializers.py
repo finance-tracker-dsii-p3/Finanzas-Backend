@@ -5,8 +5,6 @@ Serializers para gestión de facturas personales
 from rest_framework import serializers
 from bills.models import Bill, BillReminder
 from accounts.models import Account
-from categories.models import Category
-from transactions.models import Transaction
 
 
 class BillSerializer(serializers.ModelSerializer):
@@ -138,7 +136,7 @@ class BillPaymentSerializer(serializers.Serializer):
             raise serializers.ValidationError("Contexto de request requerido")
         
         try:
-            account = Account.objects.get(id=value, user=request.user)
+            Account.objects.get(id=value, user=request.user)
         except Account.DoesNotExist:
             raise serializers.ValidationError("La cuenta no existe o no te pertenece")
         

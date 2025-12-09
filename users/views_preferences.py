@@ -145,12 +145,12 @@ class UserNotificationPreferencesViewSet(viewsets.ModelViewSet):
         timezones_data = []
         for tz_name in common_timezones:
             try:
-                tz = pytz.timezone(tz_name)
+                pytz.timezone(tz_name)
                 timezones_data.append({
                     'timezone': tz_name,
                     'display_name': tz_name.replace('_', ' ')
                 })
-            except:
+            except Exception:
                 pass
         
         serializer = TimezoneListSerializer(timezones_data, many=True)

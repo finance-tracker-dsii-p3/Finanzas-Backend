@@ -201,7 +201,8 @@ class Transaction(models.Model):
         # - Gastos (Expense) desde cuentas NO exentas
         # - Transferencias (Transfer) desde cuentas NO exentas
         # - NO se aplica a ingresos (Income)
-        # - NO se aplica a tarjetas de crédito generalmente
+        # - NO se aplica a tarjetas de crédito
+        # - SOLO se aplica a cuentas en pesos colombianos (COP)
         self.gmf_amount = 0
 
         if self.origin_account and not self.origin_account.gmf_exempt:
@@ -209,11 +210,13 @@ class Transaction(models.Model):
             if self.type in [2, 3]:  # Expense o Transfer
                 # NO aplicar GMF a tarjetas de crédito
                 if self.origin_account.category != Account.CREDIT_CARD:
-                    # GMF = 4x1000 = 0.4% del monto base + impuestos
-                    amount_for_gmf = Decimal(str(self.base_amount)) + Decimal(
-                        str(self.taxed_amount)
-                    )
-                    self.gmf_amount = int(amount_for_gmf * Decimal("0.004"))  # 0.4% = 4/1000
+                    # GMF solo se aplica a cuentas en pesos colombianos (COP)
+                    if self.origin_account.currency == "COP":
+                        # GMF = 4x1000 = 0.4% del monto base + impuestos
+                        amount_for_gmf = Decimal(str(self.base_amount)) + Decimal(
+                            str(self.taxed_amount)
+                        )
+                        self.gmf_amount = int(amount_for_gmf * Decimal("0.004"))  # 0.4% = 4/1000
 
         # Calcular total: base + impuestos + GMF
         # El total_amount final siempre incluye GMF si aplica

@@ -216,5 +216,5 @@ class UserNotificationPreferences(models.Model):
         """Retorna el objeto pytz de la zona horaria"""
         try:
             return pytz.timezone(self.timezone)
-        except:
+        except Exception:
             return pytz.timezone("America/Bogota")

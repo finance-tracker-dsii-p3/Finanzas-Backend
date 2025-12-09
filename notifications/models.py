@@ -210,14 +210,14 @@ class CustomReminder(models.Model):
     @property
     def is_past_due(self):
         """Verifica si el recordatorio ya pasó su fecha"""
-        from datetime import datetime, time as datetime_time
+        from datetime import datetime
         now = dj_timezone.now()
         
         # Crear datetime del recordatorio en timezone del usuario
         try:
             prefs = self.user.notification_preferences
             tz = prefs.timezone_object
-        except:
+        except Exception:
             import pytz
             tz = pytz.timezone("America/Bogota")
         

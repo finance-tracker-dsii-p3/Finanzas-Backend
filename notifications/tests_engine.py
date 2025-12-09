@@ -385,7 +385,7 @@ class NotificationEngineTestCase(TestCase):
         )
 
         # Intentar crear notificación
-        notification = NotificationEngine.create_budget_warning(
+        NotificationEngine.create_budget_warning(
             user=user_no_prefs,
             budget=self.budget,
             percentage=85,

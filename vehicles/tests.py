@@ -9,10 +9,9 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from datetime import timedelta
 
-from vehicles.models import Vehicle, SOAT, SOATAlert
+from vehicles.models import Vehicle, SOAT
 from vehicles.services import SOATService
 from accounts.models import Account
-from categories.models import Category
 
 User = get_user_model()
 

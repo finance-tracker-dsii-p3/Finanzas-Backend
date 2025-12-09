@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from decimal import Decimal
 from credit_cards.models import InstallmentPlan, InstallmentPayment
 from accounts.models import Account
 from categories.models import Category

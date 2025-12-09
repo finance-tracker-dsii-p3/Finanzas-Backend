@@ -203,34 +203,76 @@ class TransactionSerializer(serializers.ModelSerializer):
         tax_percentage = data.get("tax_percentage")
 
         if base_amount is not None:
+            # El frontend ahora siempre envía montos en centavos (enteros)
+            # Si viene como float sin decimales, probablemente ya está en centavos
             if isinstance(base_amount, (float, Decimal)):
-                data["base_amount"] = int(Decimal(str(base_amount)) * Decimal("100"))
+                base_decimal = Decimal(str(base_amount))
+                # Verificar si es un entero (sin parte fraccionaria)
+                is_integer = base_decimal == base_decimal.quantize(Decimal('1'), rounding='ROUND_DOWN')
+                # Si el valor es >= 100 y es un entero, probablemente ya está en centavos
+                # (el frontend siempre envía enteros en centavos)
+                if base_decimal >= Decimal("100") and is_integer:
+                    # Valor grande sin decimales, ya está en centavos
+                    logger.info(f"[DEBUG] base_amount recibido como float pero es entero: {base_decimal}, tratando como centavos")
+                    data["base_amount"] = int(base_decimal)
+                else:
+                    # Tiene decimales o es pequeño, probablemente está en pesos
+                    logger.info(f"[DEBUG] base_amount recibido como float con decimales: {base_decimal}, convirtiendo de pesos a centavos")
+                    data["base_amount"] = int(base_decimal * Decimal("100"))
             elif isinstance(base_amount, str):
                 try:
                     decimal_val = Decimal(base_amount)
                     if "." in base_amount:
+                        # Tiene punto decimal, probablemente está en pesos
                         data["base_amount"] = int(decimal_val * Decimal("100"))
                     else:
+                        # Sin punto decimal, probablemente ya está en centavos
                         data["base_amount"] = int(decimal_val)
                 except (ValueError, TypeError):
                     pass
             elif isinstance(base_amount, int):
+                # Entero: asumimos que ya está en centavos (el frontend siempre envía así)
                 data["base_amount"] = base_amount
 
         if total_amount is not None:
+            # El frontend ahora siempre envía montos en centavos (enteros)
+            print(f"[DEBUG SERIALIZER] total_amount recibido: tipo={type(total_amount).__name__}, valor={total_amount}")
+            logger.info(f"[DEBUG] total_amount recibido: tipo={type(total_amount).__name__}, valor={total_amount}")
+            # Si viene como float sin decimales, probablemente ya está en centavos
             if isinstance(total_amount, (float, Decimal)):
-                data["total_amount"] = int(Decimal(str(total_amount)) * Decimal("100"))
+                total_decimal = Decimal(str(total_amount))
+                # Verificar si es un entero (sin parte fraccionaria)
+                is_integer = total_decimal == total_decimal.quantize(Decimal('1'), rounding='ROUND_DOWN')
+                # Si el valor es >= 100 y es un entero, probablemente ya está en centavos
+                # (el frontend siempre envía enteros en centavos)
+                if total_decimal >= Decimal("100") and is_integer:
+                    # Valor grande sin decimales, ya está en centavos
+                    logger.info(f"[DEBUG] total_amount recibido como float pero es entero: {total_decimal}, tratando como centavos")
+                    data["total_amount"] = int(total_decimal)
+                else:
+                    # Tiene decimales o es pequeño, probablemente está en pesos
+                    logger.info(f"[DEBUG] total_amount recibido como float con decimales: {total_decimal}, convirtiendo de pesos a centavos")
+                    data["total_amount"] = int(total_decimal * Decimal("100"))
             elif isinstance(total_amount, str):
                 try:
                     decimal_val = Decimal(total_amount)
                     if "." in total_amount:
+                        # Tiene punto decimal, probablemente está en pesos
+                        logger.info(f"[DEBUG] total_amount recibido como string con decimales: {decimal_val}, convirtiendo de pesos a centavos")
                         data["total_amount"] = int(decimal_val * Decimal("100"))
                     else:
+                        # Sin punto decimal, probablemente ya está en centavos
+                        logger.info(f"[DEBUG] total_amount recibido como string sin decimales: {decimal_val}, tratando como centavos")
                         data["total_amount"] = int(decimal_val)
                 except (ValueError, TypeError):
                     pass
             elif isinstance(total_amount, int):
+                # Entero: asumimos que ya está en centavos (el frontend siempre envía así)
+                print(f"[DEBUG SERIALIZER] total_amount recibido como int: {total_amount}, tratando como centavos")
+                logger.info(f"[DEBUG] total_amount recibido como int: {total_amount}, tratando como centavos")
                 data["total_amount"] = total_amount
+            print(f"[DEBUG SERIALIZER] total_amount final después de validación: {data.get('total_amount')}")
+            logger.info(f"[DEBUG] total_amount final después de validación: {data.get('total_amount')}")
 
         base_amount = data.get("base_amount")
         total_amount = data.get("total_amount")
@@ -381,17 +423,36 @@ class TransactionSerializer(serializers.ModelSerializer):
             final_total_pesos = (
                 Decimal(str(final_total)) / Decimal("100") if final_total else Decimal("0")
             )
+            # Determinar si el saldo aumenta o disminuye según el tipo de transacción
+            # Income (1) y Saving (4) aumentan el saldo (is_decrease=False)
+            # Expense (2) y Transfer (3) disminuyen el saldo (is_decrease=True)
+            is_decrease = transaction_type in [2, 3]  # Expense o Transfer
             TransactionSerializer._validate_account_limits(
-                origin_account, final_total_pesos, transaction_type, is_decrease=True
+                origin_account, final_total_pesos, transaction_type, is_decrease=is_decrease
             )
 
         if destination_account and transaction_type == 3:
-            final_total_pesos = (
-                Decimal(str(final_total)) / Decimal("100") if final_total else Decimal("0")
-            )
-            TransactionSerializer._validate_account_limits(
-                destination_account, final_total_pesos, transaction_type, is_decrease=False
-            )
+            # Para transferencias a tarjetas de crédito, usar capital_amount si está especificado
+            # De lo contrario, usar el total_amount
+            if (
+                destination_account.category == Account.CREDIT_CARD
+                and data.get("capital_amount") is not None
+            ):
+                capital_amount_pesos = (
+                    Decimal(str(data.get("capital_amount"))) / Decimal("100")
+                    if data.get("capital_amount")
+                    else Decimal("0")
+                )
+                TransactionSerializer._validate_account_limits(
+                    destination_account, capital_amount_pesos, transaction_type, is_decrease=False
+                )
+            else:
+                final_total_pesos = (
+                    Decimal(str(final_total)) / Decimal("100") if final_total else Decimal("0")
+                )
+                TransactionSerializer._validate_account_limits(
+                    destination_account, final_total_pesos, transaction_type, is_decrease=False
+                )
 
         goal = data.get("goal")
         if goal:
