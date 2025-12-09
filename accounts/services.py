@@ -173,31 +173,15 @@ class AccountService:
     @transaction.atomic
     def delete_account(account):
         """
-        Eliminar cuenta con validaciones
+        Eliminar cuenta sin restricciones de saldo o transacciones
 
         Args:
             account (Account): Cuenta a eliminar
 
         Returns:
             bool: True si se eliminó exitosamente
-
-        Raises:
-            ValueError: Si la cuenta no puede ser eliminada
         """
-        # Verificar si puede ser eliminada
-        if not account.can_be_deleted():
-            raise ValueError(
-                "No se puede eliminar la cuenta porque tiene transacciones asociadas. "
-                "Primero debe eliminar todas las transacciones o transferir el saldo."
-            )
-
-        # Verificar saldo
-        if account.current_balance != 0:
-            raise ValueError(
-                f"No se puede eliminar la cuenta porque tiene saldo: "
-                f"{account.current_balance} {account.currency}"
-            )
-
+        # Eliminar cuenta sin validaciones de saldo o transacciones
         account.delete()
 
         return True
@@ -390,21 +374,14 @@ class AccountService:
         """
         result = {"can_delete": True, "requires_confirmation": False, "warnings": [], "errors": []}
 
-        # Verificar saldo
+        # Advertencia informativa sobre saldo (no bloquea eliminación)
         if account.current_balance != 0:
             result["warnings"].append(
-                f"La cuenta tiene saldo: {account.current_balance} {account.currency}"
+                f"La cuenta tiene saldo: {account.current_balance} {account.currency}. "
+                "El saldo se perderá al eliminar la cuenta."
             )
-            result["requires_confirmation"] = True
 
-        # TODO: Verificar transacciones cuando esté implementado
-        # if account.transactions.exists():
-        #     result['warnings'].append(
-        #         f'La cuenta tiene {account.transactions.count()} transacciones'
-        #     )
-        #     result['requires_confirmation'] = True
-
-        # Verificar si es la única cuenta en su moneda
+        # Advertencia si es la única cuenta en su moneda
         same_currency_accounts = (
             Account.objects.filter(user=account.user, currency=account.currency, is_active=True)
             .exclude(id=account.id)
@@ -413,13 +390,8 @@ class AccountService:
 
         if same_currency_accounts == 0:
             result["warnings"].append(f"Es la única cuenta en {account.currency}")
-            result["requires_confirmation"] = True
 
-        # Si hay errores críticos
-        if not account.can_be_deleted() and not force:
-            result["can_delete"] = False
-            result["errors"].append(
-                "La cuenta tiene transacciones asociadas y no puede ser eliminada"
-            )
+        # No hay errores que bloqueen la eliminación
+        # Las cuentas se pueden eliminar en cualquier momento
 
         return result

@@ -406,10 +406,13 @@ class Budget(models.Model):
 
         # Solo consideramos transacciones de gasto (type=2) de este usuario, categoría y moneda
         # La moneda se obtiene de la cuenta de origen de la transacción
+        # IMPORTANTE: Las transferencias (type=3) NO se incluyen aquí para evitar doble conteo.
+        # Los pagos de tarjeta de crédito se registran como transferencias banco->tarjeta,
+        # por lo que NO deben contarse como gastos en los presupuestos.
         queryset = Transaction.objects.filter(
             user=self.user,
             category=self.category,
-            type=2,  # Expense
+            type=2,  # Expense (excluye Transfer=3 para evitar doble conteo)
             date__gte=start_date,
             date__lte=end_date,
             origin_account__currency=self.currency,  # Filtrar por moneda del presupuesto

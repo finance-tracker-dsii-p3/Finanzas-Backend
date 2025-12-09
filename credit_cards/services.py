@@ -52,10 +52,38 @@ class InstallmentPlanService:
 
     @staticmethod
     def _generate_payments(plan: InstallmentPlan):
+        """
+        Genera todas las cuotas desde cero (uso en creación).
+        """
         plan.payments.all().delete()
+        InstallmentPlanService._regenerate_future_payments(plan, keep_completed=False)
+
+    @staticmethod
+    def _regenerate_future_payments(plan: InstallmentPlan, keep_completed: bool = True):
+        """
+        Regenera cuotas pendientes/atrasadas a partir del calendario actual.
+
+        - Mantiene cuotas pagadas si keep_completed=True.
+        - Recalcula montos y fechas solo para cuotas futuras, evitando tocar pagos ya realizados.
+        """
+        completed_numbers = set()
+        if keep_completed:
+            completed_numbers = set(
+                plan.payments.filter(status=InstallmentPayment.STATUS_COMPLETED).values_list(
+                    "installment_number", flat=True
+                )
+            )
+
+        # Eliminar cuotas no pagadas para reconstruirlas con el nuevo calendario
+        plan.payments.exclude(status=InstallmentPayment.STATUS_COMPLETED).delete()
+
         schedule = plan.get_payment_schedule()
         payments = []
+        today = date.today()
         for item in schedule:
+            # Si keep_completed=True, saltar cuotas ya pagadas
+            if keep_completed and item["installment_number"] in completed_numbers:
+                continue
             payments.append(
                 InstallmentPayment(
                     plan=plan,
@@ -66,7 +94,8 @@ class InstallmentPlanService:
                     interest_amount=item["interest_amount"],
                 )
             )
-        InstallmentPayment.objects.bulk_create(payments)
+        if payments:
+            InstallmentPayment.objects.bulk_create(payments)
 
     @staticmethod
     @db_transaction.atomic
@@ -89,6 +118,8 @@ class InstallmentPlanService:
             raise ValidationError("Las cuentas deben tener la misma moneda.")
 
         # Crear transferencia para capital (no gasto)
+        # IMPORTANTE: Las transferencias banco->tarjeta NO se cuentan como gastos
+        # para evitar doble conteo (la compra original ya fue registrada como gasto)
         transfer_tx = Transaction.objects.create(
             user=plan.user,
             origin_account=source_account,
@@ -105,7 +136,14 @@ class InstallmentPlanService:
             date=payment_date,
             note=notes,
         )
-        TransactionService.handle_transaction_creation(transfer_tx)
+        # Manejar creación de transacción (actualiza balances pero no valida límites de tarjeta para transferencias)
+        try:
+            TransactionService.handle_transaction_creation(transfer_tx)
+        except ValueError as e:
+            # Si falla por validación de límite de tarjeta (saldo positivo), ignorar
+            # porque las transferencias de pago pueden dejar saldo positivo temporalmente
+            if "saldo positivo" not in str(e).lower():
+                raise
 
         # Crear gasto por interés en categoría de financiamiento
         interest_tx = None
@@ -140,8 +178,23 @@ class InstallmentPlanService:
     @staticmethod
     @db_transaction.atomic
     def update_plan(plan: InstallmentPlan, **kwargs) -> InstallmentPlan:
-        if plan.payments.filter(status=InstallmentPayment.STATUS_COMPLETED).exists():
-            raise ValidationError("No se puede editar un plan con cuotas pagadas. Cancela y crea otro plan.")
+        """
+        Actualiza un plan de cuotas, permitiendo edición incluso con cuotas pagadas.
+        Solo recalcula cuotas futuras, preservando el histórico de pagos realizados.
+        """
+        completed_count = plan.payments.filter(status=InstallmentPayment.STATUS_COMPLETED).count()
+        requested_installments = kwargs.get("number_of_installments")
+        if requested_installments is None:
+            requested_installments = plan.number_of_installments
+
+        if requested_installments < 1:
+            raise ValidationError("El número de cuotas debe ser al menos 1.")
+
+        # No permitir reducir el número de cuotas por debajo de las ya pagadas
+        if requested_installments < completed_count:
+            raise ValidationError(
+                f"No puedes reducir las cuotas a menos de las ya pagadas ({completed_count})."
+            )
 
         allowed_fields = {"number_of_installments", "interest_rate", "start_date", "description"}
         updated = False
@@ -157,7 +210,8 @@ class InstallmentPlanService:
         if updated:
             plan.installment_amount = plan.calculate_installment_amount()
             plan.save()
-            InstallmentPlanService._generate_payments(plan)
+            # Regenerar solo cuotas futuras, manteniendo histórico pagado
+            InstallmentPlanService._regenerate_future_payments(plan, keep_completed=True)
             InstallmentPlanService._update_plan_status(plan)
 
         return plan

@@ -2,6 +2,8 @@ from django.utils import timezone
 from datetime import timedelta
 from users.models import User
 from notifications.models import Notification
+from credit_cards.services import InstallmentPlanService
+from credit_cards.models import InstallmentPlan
 import logging
 
 logger = logging.getLogger(__name__)
@@ -100,6 +102,27 @@ class DashboardService:
             unread_notifications = Notification.objects.filter(user=user, read=False).count()
             total_notifications = Notification.objects.filter(user=user).count()
 
+            # Información de planes de cuotas (HU-16)
+            today = timezone.now().date()
+            upcoming_payments_qs = InstallmentPlanService.get_upcoming_payments(user, days=30)[:5]
+            upcoming_payments = [
+                {
+                    "plan_id": p.plan_id,
+                    "installment_number": p.installment_number,
+                    "due_date": p.due_date,
+                    "installment_amount": p.installment_amount,
+                    "status": p.status,
+                    "credit_card": p.plan.credit_card_account.name,
+                }
+                for p in upcoming_payments_qs
+            ]
+
+            monthly_summary = InstallmentPlanService.get_monthly_summary(
+                user, today.year, today.month
+            )
+
+            active_plans = InstallmentPlan.objects.filter(user=user, status="active").count()
+
             # Mini cards para usuarios
             mini_cards = [
                 {
@@ -149,6 +172,11 @@ class DashboardService:
                 "recent_activities": DashboardService._get_user_recent_activities(user),
                 "alerts": DashboardService._get_user_alerts(user),
                 "charts_data": {"basic_stats": True},
+                "credit_cards": {
+                    "upcoming_payments": upcoming_payments,
+                    "monthly_summary": monthly_summary,
+                    "active_plans": active_plans,
+                },
             }
 
         except Exception as e:

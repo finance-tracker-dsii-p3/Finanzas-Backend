@@ -307,12 +307,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         account = self.get_object()
 
         try:
-            # Validar si se puede desactivar
-            if account.is_active and account.current_balance != 0:
-                return Response(
-                    {"error": "No se puede desactivar una cuenta con saldo"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            # Permitir desactivar cuenta con saldo (solo advertencia, no bloqueo)
 
             account.is_active = not account.is_active
             account.save(update_fields=["is_active", "updated_at"])
