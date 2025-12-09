@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django.core.validators
@@ -12,7 +13,7 @@ class Migration(migrations.Migration):
         ("accounts", "0005_account_account_number_account_bank_name"),
         ("categories", "0002_alter_category_icon"),
         ("transactions", "0009_add_currency_conversion_fields"),
-        ("auth", "0012_alter_user_first_name_max_length"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -83,7 +84,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="installment_plans",
-                        to="auth.user",
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
