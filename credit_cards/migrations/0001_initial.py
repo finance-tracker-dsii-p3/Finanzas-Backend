@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ("users", "0001_initial"),
         ("accounts", "0005_account_account_number_account_bank_name"),
         ("categories", "0002_alter_category_icon"),
         ("transactions", "0009_add_currency_conversion_fields"),
