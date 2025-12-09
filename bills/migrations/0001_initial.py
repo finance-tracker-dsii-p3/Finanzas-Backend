@@ -10,6 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ('users', '0001_initial'),  # Asegurar que User existe primero
         ('transactions', '0009_add_currency_conversion_fields'),
         ('accounts', '0005_account_account_number_account_bank_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
