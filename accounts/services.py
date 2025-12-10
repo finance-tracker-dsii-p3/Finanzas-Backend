@@ -282,12 +282,14 @@ class AccountService:
         )
 
         for payment in transfer_payments:
-            total_paid += Decimal(str(payment.total_amount))
+            # Convertir centavos a pesos: total_amount está en centavos
+            total_paid += Decimal(str(payment.total_amount)) / Decimal("100")
             # Si tiene capital_amount especificado, usar ese; sino, todo el pago es capital
             if payment.capital_amount is not None:
-                capital_paid += Decimal(str(payment.capital_amount))
+                # capital_amount también está en centavos
+                capital_paid += Decimal(str(payment.capital_amount)) / Decimal("100")
             else:
-                capital_paid += Decimal(str(payment.total_amount))
+                capital_paid += Decimal(str(payment.total_amount)) / Decimal("100")
 
         # Ingresos donde la tarjeta es origen (aunque es raro para tarjetas de crédito)
         income_payments = Transaction.objects.filter(
@@ -296,8 +298,9 @@ class AccountService:
             type=1,  # Income
         ).aggregate(total=Sum("total_amount"))["total"] or Decimal("0.00")
 
-        total_paid += Decimal(str(income_payments))
-        capital_paid += Decimal(str(income_payments))  # Los ingresos directos son todo capital
+        # income_payments también está en centavos, convertir a pesos
+        total_paid += Decimal(str(income_payments)) / Decimal("100")
+        capital_paid += Decimal(str(income_payments)) / Decimal("100")  # Los ingresos directos son todo capital
 
         # El "lo usado" debería ser: deuda actual = gastos - capital pagado
         # Pero como current_balance ya refleja esto (se actualiza solo con capital),

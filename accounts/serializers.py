@@ -106,7 +106,7 @@ class AccountCreateSerializer(serializers.ModelSerializer):
             "current_balance": {"required": False, "default": Decimal("0.00")},
             "description": {"required": False},
             "bank_name": {"required": False},
-            "account_number": {"required": False},
+            "account_number": {"required": True},  # Ahora es obligatorio
             "is_active": {"required": False, "default": True},
             "gmf_exempt": {"required": False, "default": False},
             "expiration_date": {"required": False},
@@ -119,6 +119,32 @@ class AccountCreateSerializer(serializers.ModelSerializer):
         current_balance = attrs.get("current_balance", Decimal("0.00"))
         expiration_date = attrs.get("expiration_date")
         credit_limit = attrs.get("credit_limit")
+        account_number = attrs.get("account_number")
+        currency = attrs.get("currency", "COP")
+
+        # Validar número de cuenta: obligatorio con mínimo de dígitos según moneda
+        if not account_number or not account_number.strip():
+            raise serializers.ValidationError(
+                {"account_number": "El número de cuenta es requerido."}
+            )
+        
+        # Contar solo dígitos (ignorar espacios, guiones, etc.)
+        digits_only = "".join(filter(str.isdigit, account_number))
+        
+        # Mínimo de dígitos según moneda
+        min_digits_by_currency = {
+            "COP": 10,
+            "USD": 7,
+            "EUR": 8,
+        }
+        min_digits = min_digits_by_currency.get(currency, 10)
+        
+        if len(digits_only) < min_digits:
+            raise serializers.ValidationError(
+                {
+                    "account_number": f"El número de cuenta debe tener al menos {min_digits} dígitos para cuentas en {currency}."
+                }
+            )
 
         if category == Account.CREDIT_CARD:
             attrs["account_type"] = Account.LIABILITY

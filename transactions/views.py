@@ -38,12 +38,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
     ]
     filterset_class = TransactionFilter
     search_fields = ["tag", "date"]  # DRF search filter (optional)
-    ordering_fields = ["date", "total_amount"]  # user can order by these
-    ordering = ["-date"]  # default ordering
+    ordering_fields = ["date", "created_at", "total_amount"]  # user can order by these
+    ordering = ["-created_at"]  # default ordering: más reciente primero (por fecha y hora de creación)
 
     def get_queryset(self):
         """Filtrar transacciones por usuario autenticado"""
-        return Transaction.objects.filter(user=self.request.user).order_by("-date", "-created_at")
+        # Ordenar por fecha y hora de creación (más reciente primero)
+        # created_at tiene fecha y hora, así que es más preciso que solo date
+        return Transaction.objects.filter(user=self.request.user).order_by("-created_at")
 
     def get_serializer_class(self):
         """Seleccionar serializer según la acción"""
