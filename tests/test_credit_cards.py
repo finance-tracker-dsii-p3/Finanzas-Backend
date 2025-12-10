@@ -90,9 +90,7 @@ class CreditCardInstallmentsTests(TestCase):
         paid_amount = payment1.installment_amount
 
         # Editar plan: cambiar tasa de interés
-        updated_plan = InstallmentPlanService.update_plan(
-            self.plan, interest_rate=Decimal("1.50")
-        )
+        updated_plan = InstallmentPlanService.update_plan(self.plan, interest_rate=Decimal("1.50"))
 
         # Verificar que la cuota pagada sigue igual
         paid_payment = updated_plan.payments.get(installment_number=paid_number)
@@ -100,9 +98,7 @@ class CreditCardInstallmentsTests(TestCase):
         self.assertEqual(paid_payment.installment_amount, paid_amount)
 
         # Verificar que las cuotas futuras fueron recalculadas
-        future_payments = updated_plan.payments.filter(
-            status=InstallmentPayment.STATUS_PENDING
-        )
+        future_payments = updated_plan.payments.filter(status=InstallmentPayment.STATUS_PENDING)
         self.assertGreater(future_payments.count(), 0)
 
     def test_cannot_reduce_installments_below_paid(self):
@@ -178,4 +174,3 @@ class CreditCardInstallmentsTests(TestCase):
 
         # Verificar que la transferencia NO está en el presupuesto
         # (ya está validado porque get_spent_amount filtra por type=2, excluyendo TRANSFER=3)
-

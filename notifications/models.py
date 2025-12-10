@@ -105,13 +105,13 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.get_notification_type_display()} - {self.title} ({self.user})"
-    
+
     def mark_as_sent(self):
         """Marca la notificación como enviada"""
         if not self.sent_at:
             self.sent_at = dj_timezone.now()
             self.save(update_fields=["sent_at"])
-    
+
     def mark_as_read(self):
         """Marca la notificación como leída"""
         if not self.read:
@@ -125,49 +125,43 @@ class CustomReminder(models.Model):
     Modelo para recordatorios personalizados creados por el usuario
     Permite programar recordatorios con fecha y hora específicas
     """
-    
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="custom_reminders",
         verbose_name="Usuario",
-        help_text="Usuario propietario del recordatorio"
+        help_text="Usuario propietario del recordatorio",
     )
-    
+
     title = models.CharField(
-        max_length=200,
-        verbose_name="Título",
-        help_text="Título del recordatorio"
+        max_length=200, verbose_name="Título", help_text="Título del recordatorio"
     )
-    
+
     message = models.TextField(
-        verbose_name="Mensaje",
-        help_text="Mensaje detallado del recordatorio"
+        verbose_name="Mensaje", help_text="Mensaje detallado del recordatorio"
     )
-    
+
     reminder_date = models.DateField(
         verbose_name="Fecha del recordatorio",
-        help_text="Fecha en que se debe enviar el recordatorio"
+        help_text="Fecha en que se debe enviar el recordatorio",
     )
-    
+
     reminder_time = models.TimeField(
-        verbose_name="Hora del recordatorio",
-        help_text="Hora en que se debe enviar el recordatorio"
+        verbose_name="Hora del recordatorio", help_text="Hora en que se debe enviar el recordatorio"
     )
-    
+
     is_sent = models.BooleanField(
-        default=False,
-        verbose_name="Enviado",
-        help_text="Indica si el recordatorio ya fue enviado"
+        default=False, verbose_name="Enviado", help_text="Indica si el recordatorio ya fue enviado"
     )
-    
+
     sent_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Enviado en",
-        help_text="Fecha y hora en que se envió el recordatorio"
+        help_text="Fecha y hora en que se envió el recordatorio",
     )
-    
+
     notification = models.OneToOneField(
         Notification,
         null=True,
@@ -175,26 +169,24 @@ class CustomReminder(models.Model):
         on_delete=models.SET_NULL,
         related_name="custom_reminder",
         verbose_name="Notificación",
-        help_text="Notificación generada para este recordatorio"
+        help_text="Notificación generada para este recordatorio",
     )
-    
+
     is_read = models.BooleanField(
-        default=False,
-        verbose_name="Leído",
-        help_text="Indica si el recordatorio ha sido leído"
+        default=False, verbose_name="Leído", help_text="Indica si el recordatorio ha sido leído"
     )
-    
+
     read_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Leído en",
-        help_text="Fecha y hora en que se leyó el recordatorio"
+        help_text="Fecha y hora en que se leyó el recordatorio",
     )
-    
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name = "Recordatorio personalizado"
         verbose_name_plural = "Recordatorios personalizados"
@@ -203,38 +195,39 @@ class CustomReminder(models.Model):
             models.Index(fields=["user", "is_sent"]),
             models.Index(fields=["reminder_date", "reminder_time"]),
         ]
-    
+
     def __str__(self):
         return f"{self.title} - {self.reminder_date} {self.reminder_time}"
-    
+
     @property
     def is_past_due(self):
         """Verifica si el recordatorio ya pasó su fecha"""
         from datetime import datetime
+
         now = dj_timezone.now()
-        
+
         # Crear datetime del recordatorio en timezone del usuario
         try:
             prefs = self.user.notification_preferences
             tz = prefs.timezone_object
         except Exception:
             import pytz
+
             tz = pytz.timezone("America/Bogota")
-        
+
         reminder_datetime = dj_timezone.make_aware(
-            datetime.combine(self.reminder_date, self.reminder_time),
-            tz
+            datetime.combine(self.reminder_date, self.reminder_time), tz
         )
-        
+
         return now > reminder_datetime
-    
+
     def mark_as_sent(self):
         """Marca el recordatorio como enviado"""
         if not self.is_sent:
             self.is_sent = True
             self.sent_at = dj_timezone.now()
             self.save(update_fields=["is_sent", "sent_at"])
-    
+
     def mark_as_read(self):
         """Marca el recordatorio como leído"""
         if not self.is_read:

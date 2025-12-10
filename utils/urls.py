@@ -15,7 +15,7 @@ router = DefaultRouter()
 # GET   /api/utils/base-currency/{id}/     - Ver detalle de configuración
 # PUT   /api/utils/base-currency/{id}/     - Actualizar moneda base
 # PATCH /api/utils/base-currency/{id}/     - Actualizar moneda base parcial
-router.register(r'base-currency', views.BaseCurrencyViewSet, basename='base-currency')
+router.register(r"base-currency", views.BaseCurrencyViewSet, basename="base-currency")
 
 # /api/utils/exchange-rates/ - Gestión de tipos de cambio históricos mensuales
 # GET   /api/utils/exchange-rates/         - Listar tipos de cambio (filtros: year, month, from_currency, to_currency)
@@ -24,17 +24,14 @@ router.register(r'base-currency', views.BaseCurrencyViewSet, basename='base-curr
 # PUT   /api/utils/exchange-rates/{id}/    - Actualizar tipo de cambio
 # PATCH /api/utils/exchange-rates/{id}/    - Actualizar tipo de cambio parcial
 # DELETE /api/utils/exchange-rates/{id}/   - Eliminar tipo de cambio
-router.register(r'exchange-rates', views.ExchangeRateViewSet, basename='exchange-rates')
+router.register(r"exchange-rates", views.ExchangeRateViewSet, basename="exchange-rates")
 
 urlpatterns = [
     # Endpoints heredados (compatibilidad con código existente)
     # GET /api/utils/currency/exchange-rate/?from_currency=USD&to_currency=COP&date=2025-12-08
     path("currency/exchange-rate/", views.get_exchange_rate, name="exchange-rate"),
-    
     # POST /api/utils/currency/convert/ {\"amount\": 100, \"from_currency\": \"USD\", \"to_currency\": \"COP\", \"date\": \"2025-12-08\"}
     path("currency/convert/", views.convert_currency, name="convert-currency"),
-    
     # Nuevos endpoints para moneda base y tipos de cambio mensuales
     path("", include(router.urls)),
 ]
-

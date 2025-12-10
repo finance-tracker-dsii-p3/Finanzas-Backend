@@ -127,10 +127,10 @@ class AccountCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"account_number": "El número de cuenta es requerido."}
             )
-        
+
         # Contar solo dígitos (ignorar espacios, guiones, etc.)
         digits_only = "".join(filter(str.isdigit, account_number))
-        
+
         # Mínimo de dígitos según moneda
         min_digits_by_currency = {
             "COP": 10,
@@ -138,7 +138,7 @@ class AccountCreateSerializer(serializers.ModelSerializer):
             "EUR": 8,
         }
         min_digits = min_digits_by_currency.get(currency, 10)
-        
+
         if len(digits_only) < min_digits:
             raise serializers.ValidationError(
                 {

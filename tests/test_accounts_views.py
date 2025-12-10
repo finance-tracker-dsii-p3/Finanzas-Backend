@@ -1,0 +1,240 @@
+"""
+Tests para la API de Cuentas (accounts/views.py)
+Fase 1: Aumentar cobertura de tests
+"""
+
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from decimal import Decimal
+
+from accounts.models import Account, AccountOption, AccountOptionType
+
+User = get_user_model()
+
+
+class AccountsViewsTests(TestCase):
+    """Tests para endpoints de cuentas"""
+
+    def setUp(self):
+        """Configuración inicial para cada test"""
+        self.client = APIClient()
+
+        # Crear usuario y token
+        self.user = User.objects.create_user(
+            identification="12345678",
+            username="testuser",
+            email="test@example.com",
+            password="testpass123",
+            is_verified=True,
+        )
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
+
+        # Crear cuentas de prueba
+        self.bank_account = Account.objects.create(
+            user=self.user,
+            name="Banco Principal",
+            account_type=Account.ASSET,
+            category=Account.BANK_ACCOUNT,
+            current_balance=Decimal("1000.00"),
+            currency="COP",
+        )
+
+        self.credit_card = Account.objects.create(
+            user=self.user,
+            name="Tarjeta de Crédito",
+            account_type=Account.LIABILITY,
+            category=Account.CREDIT_CARD,
+            current_balance=Decimal("-500.00"),
+            currency="COP",
+        )
+
+    def test_list_accounts_success(self):
+        """Test: Listar cuentas exitosamente"""
+        response = self.client.get("/api/accounts/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 2)
+
+    def test_list_accounts_with_active_only_filter(self):
+        """Test: Listar solo cuentas activas"""
+        self.bank_account.is_active = False
+        self.bank_account.save()
+
+        response = self.client.get("/api/accounts/?active_only=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Tarjeta de Crédito")
+
+    def test_list_accounts_with_category_filter(self):
+        """Test: Filtrar cuentas por categoría"""
+        response = self.client.get("/api/accounts/?category=bank_account")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Banco Principal")
+
+    def test_list_accounts_with_account_type_filter(self):
+        """Test: Filtrar cuentas por tipo"""
+        response = self.client.get("/api/accounts/?account_type=asset")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Banco Principal")
+
+    def test_create_account_success(self):
+        """Test: Crear cuenta exitosamente"""
+        data = {
+            "name": "Nueva Cuenta",
+            "account_number": "1234567890123",  # Mínimo 13 dígitos para COP
+            "account_type": "asset",
+            "category": "bank_account",
+            "current_balance": "2000.00",
+            "currency": "COP",
+        }
+        response = self.client.post("/api/accounts/", data, format="json")
+        if response.status_code != status.HTTP_201_CREATED:
+            # Imprimir el error para debugging
+            print(f"Error response: {response.data}")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["name"], "Nueva Cuenta")
+        self.assertTrue(Account.objects.filter(name="Nueva Cuenta").exists())
+
+    def test_retrieve_account_success(self):
+        """Test: Obtener detalle de cuenta"""
+        response = self.client.get(f"/api/accounts/{self.bank_account.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Banco Principal")
+        self.assertEqual(response.data["id"], self.bank_account.id)
+
+    def test_update_account_success(self):
+        """Test: Actualizar cuenta exitosamente"""
+        data = {"name": "Banco Actualizado"}
+        response = self.client.patch(f"/api/accounts/{self.bank_account.id}/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Banco Actualizado")
+        self.bank_account.refresh_from_db()
+        self.assertEqual(self.bank_account.name, "Banco Actualizado")
+
+    def test_delete_account_success(self):
+        """Test: Eliminar cuenta exitosamente"""
+        account_id = self.bank_account.id
+        response = self.client.delete(f"/api/accounts/{account_id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Account.objects.filter(id=account_id).exists())
+
+    def test_summary_endpoint_success(self):
+        """Test: Obtener resumen financiero"""
+        response = self.client.get("/api/accounts/summary/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("total_assets", response.data)
+        self.assertIn("total_liabilities", response.data)
+        self.assertIn("net_worth", response.data)
+
+    def test_by_currency_endpoint_success(self):
+        """Test: Filtrar cuentas por moneda"""
+        # Crear cuenta en USD
+        Account.objects.create(
+            user=self.user,
+            name="USD Account",
+            account_type=Account.ASSET,
+            category=Account.BANK_ACCOUNT,
+            current_balance=Decimal("100.00"),
+            currency="USD",
+        )
+
+        response = self.client.get("/api/accounts/by_currency/?currency=COP")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 2)
+
+    def test_by_currency_endpoint_missing_parameter(self):
+        """Test: Error cuando falta parámetro currency"""
+        response = self.client.get("/api/accounts/by_currency/")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_by_currency_endpoint_invalid_currency(self):
+        """Test: Error con moneda inválida"""
+        response = self.client.get("/api/accounts/by_currency/?currency=XXX")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_update_balance_success(self):
+        """Test: Actualizar saldo de cuenta"""
+        data = {"new_balance": "1500.00", "reason": "Ajuste manual"}
+        response = self.client.post(
+            f"/api/accounts/{self.bank_account.id}/update_balance/", data, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.bank_account.refresh_from_db()
+        self.assertEqual(self.bank_account.current_balance, Decimal("1500.00"))
+
+    def test_update_balance_invalid_data(self):
+        """Test: Error al actualizar saldo con datos inválidos"""
+        data = {"new_balance": "invalid"}
+        response = self.client.post(
+            f"/api/accounts/{self.bank_account.id}/update_balance/", data, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_toggle_active_success(self):
+        """Test: Activar/desactivar cuenta"""
+        initial_status = self.bank_account.is_active
+        response = self.client.post(f"/api/accounts/{self.bank_account.id}/toggle_active/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.bank_account.refresh_from_db()
+        self.assertNotEqual(self.bank_account.is_active, initial_status)
+
+    def test_validate_deletion_success(self):
+        """Test: Validar eliminación de cuenta"""
+        response = self.client.post(f"/api/accounts/{self.bank_account.id}/validate_deletion/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("can_delete", response.data)
+        self.assertIn("warnings", response.data)
+
+    def test_credit_cards_summary_success(self):
+        """Test: Obtener resumen de tarjetas de crédito"""
+        response = self.client.get("/api/accounts/credit_cards_summary/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("cards_count", response.data)
+
+    def test_categories_stats_success(self):
+        """Test: Obtener estadísticas por categorías"""
+        response = self.client.get("/api/accounts/categories_stats/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+
+    def test_get_account_options_success(self):
+        """Test: Obtener opciones de cuentas"""
+        # Crear algunas opciones
+        AccountOption.objects.create(
+            option_type=AccountOptionType.BANK, name="Banco Test", is_active=True, order=1
+        )
+
+        response = self.client.get("/api/accounts/options/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("banks", response.data)
+        self.assertIn("wallets", response.data)
+        self.assertIn("credit_card_banks", response.data)
+
+    def test_list_requires_authentication(self):
+        """Test: Listar cuentas requiere autenticación"""
+        self.client.credentials()
+        response = self.client.get("/api/accounts/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_requires_authentication(self):
+        """Test: Crear cuenta requiere autenticación"""
+        self.client.credentials()
+        data = {
+            "name": "Nueva Cuenta",
+            "account_number": "123456789",
+            "account_type": "asset",
+            "category": "bank_account",
+            "current_balance": "2000.00",
+            "currency": "COP",
+        }
+        response = self.client.post("/api/accounts/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

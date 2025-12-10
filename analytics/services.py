@@ -40,18 +40,19 @@ class FinancialAnalyticsService:
         base_filter = Q(user=user, date__gte=start_date, date__lte=end_date) & ~Q(type=3)
 
         def _sum_by_currency(qs):
-            rows = (
-                qs.values("transaction_currency", "origin_account__currency")
-                .annotate(total=Sum(amount_field), count=Count("id"))
+            rows = qs.values("transaction_currency", "origin_account__currency").annotate(
+                total=Sum(amount_field), count=Count("id")
             )
             total_base = Decimal("0")
             total_count = 0
             for r in rows:
                 curr = r["transaction_currency"] or r["origin_account__currency"] or base_currency
                 amount = r["total"] or Decimal("0")
-                converted, _, _ = FxService.convert_to_base(
-                    int(amount), curr, base_currency, end_date
-                ) if amount is not None else (0, Decimal("1"), None)
+                converted, _, _ = (
+                    FxService.convert_to_base(int(amount), curr, base_currency, end_date)
+                    if amount is not None
+                    else (0, Decimal("1"), None)
+                )
                 total_base += Decimal(str(converted))
                 total_count += r["count"]
             return total_base, total_count
@@ -131,9 +132,13 @@ class FinancialAnalyticsService:
         category_totals = {}
         for item in rows:
             cat_id = item["category__id"]
-            currency = item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            currency = (
+                item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            )
             amount = item["amount"] or Decimal("0")
-            converted, _, _ = FxService.convert_to_base(int(amount), currency, base_currency, end_date)
+            converted, _, _ = FxService.convert_to_base(
+                int(amount), currency, base_currency, end_date
+            )
             if cat_id not in category_totals:
                 category_totals[cat_id] = {
                     "amount": Decimal("0"),
@@ -155,9 +160,13 @@ class FinancialAnalyticsService:
         uncategorized_amount = Decimal("0")
         uncategorized_count = 0
         for item in uncategorized_rows:
-            currency = item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            currency = (
+                item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            )
             amount = item["amount"] or Decimal("0")
-            converted, _, _ = FxService.convert_to_base(int(amount), currency, base_currency, end_date)
+            converted, _, _ = FxService.convert_to_base(
+                int(amount), currency, base_currency, end_date
+            )
             uncategorized_amount += Decimal(str(converted))
             uncategorized_count += item["count"]
 
@@ -410,14 +419,16 @@ class FinancialAnalyticsService:
                     "formatted_amount": f"${amount:,.0f}",
                     "account": tx.origin_account.name,
                     "tag": tx.tag,
-                    "category": {
-                        "id": tx.category.id if tx.category else None,
-                        "name": tx.category.name if tx.category else "Sin categoría",
-                        "color": tx.category.color if tx.category else "#6B7280",
-                        "icon": tx.category.icon if tx.category else "fa-question-circle",
-                    }
-                    if tx.category
-                    else None,
+                    "category": (
+                        {
+                            "id": tx.category.id if tx.category else None,
+                            "name": tx.category.name if tx.category else "Sin categoría",
+                            "color": tx.category.color if tx.category else "#6B7280",
+                            "icon": tx.category.icon if tx.category else "fa-question-circle",
+                        }
+                        if tx.category
+                        else None
+                    ),
                 }
             )
 
@@ -755,15 +766,17 @@ class FinancialAnalyticsService:
         return {
             "messages": insights,
             "alert_level": alert_level,
-            "has_significant_changes": any(
-                [
-                    income_diff.get("is_significant", False),
-                    expenses_diff.get("is_significant", False),
-                    balance_diff.get("is_significant", False),
-                ]
-            )
-            if period1_has_data and period2_has_data
-            else False,
+            "has_significant_changes": (
+                any(
+                    [
+                        income_diff.get("is_significant", False),
+                        expenses_diff.get("is_significant", False),
+                        balance_diff.get("is_significant", False),
+                    ]
+                )
+                if period1_has_data and period2_has_data
+                else False
+            ),
         }
 
     @staticmethod

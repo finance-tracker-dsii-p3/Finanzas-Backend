@@ -12,12 +12,13 @@ router = DefaultRouter()
 # PUT    /api/users/preferences/{id}/         - Actualizar preferencias completas
 # PATCH  /api/users/preferences/{id}/         - Actualizar preferencias parciales
 # GET    /api/users/preferences/timezones/    - Listar zonas horarias disponibles
-router.register(r"preferences", UserNotificationPreferencesViewSet, basename="notification-preferences")
+router.register(
+    r"preferences", UserNotificationPreferencesViewSet, basename="notification-preferences"
+)
 
 urlpatterns = [
     # Router endpoints
     path("", include(router.urls)),
-    
     # Autenticación
     path("register/", views.register_view, name="register"),  # POST - Registrar nuevo usuario
     path("login/", views.login_view, name="login"),  # POST - Iniciar sesión

@@ -16,16 +16,25 @@ class InstallmentPlanViewSet(viewsets.GenericViewSet):
     serializer_class = InstallmentPlanSerializer
 
     def get_queryset(self):
-        return InstallmentPlan.objects.filter(user=self.request.user).select_related(
-            "credit_card_account", "financing_category", "purchase_transaction"
-        ).prefetch_related("payments")
+        return (
+            InstallmentPlan.objects.filter(user=self.request.user)
+            .select_related("credit_card_account", "financing_category", "purchase_transaction")
+            .prefetch_related("payments")
+        )
 
     def list(self, request):
         serializer = InstallmentPlanSerializer(self.get_queryset(), many=True)
-        return Response({"status": "success", "data": {"count": len(serializer.data), "results": serializer.data}})
+        return Response(
+            {
+                "status": "success",
+                "data": {"count": len(serializer.data), "results": serializer.data},
+            }
+        )
 
     def create(self, request):
-        serializer = InstallmentPlanCreateSerializer(data=request.data, context={"request": request})
+        serializer = InstallmentPlanCreateSerializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         plan = InstallmentPlanService.create_from_transaction(
@@ -36,7 +45,9 @@ class InstallmentPlanViewSet(viewsets.GenericViewSet):
             financing_category=data["financing_category_obj"],
             description=data.get("description", ""),
         )
-        return Response({"status": "success", "data": {"plan_id": plan.id}}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"status": "success", "data": {"plan_id": plan.id}}, status=status.HTTP_201_CREATED
+        )
 
     def retrieve(self, request, pk=None):
         plan = self.get_object()

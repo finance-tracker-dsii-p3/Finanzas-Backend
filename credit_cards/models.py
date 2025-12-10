@@ -48,9 +48,13 @@ class InstallmentPlan(models.Model):
         blank=True,
         help_text="Valor de la cuota calculada en centavos",
     )
-    total_interest = models.IntegerField(default=0, help_text="Interés total proyectado en centavos")
+    total_interest = models.IntegerField(
+        default=0, help_text="Interés total proyectado en centavos"
+    )
     total_principal = models.IntegerField(default=0, help_text="Capital total del plan en centavos")
-    total_amount = models.IntegerField(default=0, help_text="Total a pagar (capital + interés) en centavos")
+    total_amount = models.IntegerField(
+        default=0, help_text="Total a pagar (capital + interés) en centavos"
+    )
     start_date = models.DateField(help_text="Fecha de inicio del plan")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     financing_category = models.ForeignKey(
@@ -73,7 +77,9 @@ class InstallmentPlan(models.Model):
         if self.purchase_transaction.user_id != self.user_id:
             raise ValidationError("La transacción de compra debe pertenecer al usuario.")
         if self.purchase_transaction.origin_account_id != self.credit_card_account_id:
-            raise ValidationError("La compra debe haberse hecho con la tarjeta de crédito seleccionada.")
+            raise ValidationError(
+                "La compra debe haberse hecho con la tarjeta de crédito seleccionada."
+            )
         if self.number_of_installments < 1:
             raise ValidationError("El número de cuotas debe ser al menos 1.")
         if self.interest_rate < 0:
@@ -111,9 +117,11 @@ class InstallmentPlan(models.Model):
         installment_amount = Decimal(self.installment_amount or self.calculate_installment_amount())
 
         for i in range(1, self.number_of_installments + 1):
-            interest_amount = (principal_remaining * rate).quantize(
-                Decimal("1."), rounding=ROUND_HALF_UP
-            ) if rate > 0 else Decimal("0")
+            interest_amount = (
+                (principal_remaining * rate).quantize(Decimal("1."), rounding=ROUND_HALF_UP)
+                if rate > 0
+                else Decimal("0")
+            )
             principal_amount = installment_amount - interest_amount
             if principal_amount < 0:
                 principal_amount = Decimal("0")

@@ -1,6 +1,7 @@
 """
 Serializers para configuración de monedas y tipos de cambio
 """
+
 from rest_framework import serializers
 from utils.models import BaseCurrencySetting, ExchangeRate
 from utils.currency_converter import FxService
@@ -9,7 +10,7 @@ from datetime import date
 
 class BaseCurrencySerializer(serializers.ModelSerializer):
     """Serializer para configuración de moneda base del usuario"""
-    
+
     class Meta:
         model = BaseCurrencySetting
         fields = ["base_currency", "updated_at"]
@@ -26,15 +27,12 @@ class BaseCurrencySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user
         validated_data["user"] = user
-        return BaseCurrencySetting.objects.update_or_create(
-            user=user,
-            defaults=validated_data
-        )[0]
+        return BaseCurrencySetting.objects.update_or_create(user=user, defaults=validated_data)[0]
 
 
 class ExchangeRateSerializer(serializers.ModelSerializer):
     """Serializer para tipos de cambio mensuales"""
-    
+
     class Meta:
         model = ExchangeRate
         fields = [
@@ -70,9 +68,7 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
         """Valida que el año sea razonable"""
         current_year = date.today().year
         if not 2000 <= value <= current_year + 10:
-            raise serializers.ValidationError(
-                f"El año debe estar entre 2000 y {current_year + 10}"
-            )
+            raise serializers.ValidationError(f"El año debe estar entre 2000 y {current_year + 10}")
         return value
 
     def validate_rate(self, value):

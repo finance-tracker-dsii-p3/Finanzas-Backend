@@ -48,12 +48,37 @@ jobs:
           python manage.py check
           python manage.py makemigrations --check --dry-run
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           DJANGO_ENV: testing
           DJANGO_SETTINGS_MODULE: finanzas_back.settings
         run: |
-          python manage.py test --verbosity 1 --keepdb
+          pip install pytest-cov
+          pytest --cov=. --cov-report=html --cov-report=term --cov-report=xml --cov-report=json --cov-fail-under=20 --cov-branch --verbosity=1
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+        continue-on-error: true
+
+      - name: Security scan with Bandit
+        run: |
+          pip install bandit[toml]
+          bandit -r . -f json -o bandit-report.json -ll || true
+        continue-on-error: true
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+          retention-days: 7
 
   deploy:
     needs: test
@@ -62,7 +87,7 @@ jobs:
     if: |
       github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') ||
       (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop'))
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -366,24 +366,52 @@ class Budget(models.Model):
         # Rango de fechas del período actual (mensual o anual)
         start_date, end_date = self.get_period_dates(reference_date)
 
-        # Solo consideramos transacciones de gasto (type=2) de este usuario, categoría y moneda
-        # La moneda se obtiene de la cuenta de origen de la transacción
+        # Solo consideramos transacciones de gasto (type=2) de este usuario y categoría
         # IMPORTANTE: Las transferencias (type=3) NO se incluyen aquí para evitar doble conteo.
         # Los pagos de tarjeta de crédito se registran como transferencias banco->tarjeta,
         # por lo que NO deben contarse como gastos en los presupuestos.
+        # IMPORTANTE: Incluimos transacciones de TODAS las monedas y las convertimos a la moneda del presupuesto
         queryset = Transaction.objects.filter(
             user=self.user,
             category=self.category,
             type=2,  # Expense (excluye Transfer=3 para evitar doble conteo)
             date__gte=start_date,
             date__lte=end_date,
-            origin_account__currency=self.currency,  # Filtrar por moneda del presupuesto
+            # NO filtramos por moneda aquí - convertiremos todas a la moneda del presupuesto
         )
 
         # Campo a sumar según modo de cálculo
         amount_field = "base_amount" if self.calculation_mode == self.BASE else "total_amount"
-        total_int = queryset.aggregate(total=models.Sum(amount_field))["total"] or 0
 
-        # Las transacciones usan enteros; asumimos que representan centavos.
-        total_decimal = (Decimal(total_int) / Decimal("100")).quantize(Decimal("0.01"))
+        # Convertir cada transacción a la moneda del presupuesto
+        from utils.currency_converter import FxService
+
+        total_decimal = Decimal("0")
+        for transaction in queryset:
+            # Obtener la moneda de la transacción
+            txn_currency = transaction.transaction_currency or (
+                transaction.origin_account.currency if transaction.origin_account else self.currency
+            )
+
+            # Obtener el monto en centavos
+            amount_cents = getattr(transaction, amount_field) or 0
+
+            # Si la moneda es diferente, convertir a la moneda del presupuesto
+            if txn_currency != self.currency:
+                try:
+                    converted_cents, _, _ = FxService.convert_amount(
+                        amount_cents, txn_currency, self.currency, transaction.date
+                    )
+                    amount_cents = converted_cents
+                except Exception:
+                    # Si falla la conversión, registrar error pero continuar
+                    # Nota: Se omite logging aquí para evitar import circular
+                    # El error se maneja silenciosamente omitiendo la transacción
+                    # Si no se puede convertir, no incluir esta transacción
+                    continue
+
+            # Convertir de centavos a decimal y sumar
+            amount_decimal = (Decimal(str(amount_cents)) / Decimal("100")).quantize(Decimal("0.01"))
+            total_decimal += amount_decimal
+
         return total_decimal

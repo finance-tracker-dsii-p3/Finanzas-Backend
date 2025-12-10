@@ -18,7 +18,7 @@ class TransactionService:
         transaction_type = transaction.type
         total_amount_cents = transaction.total_amount
         amount = Decimal(str(total_amount_cents)) / Decimal("100")
-        
+
         print(
             f"[DEBUG SERVICE] Actualizando saldo - Transacción ID: {transaction.id}, "
             f"total_amount (centavos): {total_amount_cents}, "
@@ -139,7 +139,7 @@ class TransactionService:
             # Income (1) y Saving (4) aumentan el saldo
             if transaction_type in [TransactionService.INCOME, TransactionService.SAVING]:
                 new_balance = current_balance + amount
-                
+
                 # Para cuentas de activo, no hay restricción (pueden aumentar sin límite)
                 # Para cuentas de pasivo, validar que no queden positivas
                 if account.account_type == Account.LIABILITY:
@@ -193,13 +193,10 @@ class TransactionService:
         if transaction.destination_account and transaction_type == TransactionService.TRANSFER:
             account = Account.objects.get(pk=transaction.destination_account.pk)
             current_balance = account.current_balance
-            
+
             # Para transferencias, el destino recibe el monto (aumenta el saldo)
             # Si es tarjeta de crédito y tiene capital_amount, usar ese monto
-            if (
-                account.category == Account.CREDIT_CARD
-                and transaction.capital_amount is not None
-            ):
+            if account.category == Account.CREDIT_CARD and transaction.capital_amount is not None:
                 capital_amount = Decimal(str(transaction.capital_amount)) / Decimal("100")
                 new_balance = current_balance + capital_amount
             else:

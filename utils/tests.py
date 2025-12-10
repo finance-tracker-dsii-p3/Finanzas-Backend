@@ -98,9 +98,7 @@ class FxServiceTest(TestCase):
 
     def test_convert_same_currency(self):
         """Convertir misma moneda retorna igual"""
-        converted, rate, warning = FxService.convert_amount(
-            10000, "COP", "COP", date(2025, 1, 15)
-        )
+        converted, rate, warning = FxService.convert_amount(10000, "COP", "COP", date(2025, 1, 15))
         self.assertEqual(converted, 10000)
         self.assertEqual(rate, Decimal("1"))
         self.assertIsNone(warning)
@@ -116,9 +114,7 @@ class FxServiceTest(TestCase):
 
     def test_convert_usd_to_cop(self):
         """Convertir USD a COP"""
-        converted, rate, warning = FxService.convert_amount(
-            10000, "USD", "COP", date(2025, 1, 15)
-        )
+        converted, rate, warning = FxService.convert_amount(10000, "USD", "COP", date(2025, 1, 15))
         # 100 USD * 4000 = 400,000 COP = 40,000,000 centavos
         self.assertEqual(converted, 40000000)
         self.assertEqual(rate, Decimal("4000.0"))
@@ -126,9 +122,7 @@ class FxServiceTest(TestCase):
 
     def test_fallback_to_previous_month(self):
         """Usar tipo de cambio de mes anterior si no existe el actual"""
-        converted, rate, warning = FxService.convert_amount(
-            10000, "USD", "COP", date(2025, 2, 15)
-        )
+        converted, rate, warning = FxService.convert_amount(10000, "USD", "COP", date(2025, 2, 15))
         # Debe usar la tasa de enero 2025
         self.assertEqual(converted, 40000000)
         self.assertIsNotNone(warning)

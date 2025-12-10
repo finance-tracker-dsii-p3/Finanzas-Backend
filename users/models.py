@@ -134,83 +134,83 @@ class UserNotificationPreferences(models.Model):
     Preferencias de notificaciones y recordatorios del usuario
     Incluye timezone, idioma y tipos de notificaciones habilitadas
     """
-    
+
     # Idiomas soportados
     SPANISH = "es"
     ENGLISH = "en"
-    
+
     LANGUAGE_CHOICES = [
         (SPANISH, "Español"),
         (ENGLISH, "English"),
     ]
-    
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="notification_preferences",
         verbose_name="Usuario",
-        help_text="Usuario propietario de las preferencias"
+        help_text="Usuario propietario de las preferencias",
     )
-    
+
     # Configuración regional
     timezone = models.CharField(
         max_length=50,
         default="America/Bogota",
         verbose_name="Zona horaria",
-        help_text="Zona horaria del usuario para programar recordatorios"
+        help_text="Zona horaria del usuario para programar recordatorios",
     )
-    
+
     language = models.CharField(
         max_length=2,
         choices=LANGUAGE_CHOICES,
         default=SPANISH,
         verbose_name="Idioma",
-        help_text="Idioma preferido para las notificaciones"
+        help_text="Idioma preferido para las notificaciones",
     )
-    
+
     # Tipos de notificaciones habilitadas
     enable_budget_alerts = models.BooleanField(
         default=True,
         verbose_name="Alertas de presupuesto",
-        help_text="Recibir alertas cuando se alcance el 80% o 100% del presupuesto"
+        help_text="Recibir alertas cuando se alcance el 80% o 100% del presupuesto",
     )
-    
+
     enable_bill_reminders = models.BooleanField(
         default=True,
         verbose_name="Recordatorios de facturas",
-        help_text="Recibir recordatorios de vencimiento de facturas"
+        help_text="Recibir recordatorios de vencimiento de facturas",
     )
-    
+
     enable_soat_reminders = models.BooleanField(
         default=True,
         verbose_name="Recordatorios de SOAT",
-        help_text="Recibir recordatorios de vencimiento de SOAT"
+        help_text="Recibir recordatorios de vencimiento de SOAT",
     )
-    
+
     enable_month_end_reminders = models.BooleanField(
         default=True,
         verbose_name="Recordatorios de fin de mes",
-        help_text="Recibir recordatorio de importar extractos antes del cierre del mes"
+        help_text="Recibir recordatorio de importar extractos antes del cierre del mes",
     )
-    
+
     enable_custom_reminders = models.BooleanField(
         default=True,
         verbose_name="Recordatorios personalizados",
-        help_text="Recibir recordatorios personalizados creados por el usuario"
+        help_text="Recibir recordatorios personalizados creados por el usuario",
     )
-    
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name = "Preferencia de notificaciones"
         verbose_name_plural = "Preferencias de notificaciones"
         db_table = "users_notification_preferences"
-    
+
     def __str__(self):
         return f"Preferencias de {self.user.username}"
-    
+
     @property
     def timezone_object(self):
         """Retorna el objeto pytz de la zona horaria"""

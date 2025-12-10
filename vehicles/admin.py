@@ -37,9 +37,10 @@ class SOATAdmin(admin.ModelAdmin):
     ]
     date_hierarchy = "expiry_date"
     ordering = ["-expiry_date"]
-    
+
     def cost_display(self, obj):
         return f"${obj.cost / 100:,.2f}"
+
     cost_display.short_description = "Costo"
 
 

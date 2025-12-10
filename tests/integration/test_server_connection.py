@@ -6,6 +6,7 @@ Script para verificar que el servidor Django esté funcionando correctamente
 import requests
 import time
 import sys
+import pytest
 
 
 def test_server_connection():
@@ -46,7 +47,9 @@ def test_server_connection():
         except requests.exceptions.ConnectionError:
             print(f"   ❌ ERROR: No se puede conectar a {url}")
             print("      → El servidor Django no está ejecutándose")
-            return False
+            pytest.skip(
+                "Servidor Django no está ejecutándose - test de integración requiere servidor activo"
+            )
         except requests.exceptions.Timeout:
             print(f"   ⏰ TIMEOUT: {url}")
         except Exception as e:
@@ -54,7 +57,7 @@ def test_server_connection():
 
     print("\n" + "=" * 50)
     print("✅ Servidor Django está funcionando correctamente")
-    return True
+    assert True  # Test passed
 
 
 def test_api_endpoints():
@@ -93,11 +96,13 @@ def test_api_endpoints():
 
         except requests.exceptions.ConnectionError:
             print(f"   ❌ ERROR: No se puede conectar")
-            return False
+            pytest.skip(
+                "Servidor Django no está ejecutándose - test de integración requiere servidor activo"
+            )
         except Exception as e:
             print(f"   ❌ ERROR: {str(e)}")
 
-    return True
+    assert True  # Test passed
 
 
 def main():

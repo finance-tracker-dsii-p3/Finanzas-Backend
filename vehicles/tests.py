@@ -18,7 +18,7 @@ User = get_user_model()
 
 class VehicleModelTest(TestCase):
     """Tests para el modelo Vehicle"""
-    
+
     def setUp(self):
         self.user = User.objects.create_user(
             identification="VEH-TEST-001",
@@ -27,7 +27,7 @@ class VehicleModelTest(TestCase):
             password="testpass123",
             role="user",
         )
-    
+
     def test_create_vehicle(self):
         """Crear vehículo básico"""
         vehicle = Vehicle.objects.create(
@@ -39,7 +39,7 @@ class VehicleModelTest(TestCase):
         )
         self.assertEqual(vehicle.plate, "ABC123")
         self.assertTrue(vehicle.is_active)
-    
+
     def test_plate_case_sensitive(self):
         """La placa conserva su formato original"""
         vehicle = Vehicle.objects.create(
@@ -51,7 +51,7 @@ class VehicleModelTest(TestCase):
 
 class SOATModelTest(TestCase):
     """Tests para el modelo SOAT"""
-    
+
     def setUp(self):
         self.user = User.objects.create_user(
             identification="SOAT-TEST-001",
@@ -64,7 +64,7 @@ class SOATModelTest(TestCase):
             user=self.user,
             plate="XYZ789",
         )
-    
+
     def test_create_soat(self):
         """Crear SOAT básico"""
         today = timezone.now().date()
@@ -76,7 +76,7 @@ class SOATModelTest(TestCase):
         )
         self.assertEqual(soat.status, "vigente")
         self.assertFalse(soat.is_paid)
-    
+
     def test_days_until_expiry(self):
         """Calcular días hasta vencimiento"""
         today = timezone.now().date()
@@ -87,7 +87,7 @@ class SOATModelTest(TestCase):
             cost=500000.00,
         )
         self.assertEqual(soat.days_until_expiry, 10)
-    
+
     def test_is_expired(self):
         """Verificar SOAT vencido"""
         today = timezone.now().date()
@@ -98,7 +98,7 @@ class SOATModelTest(TestCase):
             cost=500000.00,
         )
         self.assertTrue(soat.is_expired)
-    
+
     def test_is_near_expiry(self):
         """Verificar SOAT próximo a vencer"""
         today = timezone.now().date()
@@ -114,7 +114,7 @@ class SOATModelTest(TestCase):
 
 class SOATServiceTest(TestCase):
     """Tests para servicios de SOAT"""
-    
+
     def setUp(self):
         self.user = User.objects.create_user(
             identification="SRV-TEST-001",
@@ -143,16 +143,16 @@ class SOATServiceTest(TestCase):
             expiry_date=today + timedelta(days=365),
             cost=500000.00,  # 500,000 COP
         )
-    
+
     def test_register_payment(self):
         """Registrar pago de SOAT"""
         transaction = SOATService.register_payment(
             soat=self.soat,
             account_id=self.account.id,
             payment_date=timezone.now().date(),
-            notes="Pago anual"
+            notes="Pago anual",
         )
-        
+
         self.assertIsNotNone(transaction)
         self.soat.refresh_from_db()
         self.assertTrue(self.soat.is_paid)
@@ -161,7 +161,7 @@ class SOATServiceTest(TestCase):
 
 class VehicleAPITest(TestCase):
     """Tests para API de vehículos"""
-    
+
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -172,7 +172,7 @@ class VehicleAPITest(TestCase):
             role="user",
         )
         self.client.force_authenticate(user=self.user)
-    
+
     def test_create_vehicle(self):
         """POST /api/vehicles/"""
         data = {
@@ -184,12 +184,12 @@ class VehicleAPITest(TestCase):
         response = self.client.post("/api/vehicles/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["plate"], "API123")
-    
+
     def test_list_vehicles(self):
         """GET /api/vehicles/"""
         Vehicle.objects.create(user=self.user, plate="TEST1")
         Vehicle.objects.create(user=self.user, plate="TEST2")
-        
+
         response = self.client.get("/api/vehicles/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Verificar que hay resultados (puede estar paginado)
@@ -201,7 +201,7 @@ class VehicleAPITest(TestCase):
 
 class SOATAPITest(TestCase):
     """Tests para API de SOAT"""
-    
+
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -225,7 +225,7 @@ class SOATAPITest(TestCase):
             currency="COP",
             current_balance=1000000.00,
         )
-    
+
     def test_create_soat(self):
         """POST /api/soats/"""
         today = timezone.now().date()
@@ -238,7 +238,7 @@ class SOATAPITest(TestCase):
         }
         response = self.client.post("/api/soats/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    
+
     def test_register_payment(self):
         """POST /api/soats/{id}/register_payment/"""
         today = timezone.now().date()
@@ -248,16 +248,12 @@ class SOATAPITest(TestCase):
             expiry_date=today + timedelta(days=365),
             cost=500000.00,
         )
-        
+
         data = {
             "account_id": self.account.id,
             "payment_date": str(today),
             "notes": "Test payment",
         }
-        response = self.client.post(
-            f"/api/soats/{soat.id}/register_payment/",
-            data,
-            format="json"
-        )
+        response = self.client.post(f"/api/soats/{soat.id}/register_payment/", data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("transaction_id", response.data)

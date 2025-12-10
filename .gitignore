@@ -20,3 +20,13 @@ finanzas_back/settings/local.py
 # Archivos de despliegue específicos del usuario
 render-local.yaml
 deployment-notes.md
+
+# Archivos de cobertura
+coverage.json
+coverage.xml
+htmlcov/
+.coverage
+*.cover
+
+# Archivos de pre-commit
+.bandit

@@ -28,6 +28,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     base_currency = serializers.SerializerMethodField()
     base_equivalent_amount = serializers.SerializerMethodField()
     base_exchange_rate = serializers.SerializerMethodField()
+    base_exchange_rate_warning = serializers.SerializerMethodField()
 
     class Meta:
         model = Transaction
@@ -65,6 +66,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "base_currency",
             "base_equivalent_amount",
             "base_exchange_rate",
+            "base_exchange_rate_warning",
             "created_at",
             "updated_at",
         ]
@@ -85,9 +87,13 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
     def get_base_equivalent_amount(self, obj):
         base_currency = self._resolve_base()
-        txn_currency = obj.transaction_currency or (obj.origin_account.currency if obj.origin_account else base_currency)
+        txn_currency = obj.transaction_currency or (
+            obj.origin_account.currency if obj.origin_account else base_currency
+        )
         try:
-            logger.info(f"Converting {obj.total_amount} {txn_currency} -> {base_currency} on {obj.date}")
+            logger.info(
+                f"Converting {obj.total_amount} {txn_currency} -> {base_currency} on {obj.date}"
+            )
             converted, rate, warning = FxService.convert_to_base(
                 obj.total_amount, txn_currency, base_currency, obj.date
             )
@@ -99,15 +105,35 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
 
     def get_base_exchange_rate(self, obj):
         base_currency = self._resolve_base()
-        txn_currency = obj.transaction_currency or (obj.origin_account.currency if obj.origin_account else base_currency)
+        txn_currency = obj.transaction_currency or (
+            obj.origin_account.currency if obj.origin_account else base_currency
+        )
         if txn_currency == base_currency:
             return 1.0
         try:
-            _, rate, _ = FxService.convert_to_base(obj.total_amount, txn_currency, base_currency, obj.date)
+            _, rate, _ = FxService.convert_to_base(
+                obj.total_amount, txn_currency, base_currency, obj.date
+            )
             return float(rate)
         except Exception as e:
             logger.error(f"Rate lookup failed: {e}")
             return None
+
+    def get_base_exchange_rate_warning(self, obj):
+        base_currency = self._resolve_base()
+        txn_currency = obj.transaction_currency or (
+            obj.origin_account.currency if obj.origin_account else base_currency
+        )
+        if txn_currency == base_currency:
+            return None
+        try:
+            _, _, warning = FxService.convert_to_base(
+                obj.total_amount, txn_currency, base_currency, obj.date
+            )
+            return warning
+        except Exception as e:
+            logger.error(f"Warning lookup failed: {e}")
+            return f"Error al obtener tipo de cambio: {str(e)}"
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -208,16 +234,22 @@ class TransactionSerializer(serializers.ModelSerializer):
             if isinstance(base_amount, (float, Decimal)):
                 base_decimal = Decimal(str(base_amount))
                 # Verificar si es un entero (sin parte fraccionaria)
-                is_integer = base_decimal == base_decimal.quantize(Decimal('1'), rounding='ROUND_DOWN')
+                is_integer = base_decimal == base_decimal.quantize(
+                    Decimal("1"), rounding="ROUND_DOWN"
+                )
                 # Si el valor es >= 100 y es un entero, probablemente ya está en centavos
                 # (el frontend siempre envía enteros en centavos)
                 if base_decimal >= Decimal("100") and is_integer:
                     # Valor grande sin decimales, ya está en centavos
-                    logger.info(f"[DEBUG] base_amount recibido como float pero es entero: {base_decimal}, tratando como centavos")
+                    logger.info(
+                        f"[DEBUG] base_amount recibido como float pero es entero: {base_decimal}, tratando como centavos"
+                    )
                     data["base_amount"] = int(base_decimal)
                 else:
                     # Tiene decimales o es pequeño, probablemente está en pesos
-                    logger.info(f"[DEBUG] base_amount recibido como float con decimales: {base_decimal}, convirtiendo de pesos a centavos")
+                    logger.info(
+                        f"[DEBUG] base_amount recibido como float con decimales: {base_decimal}, convirtiendo de pesos a centavos"
+                    )
                     data["base_amount"] = int(base_decimal * Decimal("100"))
             elif isinstance(base_amount, str):
                 try:
@@ -236,43 +268,65 @@ class TransactionSerializer(serializers.ModelSerializer):
 
         if total_amount is not None:
             # El frontend ahora siempre envía montos en centavos (enteros)
-            print(f"[DEBUG SERIALIZER] total_amount recibido: tipo={type(total_amount).__name__}, valor={total_amount}")
-            logger.info(f"[DEBUG] total_amount recibido: tipo={type(total_amount).__name__}, valor={total_amount}")
+            print(
+                f"[DEBUG SERIALIZER] total_amount recibido: tipo={type(total_amount).__name__}, valor={total_amount}"
+            )
+            logger.info(
+                f"[DEBUG] total_amount recibido: tipo={type(total_amount).__name__}, valor={total_amount}"
+            )
             # Si viene como float sin decimales, probablemente ya está en centavos
             if isinstance(total_amount, (float, Decimal)):
                 total_decimal = Decimal(str(total_amount))
                 # Verificar si es un entero (sin parte fraccionaria)
-                is_integer = total_decimal == total_decimal.quantize(Decimal('1'), rounding='ROUND_DOWN')
+                is_integer = total_decimal == total_decimal.quantize(
+                    Decimal("1"), rounding="ROUND_DOWN"
+                )
                 # Si el valor es >= 100 y es un entero, probablemente ya está en centavos
                 # (el frontend siempre envía enteros en centavos)
                 if total_decimal >= Decimal("100") and is_integer:
                     # Valor grande sin decimales, ya está en centavos
-                    logger.info(f"[DEBUG] total_amount recibido como float pero es entero: {total_decimal}, tratando como centavos")
+                    logger.info(
+                        f"[DEBUG] total_amount recibido como float pero es entero: {total_decimal}, tratando como centavos"
+                    )
                     data["total_amount"] = int(total_decimal)
                 else:
                     # Tiene decimales o es pequeño, probablemente está en pesos
-                    logger.info(f"[DEBUG] total_amount recibido como float con decimales: {total_decimal}, convirtiendo de pesos a centavos")
+                    logger.info(
+                        f"[DEBUG] total_amount recibido como float con decimales: {total_decimal}, convirtiendo de pesos a centavos"
+                    )
                     data["total_amount"] = int(total_decimal * Decimal("100"))
             elif isinstance(total_amount, str):
                 try:
                     decimal_val = Decimal(total_amount)
                     if "." in total_amount:
                         # Tiene punto decimal, probablemente está en pesos
-                        logger.info(f"[DEBUG] total_amount recibido como string con decimales: {decimal_val}, convirtiendo de pesos a centavos")
+                        logger.info(
+                            f"[DEBUG] total_amount recibido como string con decimales: {decimal_val}, convirtiendo de pesos a centavos"
+                        )
                         data["total_amount"] = int(decimal_val * Decimal("100"))
                     else:
                         # Sin punto decimal, probablemente ya está en centavos
-                        logger.info(f"[DEBUG] total_amount recibido como string sin decimales: {decimal_val}, tratando como centavos")
+                        logger.info(
+                            f"[DEBUG] total_amount recibido como string sin decimales: {decimal_val}, tratando como centavos"
+                        )
                         data["total_amount"] = int(decimal_val)
                 except (ValueError, TypeError):
                     pass
             elif isinstance(total_amount, int):
                 # Entero: asumimos que ya está en centavos (el frontend siempre envía así)
-                print(f"[DEBUG SERIALIZER] total_amount recibido como int: {total_amount}, tratando como centavos")
-                logger.info(f"[DEBUG] total_amount recibido como int: {total_amount}, tratando como centavos")
+                print(
+                    f"[DEBUG SERIALIZER] total_amount recibido como int: {total_amount}, tratando como centavos"
+                )
+                logger.info(
+                    f"[DEBUG] total_amount recibido como int: {total_amount}, tratando como centavos"
+                )
                 data["total_amount"] = total_amount
-            print(f"[DEBUG SERIALIZER] total_amount final después de validación: {data.get('total_amount')}")
-            logger.info(f"[DEBUG] total_amount final después de validación: {data.get('total_amount')}")
+            print(
+                f"[DEBUG SERIALIZER] total_amount final después de validación: {data.get('total_amount')}"
+            )
+            logger.info(
+                f"[DEBUG] total_amount final después de validación: {data.get('total_amount')}"
+            )
 
         base_amount = data.get("base_amount")
         total_amount = data.get("total_amount")
@@ -539,9 +593,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             if new_balance < 0:
                 raise serializers.ValidationError(
                     {
-                        "origin_account"
-                        if is_decrease
-                        else "destination_account": f"No se puede realizar esta transacción. El saldo resultante sería negativo (${new_balance:,.2f}). "
+                        (
+                            "origin_account" if is_decrease else "destination_account"
+                        ): f"No se puede realizar esta transacción. El saldo resultante sería negativo (${new_balance:,.2f}). "
                         f"Saldo actual: ${current_balance:,.2f}, Monto: ${amount_decimal:,.2f}"
                     }
                 )
@@ -567,9 +621,9 @@ class TransactionSerializer(serializers.ModelSerializer):
                 if new_balance > 0:
                     raise serializers.ValidationError(
                         {
-                            "origin_account"
-                            if is_decrease
-                            else "destination_account": "Las tarjetas de crédito no pueden tener saldo positivo."
+                            (
+                                "origin_account" if is_decrease else "destination_account"
+                            ): "Las tarjetas de crédito no pueden tener saldo positivo."
                         }
                     )
             else:
@@ -577,9 +631,9 @@ class TransactionSerializer(serializers.ModelSerializer):
                 if new_balance > 0:
                     raise serializers.ValidationError(
                         {
-                            "origin_account"
-                            if is_decrease
-                            else "destination_account": "Las cuentas de pasivo no pueden tener saldo positivo."
+                            (
+                                "origin_account" if is_decrease else "destination_account"
+                            ): "Las cuentas de pasivo no pueden tener saldo positivo."
                         }
                     )
 
@@ -668,9 +722,11 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
         )
         destination_account = data.get(
             "destination_account",
-            self.instance.destination_account
-            if hasattr(self, "instance") and self.instance
-            else None,
+            (
+                self.instance.destination_account
+                if hasattr(self, "instance") and self.instance
+                else None
+            ),
         )
         category = data.get(
             "category",
@@ -856,9 +912,11 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
             account_currency = origin_account.currency
             transaction_currency = data.get(
                 "transaction_currency",
-                self.instance.transaction_currency
-                if hasattr(self, "instance") and self.instance
-                else None,
+                (
+                    self.instance.transaction_currency
+                    if hasattr(self, "instance") and self.instance
+                    else None
+                ),
             )
 
             if transaction_currency and transaction_currency != account_currency:
@@ -903,9 +961,9 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
             if new_balance < 0:
                 raise serializers.ValidationError(
                     {
-                        "origin_account"
-                        if is_decrease
-                        else "destination_account": f"No se puede realizar esta transacción. El saldo resultante sería negativo (${new_balance:,.2f}). "
+                        (
+                            "origin_account" if is_decrease else "destination_account"
+                        ): f"No se puede realizar esta transacción. El saldo resultante sería negativo (${new_balance:,.2f}). "
                         f"Saldo actual: ${current_balance:,.2f}, Monto: ${amount_decimal:,.2f}"
                     }
                 )
@@ -931,9 +989,9 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 if new_balance > 0:
                     raise serializers.ValidationError(
                         {
-                            "origin_account"
-                            if is_decrease
-                            else "destination_account": "Las tarjetas de crédito no pueden tener saldo positivo."
+                            (
+                                "origin_account" if is_decrease else "destination_account"
+                            ): "Las tarjetas de crédito no pueden tener saldo positivo."
                         }
                     )
             else:
@@ -941,9 +999,9 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 if new_balance > 0:
                     raise serializers.ValidationError(
                         {
-                            "origin_account"
-                            if is_decrease
-                            else "destination_account": "Las cuentas de pasivo no pueden tener saldo positivo."
+                            (
+                                "origin_account" if is_decrease else "destination_account"
+                            ): "Las cuentas de pasivo no pueden tener saldo positivo."
                         }
                     )
 

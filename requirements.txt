@@ -1,4 +1,4 @@
-# Django Backend 
+# Django Backend
 # Proyecto FINANZAS-BACKEND - Requirements
 
 # Core Django Framework
@@ -21,6 +21,7 @@ drf-spectacular==0.26.5  # OpenAPI/Swagger generation
 pytest==8.4.1
 pytest-django==4.8.0
 pytest-cov==4.1.0  # Coverage reporting
+bandit[toml]==1.7.5  # Security linting
 
 # Development Tools
 django-debug-toolbar==4.2.0  # Debug toolbar

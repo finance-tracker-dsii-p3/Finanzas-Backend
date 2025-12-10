@@ -1,5 +1,5 @@
 [tool.ruff]
-target-version = "py313"
+target-version = "py312"
 line-length = 100
 exclude = [
   "**/migrations/**",
@@ -22,4 +22,3 @@ ignore = ["E501"]
 "clean_active_entries.py" = ["E402", "F401"]
 "scripts/**/*.py" = ["E402", "F401"]
 "finanzas_back/settings/**/*.py" = ["F403", "F405"]
-

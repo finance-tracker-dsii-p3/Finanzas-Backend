@@ -210,17 +210,22 @@ class Transaction(models.Model):
             if self.type in [2, 3]:  # Expense o Transfer
                 # NO aplicar GMF a tarjetas de crédito ni efectivo (ni como origen ni como destino)
                 is_origin_credit_card = self.origin_account.category == Account.CREDIT_CARD
-                is_origin_cash = self.origin_account.category == Account.OTHER  # Efectivo se mapea a 'other'
+                is_origin_cash = (
+                    self.origin_account.category == Account.OTHER
+                )  # Efectivo se mapea a 'other'
                 is_destination_credit_card = (
                     self.destination_account
                     and self.destination_account.category == Account.CREDIT_CARD
                 )
                 is_destination_cash = (
-                    self.destination_account
-                    and self.destination_account.category == Account.OTHER
+                    self.destination_account and self.destination_account.category == Account.OTHER
                 )
-                if (not is_origin_credit_card and not is_origin_cash 
-                    and not is_destination_credit_card and not is_destination_cash):
+                if (
+                    not is_origin_credit_card
+                    and not is_origin_cash
+                    and not is_destination_credit_card
+                    and not is_destination_cash
+                ):
                     # GMF solo se aplica a cuentas en pesos colombianos (COP)
                     if self.origin_account.currency == "COP":
                         # GMF = 4x1000 = 0.4% del monto base + impuestos

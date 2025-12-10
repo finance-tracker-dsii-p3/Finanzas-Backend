@@ -300,7 +300,9 @@ class AccountService:
 
         # income_payments también está en centavos, convertir a pesos
         total_paid += Decimal(str(income_payments)) / Decimal("100")
-        capital_paid += Decimal(str(income_payments)) / Decimal("100")  # Los ingresos directos son todo capital
+        capital_paid += Decimal(str(income_payments)) / Decimal(
+            "100"
+        )  # Los ingresos directos son todo capital
 
         # El "lo usado" debería ser: deuda actual = gastos - capital pagado
         # Pero como current_balance ya refleja esto (se actualiza solo con capital),

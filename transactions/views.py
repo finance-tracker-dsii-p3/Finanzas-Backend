@@ -39,7 +39,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
     filterset_class = TransactionFilter
     search_fields = ["tag", "date"]  # DRF search filter (optional)
     ordering_fields = ["date", "created_at", "total_amount"]  # user can order by these
-    ordering = ["-created_at"]  # default ordering: más reciente primero (por fecha y hora de creación)
+    ordering = [
+        "-created_at"
+    ]  # default ordering: más reciente primero (por fecha y hora de creación)
 
     def get_queryset(self):
         """Filtrar transacciones por usuario autenticado"""
