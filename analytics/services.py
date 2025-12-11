@@ -251,6 +251,7 @@ class FinancialAnalyticsService:
             "mode": mode,
             "period_summary": f"{start_date.strftime('%d/%m')} - {end_date.strftime('%d/%m')}",
             "categories_count": len(main_categories) + len(others_categories),
+            "currency": base_currency,
         }
 
     @staticmethod
@@ -268,26 +269,39 @@ class FinancialAnalyticsService:
             Dict con series de datos para gráfico de líneas
         """
         amount_field = "base_amount" if mode == "base" else "total_amount"
+        base_currency = FxService.get_base_currency(user)
 
-        # Obtener transacciones diarias agrupadas (sin transferencias)
+        # Obtener transacciones diarias agrupadas por fecha, tipo Y moneda (sin transferencias)
         daily_transactions = (
             Transaction.objects.filter(user=user, date__gte=start_date, date__lte=end_date)
             .exclude(type=3)
-            .values("date")
-            .annotate(
-                income=Sum(amount_field, filter=Q(type=1)),
-                expenses=Sum(amount_field, filter=Q(type=2)),
-            )
+            .values("date", "type", "transaction_currency", "origin_account__currency")
+            .annotate(total=Sum(amount_field), count=Count("id"))
             .order_by("date")
         )
 
-        # Crear diccionario para búsqueda rápida
+        # Crear diccionario para búsqueda rápida, agrupando por fecha y convirtiendo monedas
         transactions_by_date = {}
         for item in daily_transactions:
-            transactions_by_date[item["date"]] = {
-                "income": float(item["income"] or 0),
-                "expenses": float(item["expenses"] or 0),
-            }
+            transaction_date = item["date"]
+            transaction_type = item["type"]
+            curr = item["transaction_currency"] or item["origin_account__currency"] or base_currency
+            amount = item["total"] or Decimal("0")
+
+            # Convertir a moneda base
+            converted, _, _ = FxService.convert_to_base(
+                int(amount), curr, base_currency, transaction_date
+            )
+
+            # Inicializar fecha si no existe
+            if transaction_date not in transactions_by_date:
+                transactions_by_date[transaction_date] = {"income": 0.0, "expenses": 0.0}
+
+            # Acumular por tipo (1=ingreso, 2=gasto)
+            if transaction_type == 1:
+                transactions_by_date[transaction_date]["income"] += float(converted)
+            elif transaction_type == 2:
+                transactions_by_date[transaction_date]["expenses"] += float(converted)
 
         # Generar series de datos día por día
         dates = []
@@ -351,6 +365,7 @@ class FinancialAnalyticsService:
             },
             "mode": mode,
             "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+            "currency": base_currency,
         }
 
     @staticmethod
@@ -548,6 +563,8 @@ class FinancialAnalyticsService:
         Returns:
             Dict con comparación detallada entre períodos
         """
+        base_currency = FxService.get_base_currency(user)
+
         # Obtener indicadores de ambos períodos
         period1_data = FinancialAnalyticsService.get_period_indicators(
             user, period1_start, period1_end, mode
@@ -656,7 +673,7 @@ class FinancialAnalyticsService:
             "metadata": {
                 "generated_at": date.today().isoformat(),
                 "comparison_mode": mode,
-                "currency": "COP",
+                "currency": base_currency,
             },
         }
 
