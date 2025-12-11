@@ -67,14 +67,14 @@ El campo `formatted` del backend está mostrando los centavos directamente sin d
 function formatAmount(centavos, currency = 'COP') {
   // Convertir centavos a unidad monetaria
   const amount = centavos / 100;
-  
+
   // Formatear según la moneda
   const locale = {
     'COP': 'es-CO',
     'USD': 'en-US',
     'EUR': 'de-DE'
   }[currency] || 'es-CO';
-  
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
@@ -138,7 +138,7 @@ class CurrencyFormatter {
   static format(cents: number, currency: string): string {
     const amount = this.centsToCurrency(cents);
     const locale = this.LOCALES[currency as keyof typeof this.LOCALES] || 'es-CO';
-    
+
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currency,
@@ -374,6 +374,6 @@ Se corrigieron los siguientes endpoints para que TODOS retornen el campo `curren
 
 ---
 
-**Última actualización:** 10 de diciembre de 2025  
-**Versión:** 1.2  
+**Última actualización:** 10 de diciembre de 2025
+**Versión:** 1.2
 **Autor:** Backend Team

@@ -222,12 +222,12 @@ export const CurrencySelector: React.FC = () => {
 
       setBaseCurrency(newCurrency);
       setMessage(response.data.message);
-      
+
       // Recargar datos de analytics/dashboard
-      window.dispatchEvent(new CustomEvent('currency-changed', { 
-        detail: { currency: newCurrency } 
+      window.dispatchEvent(new CustomEvent('currency-changed', {
+        detail: { currency: newCurrency }
       }));
-      
+
     } catch (error) {
       console.error('Error al cambiar moneda:', error);
       setMessage('Error al actualizar la moneda. Intenta de nuevo.');
@@ -251,7 +251,7 @@ export const CurrencySelector: React.FC = () => {
           </option>
         ))}
       </select>
-      
+
       {loading && <span>Actualizando...</span>}
       {message && <p className="message">{message}</p>}
     </div>
@@ -271,7 +271,7 @@ async function getCurrentBaseCurrency() {
       'Authorization': `Token ${localStorage.getItem('authToken')}`
     }
   });
-  
+
   const data = await response.json();
   return data.base_currency; // "COP", "USD", o "EUR"
 }
@@ -295,7 +295,7 @@ async function changeBaseCurrency(newCurrency) {
 
   const data = await response.json();
   console.log(data.message); // "Moneda base actualizada a USD..."
-  
+
   // Recargar datos de analytics
   reloadAnalytics();
 }
@@ -333,7 +333,7 @@ export function useBaseCurrency() {
           'Authorization': `Token ${localStorage.getItem('authToken')}`
         }
       });
-      
+
       baseCurrency.value = response.data.base_currency;
       availableCurrencies.value = response.data.available_currencies;
     } catch (err) {
@@ -441,7 +441,7 @@ console.log(`${symbol}${amount.toLocaleString()}`);
 ```javascript
 async function onCurrencyChange(newCurrency) {
   await changeBaseCurrency(newCurrency);
-  
+
   // Recargar todos los componentes que muestran valores monetarios
   await Promise.all([
     fetchAnalytics(),
