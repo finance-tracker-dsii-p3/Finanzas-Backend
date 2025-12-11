@@ -302,9 +302,48 @@ def admin_edit_user_view(request, user_id):
     basic_fields = ["first_name", "last_name", "email", "phone", "identification"]
     update_data = {k: v for k, v in request.data.items() if k in basic_fields}
 
+    # Validar email duplicado si se está cambiando
+    if "email" in update_data:
+        new_email = update_data["email"]
+        if new_email != target_user.email:
+            # Verificar que el email no esté en uso por otro usuario
+            if User.objects.filter(email=new_email).exclude(id=target_user.id).exists():
+                return Response(
+                    {"error": f"El email {new_email} ya está en uso por otro usuario"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # Validar formato de email
+            from django.core.exceptions import ValidationError
+            from django.core.validators import validate_email
+
+            try:
+                validate_email(new_email)
+            except ValidationError:
+                return Response(
+                    {"error": "Formato de email inválido"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+    # Validar identificación duplicada si se está cambiando
+    if "identification" in update_data:
+        new_identification = update_data["identification"]
+        if new_identification != target_user.identification:
+            if (
+                User.objects.filter(identification=new_identification)
+                .exclude(id=target_user.id)
+                .exists()
+            ):
+                return Response(
+                    {
+                        "error": f"La identificación {new_identification} ya está en uso por otro usuario"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
     # Campos administrativos especiales
     admin_fields = {}
     changes_made = []
+    audit_log = []  # Para registrar cambios de auditoría
 
     # Manejo de cambio de rol
     if "role" in request.data:
@@ -355,6 +394,63 @@ def admin_edit_user_view(request, user_id):
             # Marcar que la verificación cambió para activar el signal
             target_user._verification_changed = True
             changes_made.append("verificado" if new_verification else "desverificado")
+            audit_log.append(
+                {
+                    "field": "is_verified",
+                    "old_value": str(target_user.is_verified),
+                    "new_value": str(new_verification),
+                    "changed_by": request.user.username,
+                    "changed_at": timezone.now().isoformat(),
+                }
+            )
+            # Registrar también el cambio de verified_by si se está verificando
+            if new_verification and target_user.verified_by != request.user:
+                audit_log.append(
+                    {
+                        "field": "verified_by",
+                        "old_value": (
+                            str(target_user.verified_by.username)
+                            if target_user.verified_by
+                            else None
+                        ),
+                        "new_value": request.user.username,
+                        "changed_by": request.user.username,
+                        "changed_at": timezone.now().isoformat(),
+                    }
+                )
+
+    # Manejo de activar/desactivar usuario (is_active)
+    if "is_active" in request.data:
+        new_is_active = request.data["is_active"]
+        # Convertir string a boolean si es necesario
+        if isinstance(new_is_active, str):
+            if new_is_active.lower() == "true":
+                new_is_active = True
+            elif new_is_active.lower() == "false":
+                new_is_active = False
+            else:
+                return Response(
+                    {"error": "is_active debe ser true o false"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        elif not isinstance(new_is_active, bool):
+            return Response(
+                {"error": "is_active debe ser true o false"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if target_user.is_active != new_is_active:
+            admin_fields["is_active"] = new_is_active
+            changes_made.append("activado" if new_is_active else "desactivado")
+            audit_log.append(
+                {
+                    "field": "is_active",
+                    "old_value": target_user.is_active,
+                    "new_value": new_is_active,
+                    "changed_by": request.user.username,
+                    "changed_at": timezone.now().isoformat(),
+                }
+            )
 
     # Verificar que al menos hay algo que actualizar
     if not update_data and not admin_fields:
@@ -365,19 +461,65 @@ def admin_edit_user_view(request, user_id):
 
     # Actualizar campos básicos
     for field, value in update_data.items():
-        if getattr(target_user, field) != value:
+        old_value = getattr(target_user, field)
+        if old_value != value:
             setattr(target_user, field, value)
             changes_made.append(f"{field} actualizado")
+            audit_log.append(
+                {
+                    "field": field,
+                    "old_value": str(old_value) if old_value is not None else None,
+                    "new_value": str(value) if value is not None else None,
+                    "changed_by": request.user.username,
+                    "changed_at": timezone.now().isoformat(),
+                }
+            )
 
     # Actualizar campos administrativos
     for field, value in admin_fields.items():
+        old_value = getattr(target_user, field)
         setattr(target_user, field, value)
+        # Registrar en auditoría si no se registró antes
+        if field not in [log["field"] for log in audit_log]:
+            audit_log.append(
+                {
+                    "field": field,
+                    "old_value": str(old_value) if old_value is not None else None,
+                    "new_value": str(value) if value is not None else None,
+                    "changed_by": request.user.username,
+                    "changed_at": timezone.now().isoformat(),
+                }
+            )
 
     try:
         target_user.save()
     except Exception as e:
+        # Capturar errores de integridad de base de datos (duplicados, etc.)
+        from django.db import IntegrityError
+
+        error_message = str(e)
+        if isinstance(e, IntegrityError):
+            # Error de integridad (duplicados, constraints, etc.)
+            if "email" in error_message.lower() or "users_user.email" in error_message:
+                return Response(
+                    {"error": "El email ya está en uso por otro usuario"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if (
+                "identification" in error_message.lower()
+                or "users_user.identification" in error_message
+            ):
+                return Response(
+                    {"error": "La identificación ya está en uso por otro usuario"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(
+                {"error": "Error de integridad de datos. Verifique que los datos sean únicos."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(
-            {"error": f"Error al actualizar usuario: {e!s}"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": f"Error al actualizar usuario: {error_message}"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     # Mensaje de respuesta descriptivo
@@ -387,23 +529,27 @@ def admin_edit_user_view(request, user_id):
     else:
         message = f"Usuario {target_user.username} - sin cambios realizados"
 
-    return Response(
-        {
-            "message": message,
-            "user": {
-                "id": target_user.id,
-                "username": target_user.username,
-                "first_name": target_user.first_name,
-                "last_name": target_user.last_name,
-                "email": target_user.email,
-                "phone": target_user.phone,
-                "identification": target_user.identification,
-                "role": target_user.role,
-                "is_verified": target_user.is_verified,
-            },
+    response_data = {
+        "message": message,
+        "user": {
+            "id": target_user.id,
+            "username": target_user.username,
+            "first_name": target_user.first_name,
+            "last_name": target_user.last_name,
+            "email": target_user.email,
+            "phone": target_user.phone,
+            "identification": target_user.identification,
+            "role": target_user.role,
+            "is_verified": target_user.is_verified,
+            "is_active": target_user.is_active,
         },
-        status=status.HTTP_200_OK,
-    )
+    }
+
+    # Incluir auditoría si hay cambios
+    if audit_log:
+        response_data["audit_log"] = audit_log
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])

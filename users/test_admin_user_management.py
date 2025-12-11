@@ -324,3 +324,158 @@ class AdminUserManagementTestCase(TestCase):
 
         assert response.status_code == status.HTTP_200_OK
         assert "sin cambios realizados" in response.data["message"]
+
+    def test_admin_can_activate_user(self):
+        """Test: Admin puede activar un usuario"""
+        # Crear usuario inactivo
+        inactive_user = User.objects.create_user(
+            username="inactive_user",
+            email="inactive@test.com",
+            password="testpass123",
+            identification="22334455",
+            role="user",
+            is_active=False,
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_edit_user", kwargs={"user_id": inactive_user.id})
+        data = {"is_active": True}
+        response = self.client.patch(url, data)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "activado" in response.data["message"]
+
+        inactive_user.refresh_from_db()
+        assert inactive_user.is_active is True
+
+    def test_admin_can_deactivate_user(self):
+        """Test: Admin puede desactivar un usuario"""
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_edit_user", kwargs={"user_id": self.user_user.id})
+        data = {"is_active": False}
+        response = self.client.patch(url, data)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "desactivado" in response.data["message"]
+
+        self.user_user.refresh_from_db()
+        assert self.user_user.is_active is False
+
+    def test_duplicate_email_validation(self):
+        """Test: Validación de email duplicado"""
+        # Crear otro usuario con email diferente
+        another_user = User.objects.create_user(
+            username="another_user",
+            email="another@test.com",
+            password="testpass123",
+            identification="33445566",
+            role="user",
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_edit_user", kwargs={"user_id": self.user_user.id})
+        data = {"email": another_user.email}  # Intentar usar email de otro usuario
+        response = self.client.patch(url, data)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "ya está en uso por otro usuario" in response.data["error"]
+
+    def test_invalid_email_format_validation(self):
+        """Test: Validación de formato de email inválido"""
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_edit_user", kwargs={"user_id": self.user_user.id})
+        data = {"email": "invalid-email-format"}
+        response = self.client.patch(url, data)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Formato de email inválido" in response.data["error"]
+
+    def test_duplicate_identification_validation(self):
+        """Test: Validación de identificación duplicada"""
+        # Crear otro usuario con identificación diferente
+        another_user = User.objects.create_user(
+            username="another_user2",
+            email="another2@test.com",
+            password="testpass123",
+            identification="44556677",
+            role="user",
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_edit_user", kwargs={"user_id": self.user_user.id})
+        data = {
+            "identification": another_user.identification
+        }  # Intentar usar identificación de otro usuario
+        response = self.client.patch(url, data)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "ya está en uso por otro usuario" in response.data["error"]
+
+    def test_audit_log_on_user_edit(self):
+        """Test: Auditoría de cambios en edición de usuario"""
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_edit_user", kwargs={"user_id": self.user_user.id})
+        data = {
+            "first_name": "New Name",
+            "email": "newemail@test.com",
+            "is_active": False,
+        }
+        response = self.client.patch(url, data)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "audit_log" in response.data
+        assert len(response.data["audit_log"]) > 0
+
+        # Verificar que la auditoría contiene los cambios
+        audit_log = response.data["audit_log"]
+        field_names = [log["field"] for log in audit_log]
+        assert "first_name" in field_names
+        assert "email" in field_names
+        assert "is_active" in field_names
+
+        # Verificar que cada entrada de auditoría tiene los campos requeridos
+        for log_entry in audit_log:
+            assert "field" in log_entry
+            assert "old_value" in log_entry
+            assert "new_value" in log_entry
+            assert "changed_by" in log_entry
+            assert "changed_at" in log_entry
+            assert log_entry["changed_by"] == self.admin_user.username
+
+    def test_list_users_includes_last_login(self):
+        """Test: Lista de usuarios incluye last_login"""
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_users_list")
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) > 0
+
+        # Verificar que cada usuario tiene last_login en la respuesta
+        for user_data in response.data:
+            assert "last_login" in user_data
+            assert "date_joined" in user_data
+            assert "created_at" in user_data
+            assert "is_active" in user_data
+
+    def test_user_detail_includes_all_required_fields(self):
+        """Test: Detalle de usuario incluye todos los campos requeridos"""
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token.key}")
+
+        url = reverse("admin_user_detail", kwargs={"user_id": self.user_user.id})
+        response = self.client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        user_data = response.data["user"]
+
+        # Verificar campos requeridos según HU-19
+        assert "date_joined" in user_data  # Fecha de creación
+        assert "last_login" in user_data  # Último acceso
+        assert "is_active" in user_data  # Estado (activo/inactivo)

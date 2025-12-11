@@ -213,6 +213,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
             "is_verified",
             "is_active",
             "date_joined",
+            "last_login",
             "created_at",
         ]
 

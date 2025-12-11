@@ -64,3 +64,13 @@ CSRF_TRUSTED_ORIGINS = [
 REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
     "rest_framework.authentication.TokenAuthentication",
 ]
+
+# Silenciar warnings de seguridad en desarrollo (son normales y se configuran en producción)
+SILENCED_SYSTEM_CHECKS = [
+    "security.W004",  # SECURE_HSTS_SECONDS
+    "security.W008",  # SECURE_SSL_REDIRECT
+    "security.W009",  # SECRET_KEY (se usa default inseguro solo en desarrollo)
+    "security.W012",  # SESSION_COOKIE_SECURE
+    "security.W016",  # CSRF_COOKIE_SECURE
+    "security.W018",  # DEBUG=True (normal en desarrollo)
+]
