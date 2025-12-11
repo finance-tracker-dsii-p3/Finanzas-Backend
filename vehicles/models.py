@@ -160,41 +160,105 @@ class SOAT(models.Model):
                     }
                 )
 
-    @property
-    def days_until_expiry(self):
-        """Calcula días hasta el vencimiento"""
+    def _calculate_days_until_expiry(self, user_tz=None):
+        """
+        Calcula días hasta el vencimiento usando el timezone del usuario
+
+        Args:
+            user_tz: Objeto timezone del usuario (pytz.timezone). Si es None, usa timezone del servidor.
+
+        Returns:
+            int: Días hasta el vencimiento, o None si no hay fecha de vencimiento
+        """
         if not self.expiry_date:
             return None
-        today = timezone.now().date()
-        delta = self.expiry_date - today
+
+        # Usar timezone del usuario si está disponible
+        if user_tz:
+            try:
+                user_now = timezone.now().astimezone(user_tz).date()
+            except Exception:
+                # Si hay error con el timezone, usar el del servidor
+                user_now = timezone.now().date()
+        else:
+            # Si no se proporciona timezone, usar el del servidor
+            user_now = timezone.now().date()
+
+        delta = self.expiry_date - user_now
         return delta.days
 
-    @property
-    def is_expired(self):
-        """Verifica si el SOAT está vencido"""
-        return self.days_until_expiry is not None and self.days_until_expiry < 0
+    def days_until_expiry(self, user_tz=None):
+        """
+        Método que calcula días hasta vencimiento usando timezone del usuario.
+        Si se llama sin parámetros, intenta usar el timezone del usuario.
+        """
+        if user_tz is None:
+            # Intentar obtener timezone del usuario
+            user_tz = self._get_user_timezone()
+        return self._calculate_days_until_expiry(user_tz=user_tz)
 
     @property
-    def is_near_expiry(self):
-        """Verifica si está próximo a vencer"""
-        days = self.days_until_expiry
+    def days_until_expiry_property(self):
+        """
+        Propiedad que calcula días hasta vencimiento usando timezone del usuario si está disponible.
+        Mantiene compatibilidad con código existente que usa .days_until_expiry como propiedad.
+        """
+        return self.days_until_expiry()
+
+    def is_expired(self, user_tz=None):
+        """Verifica si el SOAT está vencido usando timezone del usuario"""
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+        days = self._calculate_days_until_expiry(user_tz=user_tz)
+        return days is not None and days < 0
+
+    @property
+    def is_expired_property(self):
+        """Propiedad que verifica si el SOAT está vencido (compatibilidad)"""
+        return self.is_expired()
+
+    def is_near_expiry(self, user_tz=None):
+        """Verifica si está próximo a vencer usando timezone del usuario"""
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+        days = self._calculate_days_until_expiry(user_tz=user_tz)
         return days is not None and 0 <= days <= self.alert_days_before
+
+    @property
+    def is_near_expiry_property(self):
+        """Propiedad que verifica si está próximo a vencer (compatibilidad)"""
+        return self.is_near_expiry()
+
+    def _get_user_timezone(self):
+        """Obtiene el timezone del usuario si está disponible"""
+        try:
+            prefs = self.vehicle.user.notification_preferences
+            return prefs.timezone_object
+        except Exception:
+            return None
 
     @property
     def is_paid(self):
         """Verifica si el SOAT ha sido pagado"""
         return self.payment_transaction is not None
 
-    def update_status(self):
+    def update_status(self, user_tz=None):
         """
-        Actualiza el estado del SOAT basado en fechas y pago
+        Actualiza el estado del SOAT basado en fechas y pago usando timezone del usuario
+
+        Args:
+            user_tz: Objeto timezone del usuario (pytz.timezone). Si es None, intenta obtenerlo del usuario.
         """
-        if self.is_expired:
+        # Obtener timezone del usuario si no se proporciona
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+
+        if self.is_expired(user_tz=user_tz):
             if not self.is_paid:
                 self.status = "atrasado"
             else:
                 self.status = "vencido"
-        elif self.is_near_expiry:
+        elif self.is_near_expiry(user_tz=user_tz):
             if not self.is_paid:
                 self.status = "pendiente_pago"
             else:

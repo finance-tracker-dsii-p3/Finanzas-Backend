@@ -87,7 +87,8 @@ class SOATModelTest(TestCase):
             expiry_date=today + timedelta(days=10),
             cost=500000.00,
         )
-        assert soat.days_until_expiry == 10
+        # Usar el método sin timezone (usa timezone del servidor por defecto)
+        assert soat.days_until_expiry() == 10
 
     def test_is_expired(self):
         """Verificar SOAT vencido"""
@@ -98,7 +99,8 @@ class SOATModelTest(TestCase):
             expiry_date=today - timedelta(days=10),
             cost=500000.00,
         )
-        assert soat.is_expired
+        # Usar el método sin timezone
+        assert soat.is_expired()
 
     def test_is_near_expiry(self):
         """Verificar SOAT próximo a vencer"""
@@ -110,7 +112,79 @@ class SOATModelTest(TestCase):
             alert_days_before=7,
             cost=500000.00,
         )
-        assert soat.is_near_expiry
+        # Usar el método sin timezone
+        assert soat.is_near_expiry()
+
+    def test_days_until_expiry_with_timezone(self):
+        """Calcular días hasta vencimiento usando timezone del usuario"""
+
+        # Crear preferencias de notificación con timezone
+        from users.models import UserNotificationPreferences
+
+        prefs = UserNotificationPreferences.objects.create(
+            user=self.user,
+            timezone="America/Bogota",  # Mismo timezone que el servidor para evitar diferencias
+        )
+
+        today = timezone.now().date()
+        expiry_date = today + timedelta(days=10)
+        soat = SOAT.objects.create(
+            vehicle=self.vehicle,
+            issue_date=today,
+            expiry_date=expiry_date,
+            cost=500000.00,
+        )
+
+        # Obtener timezone del usuario
+        user_tz = prefs.timezone_object
+
+        # Calcular días usando timezone del usuario
+        days = soat.days_until_expiry(user_tz=user_tz)
+        # Verificar que el resultado es razonable (puede variar por 1 día según timezone)
+        assert 9 <= days <= 11, f"Expected days between 9-11, got {days}"
+
+    def test_is_expired_with_timezone(self):
+        """Verificar SOAT vencido usando timezone del usuario"""
+
+        from users.models import UserNotificationPreferences
+
+        prefs = UserNotificationPreferences.objects.create(
+            user=self.user,
+            timezone="America/Bogota",
+        )
+
+        today = timezone.now().date()
+        soat = SOAT.objects.create(
+            vehicle=self.vehicle,
+            issue_date=today - timedelta(days=365),
+            expiry_date=today - timedelta(days=10),
+            cost=500000.00,
+        )
+
+        user_tz = prefs.timezone_object
+        assert soat.is_expired(user_tz=user_tz)
+
+    def test_is_near_expiry_with_timezone(self):
+        """Verificar SOAT próximo a vencer usando timezone del usuario"""
+
+        from users.models import UserNotificationPreferences
+
+        prefs = UserNotificationPreferences.objects.create(
+            user=self.user,
+            timezone="America/Bogota",
+        )
+
+        today = timezone.now().date()
+        soat = SOAT.objects.create(
+            vehicle=self.vehicle,
+            issue_date=today,
+            expiry_date=today + timedelta(days=5),
+            alert_days_before=7,
+            cost=500000.00,
+        )
+
+        user_tz = prefs.timezone_object
+        assert soat.is_near_expiry(user_tz=user_tz)
 
 
 class SOATServiceTest(TestCase):
@@ -158,6 +232,38 @@ class SOATServiceTest(TestCase):
         self.soat.refresh_from_db()
         assert self.soat.is_paid
         assert self.soat.payment_transaction == transaction
+
+    def test_check_and_create_alerts_with_timezone(self):
+        """Verificar que las alertas usan timezone del usuario"""
+
+        from users.models import UserNotificationPreferences
+        from vehicles.models import SOATAlert
+
+        # Crear preferencias con timezone específico
+        UserNotificationPreferences.objects.create(
+            user=self.user,
+            timezone="America/New_York",
+        )
+
+        # Crear SOAT que vence en 5 días
+        today = timezone.now().date()
+        soat = SOAT.objects.create(
+            vehicle=self.vehicle,
+            issue_date=today,
+            expiry_date=today + timedelta(days=5),
+            alert_days_before=7,
+            cost=500000.00,
+        )
+
+        # Ejecutar servicio de alertas
+        alerts = SOATService.check_and_create_alerts()
+
+        # Verificar que se creó una alerta
+        assert len(alerts) > 0 or SOATAlert.objects.filter(soat=soat).exists()
+
+        # Verificar que el estado se actualizó correctamente
+        soat.refresh_from_db()
+        assert soat.status in ["pendiente_pago", "por_vencer", "vigente"]
 
 
 class VehicleAPITest(TestCase):

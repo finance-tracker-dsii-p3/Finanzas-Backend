@@ -34,5 +34,5 @@ ignore = ["E501", "ANN", "D", "COM812", "RUF012", "PLR2004", "PLR0912", "ARG002"
 "bills/**/*.py" = ["TRY200"]
 "categories/**/*.py" = ["TRY200"]
 "credit_cards/**/*.py" = ["TRY200"]
-"vehicles/**/*.py" = ["TRY200"]
+"vehicles/**/*.py" = ["TRY200", "PLR0915"]
 "utils/**/*.py" = ["TRY200"]

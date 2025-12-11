@@ -48,9 +48,9 @@ class SOATSerializer(serializers.ModelSerializer):
 
     vehicle_plate = serializers.CharField(source="vehicle.plate", read_only=True)
     vehicle_info = serializers.SerializerMethodField()
-    days_until_expiry = serializers.IntegerField(read_only=True)
-    is_expired = serializers.BooleanField(read_only=True)
-    is_near_expiry = serializers.BooleanField(read_only=True)
+    days_until_expiry = serializers.SerializerMethodField()
+    is_expired = serializers.SerializerMethodField()
+    is_near_expiry = serializers.SerializerMethodField()
     is_paid = serializers.BooleanField(read_only=True)
     payment_info = serializers.SerializerMethodField()
     cost_formatted = serializers.SerializerMethodField()
@@ -91,6 +91,37 @@ class SOATSerializer(serializers.ModelSerializer):
             "model": obj.vehicle.model,
             "year": obj.vehicle.year,
         }
+
+    def get_days_until_expiry(self, obj):
+        """Calcula días hasta vencimiento usando timezone del usuario"""
+        try:
+            user = self.context["request"].user
+            prefs = user.notification_preferences
+            user_tz = prefs.timezone_object
+            return obj.days_until_expiry(user_tz=user_tz)
+        except Exception:
+            # Si no hay preferencias o hay error, usar timezone del servidor
+            return obj.days_until_expiry(user_tz=None)
+
+    def get_is_expired(self, obj):
+        """Verifica si está vencido usando timezone del usuario"""
+        try:
+            user = self.context["request"].user
+            prefs = user.notification_preferences
+            user_tz = prefs.timezone_object
+            return obj.is_expired(user_tz=user_tz)
+        except Exception:
+            return obj.is_expired(user_tz=None)
+
+    def get_is_near_expiry(self, obj):
+        """Verifica si está próximo a vencer usando timezone del usuario"""
+        try:
+            user = self.context["request"].user
+            prefs = user.notification_preferences
+            user_tz = prefs.timezone_object
+            return obj.is_near_expiry(user_tz=user_tz)
+        except Exception:
+            return obj.is_near_expiry(user_tz=None)
 
     def get_payment_info(self, obj):
         """Información del pago si existe"""
@@ -210,18 +241,24 @@ class VehicleWithSOATSerializer(serializers.ModelSerializer):
 
     def get_active_soat(self, obj):
         """SOAT más reciente del vehículo"""
-        soat = (
-            obj.soats.filter(expiry_date__gte=timezone.now().date())
-            .order_by("-expiry_date")
-            .first()
-        )
+        # Obtener timezone del usuario si está disponible
+        user_tz = None
+        try:
+            user = self.context["request"].user
+            prefs = user.notification_preferences
+            user_tz = prefs.timezone_object
+            user_now = timezone.now().astimezone(user_tz).date()
+        except Exception:
+            user_now = timezone.now().date()
+
+        soat = obj.soats.filter(expiry_date__gte=user_now).order_by("-expiry_date").first()
 
         if soat:
             return {
                 "id": soat.id,
                 "expiry_date": soat.expiry_date,
                 "status": soat.status,
-                "days_until_expiry": soat.days_until_expiry,
+                "days_until_expiry": soat.days_until_expiry(user_tz=user_tz),
                 "is_paid": soat.is_paid,
             }
         return None

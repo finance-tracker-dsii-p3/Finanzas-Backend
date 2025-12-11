@@ -86,20 +86,32 @@ class SOATService:
     @staticmethod
     def check_and_create_alerts():
         """
-        Verifica todos los SOATs y crea alertas necesarias
+        Verifica todos los SOATs y crea alertas necesarias usando timezone del usuario
         (Para ejecutar con cron job)
         """
         created_alerts = []
 
-        # Obtener todos los SOATs activos
-        soats = SOAT.objects.select_related("vehicle", "vehicle__user").all()
+        # Obtener todos los SOATs activos con preferencias de usuario
+        soats = SOAT.objects.select_related(
+            "vehicle", "vehicle__user", "vehicle__user__notification_preferences"
+        ).all()
 
         for soat in soats:
             user = soat.vehicle.user
-            days = soat.days_until_expiry
 
-            # Actualizar estado
-            soat.update_status()
+            # Obtener timezone del usuario
+            try:
+                prefs = user.notification_preferences
+                user_tz = prefs.timezone_object
+            except Exception:
+                # Si no hay preferencias, usar timezone del servidor
+                user_tz = None
+
+            # Calcular días usando timezone del usuario
+            days = soat.days_until_expiry(user_tz=user_tz)
+
+            # Actualizar estado usando timezone del usuario
+            soat.update_status(user_tz=user_tz)
 
             # Verificar si ya existe una alerta reciente (últimas 24 horas)
             recent_alert = SOATAlert.objects.filter(
