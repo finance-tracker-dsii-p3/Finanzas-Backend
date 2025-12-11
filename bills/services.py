@@ -105,11 +105,21 @@ class BillService:
         """
         created_reminders = []
 
-        # Obtener todas las facturas no pagadas
-        bills = Bill.objects.filter(status__in=[Bill.PENDING, Bill.OVERDUE])
+        # Obtener todas las facturas no pagadas con información del usuario
+        bills = Bill.objects.select_related("user", "user__notification_preferences").filter(
+            status__in=[Bill.PENDING, Bill.OVERDUE]
+        )
 
         for bill in bills:
-            days_until_due = bill.days_until_due
+            user = bill.user
+            # Obtener timezone del usuario
+            try:
+                user_tz = user.notification_preferences.timezone_object
+            except Exception:
+                user_tz = None
+
+            # Calcular días usando timezone del usuario
+            days_until_due = bill.days_until_due(user_tz=user_tz)
 
             # Recordatorio: Próxima a vencer
             if 0 < days_until_due <= bill.reminder_days_before:
@@ -163,10 +173,9 @@ class BillService:
                             user=bill.user, bill=bill, reminder_type="overdue", days=days_overdue
                         )
 
-                    # Actualizar estado a overdue si no lo está
-                    if bill.status != Bill.OVERDUE:
-                        bill.status = Bill.OVERDUE
-                        bill.save(update_fields=["status"])
+                    # Actualizar estado a overdue si no lo está (usando timezone del usuario)
+                    bill.update_status(user_tz=user_tz)
+                    bill.save(update_fields=["status"])
 
         return {
             "total_bills_checked": bills.count(),

@@ -56,6 +56,42 @@ class BillSerializer(serializers.ModelSerializer):
         """Formato de moneda COP"""
         return f"${obj.amount:,.0f}"
 
+    def get_days_until_due(self, obj):
+        """Calcula días hasta vencimiento usando timezone del usuario"""
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            try:
+                user_tz = request.user.notification_preferences.timezone_object
+            except Exception:
+                user_tz = None
+        else:
+            user_tz = None
+        return obj.days_until_due(user_tz=user_tz)
+
+    def get_is_overdue(self, obj):
+        """Verifica si está vencida usando timezone del usuario"""
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            try:
+                user_tz = request.user.notification_preferences.timezone_object
+            except Exception:
+                user_tz = None
+        else:
+            user_tz = None
+        return obj.is_overdue(user_tz=user_tz)
+
+    def get_is_near_due(self, obj):
+        """Verifica si está próxima a vencer usando timezone del usuario"""
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            try:
+                user_tz = request.user.notification_preferences.timezone_object
+            except Exception:
+                user_tz = None
+        else:
+            user_tz = None
+        return obj.is_near_due(user_tz=user_tz)
+
     def get_suggested_account_info(self, obj):
         """Información de la cuenta sugerida"""
         if obj.suggested_account:
@@ -205,3 +241,15 @@ class BillListSerializer(serializers.ModelSerializer):
 
     def get_amount_formatted(self, obj):
         return f"${obj.amount:,.0f}"
+
+    def get_days_until_due(self, obj):
+        """Calcula días hasta vencimiento usando timezone del usuario"""
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            try:
+                user_tz = request.user.notification_preferences.timezone_object
+            except Exception:
+                user_tz = None
+        else:
+            user_tz = None
+        return obj.days_until_due(user_tz=user_tz)

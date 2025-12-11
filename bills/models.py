@@ -2,6 +2,7 @@
 Modelos para gestión de facturas personales (servicios y suscripciones)
 """
 
+import pytz
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -124,39 +125,87 @@ class Bill(models.Model):
     def __str__(self):
         return f"{self.provider} - ${self.amount:,.0f} - {self.due_date}"
 
-    @property
-    def days_until_due(self):
-        """Calcula los días restantes hasta el vencimiento"""
-        today = timezone.now().date()
-        delta = self.due_date - today
+    def _get_user_timezone(self):
+        """Intenta obtener el objeto timezone del usuario, si no, usa el predeterminado"""
+        try:
+            return self.user.notification_preferences.timezone_object
+        except Exception:
+            return pytz.timezone("America/Bogota")  # Default timezone
+
+    def days_until_due(self, user_tz=None):
+        """
+        Calcula los días restantes hasta el vencimiento usando el timezone del usuario.
+
+        Args:
+            user_tz: Objeto timezone del usuario (pytz.timezone). Si es None, intenta obtenerlo del usuario.
+
+        Returns:
+            int: Días restantes hasta el vencimiento (puede ser negativo si está vencida)
+        """
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+
+        if user_tz:
+            try:
+                user_now = timezone.now().astimezone(user_tz).date()
+            except Exception:
+                user_now = timezone.now().date()
+        else:
+            user_now = timezone.now().date()
+
+        delta = self.due_date - user_now
         return delta.days
 
     @property
-    def is_overdue(self):
-        """Verifica si la factura está vencida"""
-        return self.due_date < timezone.now().date() and self.status != self.PAID
+    def days_until_due_property(self):
+        """Propiedad para compatibilidad con código existente"""
+        return self.days_until_due()
+
+    def is_overdue(self, user_tz=None):
+        """Verifica si la factura está vencida usando timezone del usuario"""
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+        days = self.days_until_due(user_tz=user_tz)
+        return days < 0 and self.status != self.PAID
 
     @property
-    def is_near_due(self):
-        """Verifica si la factura está próxima a vencer"""
-        days = self.days_until_due
+    def is_overdue_property(self):
+        """Propiedad para compatibilidad con código existente"""
+        return self.is_overdue()
+
+    def is_near_due(self, user_tz=None):
+        """Verifica si la factura está próxima a vencer usando timezone del usuario"""
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+        days = self.days_until_due(user_tz=user_tz)
         return 0 <= days <= self.reminder_days_before and self.status == self.PENDING
+
+    @property
+    def is_near_due_property(self):
+        """Propiedad para compatibilidad con código existente"""
+        return self.is_near_due()
 
     @property
     def is_paid(self):
         """Verifica si la factura está pagada"""
         return self.status == self.PAID and self.payment_transaction is not None
 
-    def update_status(self):
+    def update_status(self, user_tz=None):
         """
-        Actualiza el estado de la factura según las reglas:
+        Actualiza el estado de la factura según las reglas usando timezone del usuario:
         - Si está pagada → paid
         - Si está vencida y no pagada → overdue
         - Si no está vencida y no pagada → pending
+
+        Args:
+            user_tz: Objeto timezone del usuario (pytz.timezone). Si es None, intenta obtenerlo del usuario.
         """
+        if user_tz is None:
+            user_tz = self._get_user_timezone()
+
         if self.payment_transaction:
             self.status = self.PAID
-        elif self.is_overdue:
+        elif self.is_overdue(user_tz=user_tz):
             self.status = self.OVERDUE
         else:
             self.status = self.PENDING

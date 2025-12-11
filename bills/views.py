@@ -59,6 +59,19 @@ class BillViewSet(viewsets.ModelViewSet):
             else:
                 queryset = queryset.filter(payment_transaction=None)
 
+        # Filtros por fecha de vencimiento
+        due_date_from = self.request.query_params.get("due_date_from")
+        if due_date_from:
+            queryset = queryset.filter(due_date__gte=due_date_from)
+
+        due_date_to = self.request.query_params.get("due_date_to")
+        if due_date_to:
+            queryset = queryset.filter(due_date__lte=due_date_to)
+
+        due_date = self.request.query_params.get("due_date")
+        if due_date:
+            queryset = queryset.filter(due_date=due_date)
+
         return queryset.select_related("suggested_account", "category", "payment_transaction")
 
     def get_serializer_class(self):
@@ -69,12 +82,18 @@ class BillViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Lista facturas actualizando estados automáticamente
+        Lista facturas actualizando estados automáticamente usando timezone del usuario
         """
+        # Obtener timezone del usuario
+        try:
+            user_tz = request.user.notification_preferences.timezone_object
+        except Exception:
+            user_tz = None
+
         # Actualizar estados de todas las facturas no pagadas antes de listar
         unpaid_bills = Bill.objects.filter(user=request.user, payment_transaction__isnull=True)
         for bill in unpaid_bills:
-            bill.update_status()
+            bill.update_status(user_tz=user_tz)
             bill.save(update_fields=["status"])
 
         return super().list(request, *args, **kwargs)
@@ -122,19 +141,25 @@ class BillViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def update_status(self, request, pk=None):
         """
-        Actualiza el estado de la factura manualmente
+        Actualiza el estado de la factura manualmente usando timezone del usuario
 
         POST /api/bills/{id}/update_status/
         """
         bill = self.get_object()
-        bill.update_status()
+        # Obtener timezone del usuario
+        try:
+            user_tz = request.user.notification_preferences.timezone_object
+        except Exception:
+            user_tz = None
+
+        bill.update_status(user_tz=user_tz)
         bill.save(update_fields=["status"])
 
         return Response(
             {
                 "id": bill.id,
                 "status": bill.status,
-                "days_until_due": bill.days_until_due,
+                "days_until_due": bill.days_until_due(user_tz=user_tz),
                 "is_paid": bill.is_paid,
             }
         )
@@ -142,35 +167,47 @@ class BillViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def pending(self, request):
         """
-        Obtiene todas las facturas pendientes
+        Obtiene todas las facturas pendientes usando timezone del usuario
 
         GET /api/bills/pending/
         """
+        # Obtener timezone del usuario
+        try:
+            user_tz = request.user.notification_preferences.timezone_object
+        except Exception:
+            user_tz = None
+
         # Actualizar estados de todas las facturas no pagadas
         unpaid_bills = self.get_queryset().filter(payment_transaction__isnull=True)
         for bill in unpaid_bills:
-            bill.update_status()
+            bill.update_status(user_tz=user_tz)
             bill.save(update_fields=["status"])
 
         bills = self.get_queryset().filter(status=Bill.PENDING)
-        serializer = BillListSerializer(bills, many=True)
+        serializer = BillListSerializer(bills, many=True, context={"request": request})
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def overdue(self, request):
         """
-        Obtiene todas las facturas atrasadas
+        Obtiene todas las facturas atrasadas usando timezone del usuario
 
         GET /api/bills/overdue/
         """
+        # Obtener timezone del usuario
+        try:
+            user_tz = request.user.notification_preferences.timezone_object
+        except Exception:
+            user_tz = None
+
         # Actualizar estados de todas las facturas no pagadas
         unpaid_bills = self.get_queryset().filter(payment_transaction__isnull=True)
         for bill in unpaid_bills:
-            bill.update_status()
+            bill.update_status(user_tz=user_tz)
             bill.save(update_fields=["status"])
 
         bills = self.get_queryset().filter(status=Bill.OVERDUE)
-        serializer = BillListSerializer(bills, many=True)
+        serializer = BillListSerializer(bills, many=True, context={"request": request})
         return Response(serializer.data)
 
 
