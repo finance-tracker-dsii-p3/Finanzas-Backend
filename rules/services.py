@@ -4,9 +4,11 @@ Motor de reglas que aplica automáticamente categorías y etiquetas
 """
 
 import logging
-from typing import List, Dict, Any
-from django.db import transaction
+from typing import Any
+
 from django.contrib.auth import get_user_model
+from django.db import transaction
+
 from .models import AutomaticRule
 
 User = get_user_model()
@@ -19,7 +21,7 @@ class RuleEngineService:
     """
 
     @staticmethod
-    def apply_rules_to_transaction(transaction_obj) -> Dict[str, Any]:
+    def apply_rules_to_transaction(transaction_obj) -> dict[str, Any]:
         """
         Aplica reglas automáticas a una transacción.
 
@@ -84,15 +86,15 @@ class RuleEngineService:
                 result["message"] = "Ninguna regla coincide con esta transacción"
 
         except Exception as e:
-            logger.error(f"Error aplicando reglas a transacción {transaction_obj.id}: {str(e)}")
-            result["message"] = f"Error aplicando reglas: {str(e)}"
+            logger.exception(f"Error aplicando reglas a transacción {transaction_obj.id}: {e!s}")
+            result["message"] = f"Error aplicando reglas: {e!s}"
 
         return result
 
     @staticmethod
     def get_matching_rules(
-        user, description: str = None, transaction_type: int = None
-    ) -> List[AutomaticRule]:
+        user, description: str | None = None, transaction_type: int | None = None
+    ) -> list[AutomaticRule]:
         """
         Obtiene las reglas que coincidirían con los criterios dados.
 
@@ -128,8 +130,8 @@ class RuleEngineService:
 
     @staticmethod
     def preview_rule_application(
-        user, description: str = None, transaction_type: int = None
-    ) -> Dict[str, Any]:
+        user, description: str | None = None, transaction_type: int | None = None
+    ) -> dict[str, Any]:
         """
         Previsualiza qué regla se aplicaría sin hacer cambios reales.
 
@@ -159,9 +161,9 @@ class RuleEngineService:
                 "id": first_rule.id,
                 "name": first_rule.name,
                 "action_type": first_rule.action_type,
-                "target_category": first_rule.target_category.name
-                if first_rule.target_category
-                else None,
+                "target_category": (
+                    first_rule.target_category.name if first_rule.target_category else None
+                ),
                 "target_tag": first_rule.target_tag,
             },
             "message": f'Se aplicará la regla "{first_rule.name}"',
@@ -174,7 +176,7 @@ class AutomaticRuleService:
     """
 
     @staticmethod
-    def get_user_rules(user, active_only: bool = False) -> List[AutomaticRule]:
+    def get_user_rules(user, active_only: bool = False) -> list[AutomaticRule]:
         """
         Obtiene las reglas de un usuario.
 
@@ -193,7 +195,7 @@ class AutomaticRuleService:
         return queryset.order_by("order", "created_at")
 
     @staticmethod
-    def create_rule(user, validated_data: Dict[str, Any]) -> AutomaticRule:
+    def create_rule(user, validated_data: dict[str, Any]) -> AutomaticRule:
         """
         Crea una nueva regla automática.
 
@@ -219,7 +221,7 @@ class AutomaticRuleService:
         return AutomaticRule.objects.create(**validated_data)
 
     @staticmethod
-    def update_rule(rule: AutomaticRule, validated_data: Dict[str, Any]) -> AutomaticRule:
+    def update_rule(rule: AutomaticRule, validated_data: dict[str, Any]) -> AutomaticRule:
         """
         Actualiza una regla existente.
 
@@ -237,7 +239,7 @@ class AutomaticRuleService:
         return rule
 
     @staticmethod
-    def delete_rule(rule: AutomaticRule) -> Dict[str, Any]:
+    def delete_rule(rule: AutomaticRule) -> dict[str, Any]:
         """
         Elimina una regla y actualiza las transacciones afectadas.
 
@@ -277,7 +279,7 @@ class AutomaticRuleService:
         return rule
 
     @staticmethod
-    def reorder_rules(user, rule_orders: List[Dict[str, int]]) -> List[AutomaticRule]:
+    def reorder_rules(user, rule_orders: list[dict[str, int]]) -> list[AutomaticRule]:
         """
         Reordena las reglas de un usuario.
 
@@ -303,7 +305,7 @@ class AutomaticRuleService:
         return updated_rules
 
     @staticmethod
-    def get_rule_statistics(user) -> Dict[str, Any]:
+    def get_rule_statistics(user) -> dict[str, Any]:
         """
         Obtiene estadísticas de las reglas de un usuario.
 

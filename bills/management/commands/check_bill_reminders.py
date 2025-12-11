@@ -4,6 +4,7 @@ Management command para verificar facturas y crear recordatorios automáticos
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
 from bills.services import BillService
 
 
@@ -39,5 +40,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Verificación completada exitosamente"))
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"✗ Error durante la verificación: {str(e)}"))
+            self.stdout.write(self.style.ERROR(f"✗ Error durante la verificación: {e!s}"))
             raise

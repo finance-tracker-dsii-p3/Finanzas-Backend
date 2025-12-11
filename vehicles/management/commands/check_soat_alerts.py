@@ -5,6 +5,7 @@ Ejecutar diariamente con cron: python manage.py check_soat_alerts
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
 from vehicles.services import SOATService
 
 

@@ -3,8 +3,9 @@
 Script para probar el endpoint de perfil
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_profile():

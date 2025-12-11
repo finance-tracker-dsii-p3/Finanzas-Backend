@@ -12,7 +12,7 @@
 2. **Transaction.total_amount**: `IntegerField` (almacena en **CENTAVOS**)
    - Ejemplo: `500000000` = 5,000,000 pesos (500 millones de centavos)
 
-3. **TransactionService.update_account_balance_for_transaction**: 
+3. **TransactionService.update_account_balance_for_transaction**:
    - ❌ **ANTES**: Tomaba `transaction.total_amount` (centavos) y lo trataba como pesos
    - ✅ **AHORA**: Convierte centavos a pesos dividiendo por 100
 
@@ -223,4 +223,3 @@ formatMoney(amountInPesos, currency);
 - ⚠️ Asegurar que siempre envía montos como INTEGER (centavos)
 - ⚠️ Convertir centavos a pesos al mostrar
 - ⚠️ Manejar conversión de monedas correctamente
-

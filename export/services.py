@@ -1,12 +1,16 @@
+import contextlib
 import os
-from django.conf import settings
-from django.utils import timezone
-from django.core.files import File
+
 import openpyxl
+from django.conf import settings
+from django.core.files import File
+from django.utils import timezone
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
-from users.models import User
+
 from notifications.models import Notification
+from users.models import User
+
 from .models import ExportJob
 
 
@@ -84,11 +88,8 @@ class BasicDataExporter:
                 max_length = 0
                 column_letter = get_column_letter(column[0].column)
                 for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except Exception:
-                        pass
+                    with contextlib.suppress(Exception):
+                        max_length = max(max_length, len(str(cell.value)))
                 adjusted_width = max_length + 2
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 
@@ -162,9 +163,11 @@ class BasicDataExporter:
                 worksheet.cell(
                     row=row_num,
                     column=8,
-                    value=notification.read_timestamp.strftime("%Y-%m-%d %H:%M")
-                    if notification.read_timestamp
-                    else "",
+                    value=(
+                        notification.read_timestamp.strftime("%Y-%m-%d %H:%M")
+                        if notification.read_timestamp
+                        else ""
+                    ),
                 )
 
             # Ajustar ancho de columnas
@@ -172,11 +175,8 @@ class BasicDataExporter:
                 max_length = 0
                 column_letter = get_column_letter(column[0].column)
                 for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except Exception:
-                        pass
+                    with contextlib.suppress(Exception):
+                        max_length = max(max_length, len(str(cell.value)))
                 adjusted_width = min(50, max(12, max_length + 2))  # Límite de ancho
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 

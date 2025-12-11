@@ -2,20 +2,21 @@
 Views para gestión de categorías de ingresos y gastos
 """
 
-from rest_framework import viewsets, status, permissions
+import logging
+
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-import logging
 
 from .models import Category
 from .serializers import (
-    CategoryListSerializer,
-    CategoryDetailSerializer,
+    CategoryBulkOrderSerializer,
     CategoryCreateSerializer,
-    CategoryUpdateSerializer,
+    CategoryDetailSerializer,
+    CategoryListSerializer,
     CategoryReassignSerializer,
     CategoryStatsSerializer,
-    CategoryBulkOrderSerializer,
+    CategoryUpdateSerializer,
 )
 from .services import CategoryService
 
@@ -40,20 +41,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
         """Seleccionar serializer según la acción"""
         if self.action == "list":
             return CategoryListSerializer
-        elif self.action == "retrieve":
+        if self.action == "retrieve":
             return CategoryDetailSerializer
-        elif self.action == "create":
+        if self.action == "create":
             return CategoryCreateSerializer
-        elif self.action in ["update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
             return CategoryUpdateSerializer
-        elif self.action == "delete_with_reassignment":
+        if self.action == "delete_with_reassignment":
             return CategoryReassignSerializer
-        elif self.action == "stats":
+        if self.action == "stats":
             return CategoryStatsSerializer
-        elif self.action == "bulk_update_order":
+        if self.action == "bulk_update_order":
             return CategoryBulkOrderSerializer
-        else:
-            return CategoryDetailSerializer
+        return CategoryDetailSerializer
 
     def list(self, request, *args, **kwargs):
         """
@@ -104,10 +104,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            logger.warning(
-                f"Error al crear categoría para usuario {self.request.user.id}: {str(e)}"
-            )
-            raise e
+            logger.warning(f"Error al crear categoría para usuario {self.request.user.id}: {e!s}")
+            raise
 
     def perform_update(self, serializer):
         """Actualizar categoría"""
@@ -117,8 +115,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} actualizó categoría: {category.name}")
 
         except Exception as e:
-            logger.warning(f"Error al actualizar categoría {self.get_object().id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al actualizar categoría {self.get_object().id}: {e!s}")
+            raise
 
     def perform_destroy(self, instance):
         """Eliminar categoría sin reasignación (solo si no tiene datos relacionados)"""
@@ -130,10 +128,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 raise ValueError("; ".join(validation["errors"]))
 
             if validation["requires_reassignment"]:
-                raise ValueError(
+                msg = (
                     "Esta categoría tiene transacciones o presupuestos asociados. "
                     "Usa el endpoint /delete_with_reassignment/ para reasignarlos."
                 )
+                raise ValueError(msg)
 
             # Eliminar usando service
             CategoryService.delete_category(instance)
@@ -141,8 +140,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} eliminó categoría: {instance.name}")
 
         except ValueError as e:
-            logger.warning(f"Error al eliminar categoría {instance.id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al eliminar categoría {instance.id}: {e!s}")
+            raise
 
     @action(detail=True, methods=["post"])
     def delete_with_reassignment(self, request, pk=None):
@@ -176,9 +175,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 return Response(result, status=status.HTTP_200_OK)
 
             except ValueError as e:
-                logger.warning(
-                    f"Error al eliminar categoría {category.id} con reasignación: {str(e)}"
-                )
+                logger.warning(f"Error al eliminar categoría {category.id} con reasignación: {e!s}")
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -203,7 +200,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except ValueError as e:
-            logger.warning(f"Error al cambiar estado de categoría {category.id}: {str(e)}")
+            logger.warning(f"Error al cambiar estado de categoría {category.id}: {e!s}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=["get"])
@@ -227,7 +224,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response(validation_result, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Error al validar eliminación de categoría {category.id}: {str(e)}")
+            logger.exception(f"Error al validar eliminación de categoría {category.id}: {e!s}")
             return Response(
                 {"error": "Error interno en validación"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -249,7 +246,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response(stats_data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Error al generar estadísticas para usuario {request.user.id}: {str(e)}")
+            logger.exception(f"Error al generar estadísticas para usuario {request.user.id}: {e!s}")
             return Response(
                 {"error": "Error interno al generar estadísticas"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -289,8 +286,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 )
 
             except Exception as e:
-                logger.error(
-                    f"Error al actualizar orden de categorías para usuario {request.user.id}: {str(e)}"
+                logger.exception(
+                    f"Error al actualizar orden de categorías para usuario {request.user.id}: {e!s}"
                 )
                 return Response(
                     {"error": "Error interno al actualizar orden"},
@@ -393,8 +390,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            logger.error(
-                f"Error al crear categorías por defecto para usuario {request.user.id}: {str(e)}"
+            logger.exception(
+                f"Error al crear categorías por defecto para usuario {request.user.id}: {e!s}"
             )
             return Response(
                 {"error": "Error al crear categorías por defecto"},

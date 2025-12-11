@@ -7,25 +7,47 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('rules', '0001_initial'),
-        ('categories', '0002_alter_category_icon'),
-        ('transactions', '0002_alter_transaction_type'),
+        ("rules", "0001_initial"),
+        ("categories", "0002_alter_category_icon"),
+        ("transactions", "0002_alter_transaction_type"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='applied_rule',
-            field=models.ForeignKey(blank=True, help_text='Regla automática que se aplicó a esta transacción', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='applied_transactions', to='rules.automaticrule', verbose_name='Regla aplicada'),
+            model_name="transaction",
+            name="applied_rule",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Regla automática que se aplicó a esta transacción",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="applied_transactions",
+                to="rules.automaticrule",
+                verbose_name="Regla aplicada",
+            ),
         ),
         migrations.AddField(
-            model_name='transaction',
-            name='category',
-            field=models.ForeignKey(blank=True, help_text='Categoría asignada automáticamente por regla o manualmente', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='transactions', to='categories.category', verbose_name='Categoría'),
+            model_name="transaction",
+            name="category",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Categoría asignada automáticamente por regla o manualmente",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="transactions",
+                to="categories.category",
+                verbose_name="Categoría",
+            ),
         ),
         migrations.AddField(
-            model_name='transaction',
-            name='description',
-            field=models.CharField(blank=True, help_text='Descripción del movimiento para aplicar reglas automáticas', max_length=255, null=True, verbose_name='Descripción'),
+            model_name="transaction",
+            name="description",
+            field=models.CharField(
+                blank=True,
+                help_text="Descripción del movimiento para aplicar reglas automáticas",
+                max_length=255,
+                null=True,
+                verbose_name="Descripción",
+            ),
         ),
     ]

@@ -2,9 +2,9 @@
 Modelos para gestión de vehículos y SOAT
 """
 
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils import timezone
 
 User = get_user_model()

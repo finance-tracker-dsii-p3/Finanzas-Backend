@@ -56,7 +56,7 @@ Authorization: {{token}}
 
 ### 1. Listar Cuentas
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/accounts/`
 
 **Headers:**
@@ -109,7 +109,7 @@ GET {{base_url}}/api/accounts/?active_only=true&category=bank_account
 
 ### 2. Crear Cuenta Nueva
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/accounts/`
 
 **Headers:**
@@ -186,7 +186,7 @@ Content-Type: application/json
 
 ### 3. Ver Detalle de una Cuenta
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/accounts/{id}/`
 
 **Ejemplo:**
@@ -234,7 +234,7 @@ Authorization: {{token}}
 
 ### 4. Actualizar Cuenta Completa (PUT)
 
-**Método:** `PUT`  
+**Método:** `PUT`
 **URL:** `{{base_url}}/api/accounts/{id}/`
 
 **Ejemplo:**
@@ -284,7 +284,7 @@ Content-Type: application/json
 
 ### 5. Actualizar Cuenta Parcialmente (PATCH)
 
-**Método:** `PATCH`  
+**Método:** `PATCH`
 **URL:** `{{base_url}}/api/accounts/{id}/`
 
 **Ejemplo:**
@@ -330,7 +330,7 @@ Content-Type: application/json
 
 ### 6. Eliminar Cuenta
 
-**Método:** `DELETE`  
+**Método:** `DELETE`
 **URL:** `{{base_url}}/api/accounts/{id}/`
 
 **Ejemplo:**
@@ -368,7 +368,7 @@ Authorization: {{token}}
 
 ### 7. Resumen Financiero del Usuario
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/accounts/summary/`
 
 **Headers:**
@@ -417,7 +417,7 @@ Authorization: {{token}}
 
 ### 8. Filtrar Cuentas por Moneda
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/accounts/by_currency/?currency=COP`
 
 **Query Parameters:**
@@ -466,7 +466,7 @@ GET {{base_url}}/api/accounts/by_currency/?currency=USD
 
 ### 9. Resumen de Tarjetas de Crédito
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/accounts/credit_cards_summary/`
 
 **Headers:**
@@ -491,7 +491,7 @@ Authorization: {{token}}
 
 ### 10. Estadísticas por Categorías
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/accounts/categories_stats/`
 
 **Headers:**
@@ -557,7 +557,7 @@ Authorization: {{token}}
 
 ### 11. Ajustar Saldo Manualmente
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/accounts/{id}/update_balance/`
 
 **Ejemplo:**
@@ -608,7 +608,7 @@ Content-Type: application/json
 
 ### 12. Validar si se Puede Eliminar Cuenta
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/accounts/{id}/validate_deletion/`
 
 **Ejemplo:**
@@ -670,7 +670,7 @@ Content-Type: application/json
 
 ### 13. Activar/Desactivar Cuenta
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/accounts/{id}/toggle_active/`
 
 **Ejemplo:**
@@ -790,7 +790,7 @@ Authorization: {{token}}
     ```
     POST /api/accounts/1/update_balance/
     Body: {"new_balance": "0"}
-    
+
     POST /api/accounts/1/toggle_active/
     ```
 
@@ -804,23 +804,23 @@ Authorization: {{token}}
 ## ❌ Errores Comunes y Soluciones
 
 ### Error 401 Unauthorized
-**Causa:** Token no válido o no enviado  
+**Causa:** Token no válido o no enviado
 **Solución:** Verifica que el header `Authorization: Token xxxxx` esté configurado correctamente
 
 ### Error 403 Forbidden
-**Causa:** No tienes permiso para acceder a esta cuenta (pertenece a otro usuario)  
+**Causa:** No tienes permiso para acceder a esta cuenta (pertenece a otro usuario)
 **Solución:** Solo puedes acceder a tus propias cuentas
 
 ### Error 404 Not Found
-**Causa:** La cuenta con ese ID no existe  
+**Causa:** La cuenta con ese ID no existe
 **Solución:** Verifica que el ID sea correcto con `GET /api/accounts/`
 
 ### Error 400 Bad Request
-**Causa:** Datos enviados no válidos  
+**Causa:** Datos enviados no válidos
 **Solución:** Revisa el formato JSON y los campos requeridos
 
 ### Error 500 Internal Server Error
-**Causa:** Error en el servidor  
+**Causa:** Error en el servidor
 **Solución:** Revisa los logs del servidor Django
 
 ---

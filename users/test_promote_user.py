@@ -4,9 +4,10 @@ Tests minimalistas para endpoint de promoción de usuarios
 
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
 from users.models import User
 
 
@@ -55,12 +56,12 @@ class AdminPromoteUserTestCase(TestCase):
         response = self.client.post(url)
 
         # Verificar respuesta exitosa
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("ascendido a administrador exitosamente", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "ascendido a administrador exitosamente" in response.data["message"]
 
         # Verificar que el usuario fue promovido
         self.user_test.refresh_from_db()
-        self.assertEqual(self.user_test.role, "admin")
+        assert self.user_test.role == "admin"
 
     def test_admin_cannot_change_another_admin_role(self):
         """Test: Admin no puede cambiar el rol de otro admin"""
@@ -71,12 +72,12 @@ class AdminPromoteUserTestCase(TestCase):
         response = self.client.post(url)
 
         # Verificar que falla
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Solo se pueden ascender usuarios regulares", response.data["error"])
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Solo se pueden ascender usuarios regulares" in response.data["error"]
 
         # Verificar que el admin no cambió
         self.another_admin.refresh_from_db()
-        self.assertEqual(self.another_admin.role, "admin")
+        assert self.another_admin.role == "admin"
 
     def test_promote_nonexistent_user_fails(self):
         """Test: Intentar promover usuario inexistente falla"""
@@ -87,8 +88,8 @@ class AdminPromoteUserTestCase(TestCase):
         response = self.client.post(url)
 
         # Verificar error 404
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("no encontrado", response.data["error"])
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "no encontrado" in response.data["error"]
 
     def test_non_admin_cannot_promote_users(self):
         """Test: Usuario no admin no puede usar el endpoint"""
@@ -100,4 +101,4 @@ class AdminPromoteUserTestCase(TestCase):
         response = self.client.post(url)
 
         # Verificar error de permisos
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert response.status_code == status.HTTP_403_FORBIDDEN

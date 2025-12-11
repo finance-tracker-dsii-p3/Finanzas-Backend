@@ -2,21 +2,21 @@
 Vistas para reglas automáticas (HU-12)
 """
 
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
-from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import AutomaticRule
 from .serializers import (
-    AutomaticRuleListSerializer,
-    AutomaticRuleDetailSerializer,
     AutomaticRuleCreateSerializer,
-    AutomaticRuleUpdateSerializer,
+    AutomaticRuleDetailSerializer,
+    AutomaticRuleListSerializer,
     AutomaticRuleStatsSerializer,
+    AutomaticRuleUpdateSerializer,
 )
 from .services import AutomaticRuleService, RuleEngineService
 
@@ -39,11 +39,11 @@ class AutomaticRuleViewSet(viewsets.ModelViewSet):
         """Seleccionar serializer según la acción"""
         if self.action == "list":
             return AutomaticRuleListSerializer
-        elif self.action == "retrieve":
+        if self.action == "retrieve":
             return AutomaticRuleDetailSerializer
-        elif self.action == "create":
+        if self.action == "create":
             return AutomaticRuleCreateSerializer
-        elif self.action in ["update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
             return AutomaticRuleUpdateSerializer
         return AutomaticRuleListSerializer
 
@@ -237,7 +237,7 @@ class AutomaticRuleViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response(
-                {"error": f"Error reordenando reglas: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Error reordenando reglas: {e!s}"}, status=status.HTTP_400_BAD_REQUEST
             )
 
     @action(detail=False, methods=["post"])

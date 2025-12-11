@@ -4,8 +4,8 @@ Script para probar los mismos checks que ejecuta CI/CD
 """
 
 import os
-import sys
 import subprocess
+import sys
 
 
 def run_command(command, description):
@@ -15,7 +15,9 @@ def run_command(command, description):
     print("-" * 50)
 
     try:
-        result = subprocess.run(command.split(), capture_output=True, text=True, timeout=60)
+        result = subprocess.run(
+            command.split(), check=False, capture_output=True, text=True, timeout=60
+        )
 
         print(f"   Exit code: {result.returncode}")
 
@@ -32,9 +34,8 @@ def run_command(command, description):
         if result.returncode == 0:
             print("   [OK] EXITO")
             return True
-        else:
-            print("   [ERROR] FALLO")
-            return False
+        print("   [ERROR] FALLO")
+        return False
 
     except subprocess.TimeoutExpired:
         print("   [ERROR] TIMEOUT (60 segundos)")

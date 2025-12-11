@@ -3,8 +3,10 @@ Serializers para la gestión de presupuestos
 """
 
 from rest_framework import serializers
-from .models import Budget
+
 from categories.models import Category
+
+from .models import Budget
 
 
 class BudgetListSerializer(serializers.ModelSerializer):
@@ -203,19 +205,22 @@ class BudgetCreateSerializer(serializers.ModelSerializer):
         """Validar que la categoría pertenezca al usuario"""
         user = self.context["request"].user
         if value.user != user:
-            raise serializers.ValidationError("La categoría no pertenece al usuario autenticado.")
+            msg = "La categoría no pertenece al usuario autenticado."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_amount(self, value):
         """Validar que el monto sea positivo"""
         if value <= 0:
-            raise serializers.ValidationError("El monto debe ser mayor a cero.")
+            msg = "El monto debe ser mayor a cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_alert_threshold(self, value):
         """Validar que el umbral esté entre 0 y 100"""
         if value < 0 or value > 100:
-            raise serializers.ValidationError("El umbral de alerta debe estar entre 0 y 100.")
+            msg = "El umbral de alerta debe estar entre 0 y 100."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate(self, attrs):
@@ -267,13 +272,15 @@ class BudgetUpdateSerializer(serializers.ModelSerializer):
     def validate_amount(self, value):
         """Validar que el monto sea positivo"""
         if value <= 0:
-            raise serializers.ValidationError("El monto debe ser mayor a cero.")
+            msg = "El monto debe ser mayor a cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_alert_threshold(self, value):
         """Validar que el umbral esté entre 0 y 100"""
         if value < 0 or value > 100:
-            raise serializers.ValidationError("El umbral de alerta debe estar entre 0 y 100.")
+            msg = "El umbral de alerta debe estar entre 0 y 100."
+            raise serializers.ValidationError(msg)
         return value
 
 

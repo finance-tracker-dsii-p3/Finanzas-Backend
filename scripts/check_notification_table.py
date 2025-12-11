@@ -5,6 +5,7 @@ Script para verificar la estructura de la tabla de notificaciones
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -12,6 +13,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
 
 from django.db import connection
+
 from notifications.models import Notification
 
 

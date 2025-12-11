@@ -2,13 +2,14 @@
 Modelos para gestión de presupuestos por categoría
 """
 
-from django.db import models
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
-from django.core.exceptions import ValidationError
-from decimal import Decimal
-from datetime import date
 import calendar
+from datetime import date
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.db import models
 
 User = get_user_model()
 
@@ -136,11 +137,8 @@ class Budget(models.Model):
         super().clean()
 
         # Validar que la categoría pertenezca al mismo usuario
-        if self.category and self.user:
-            if self.category.user != self.user:
-                raise ValidationError(
-                    {"category": "La categoría debe pertenecer al mismo usuario."}
-                )
+        if self.category and self.user and self.category.user != self.user:
+            raise ValidationError({"category": "La categoría debe pertenecer al mismo usuario."})
 
         # Validar que el umbral no sea mayor a 100
         if self.alert_threshold > 100:
@@ -221,7 +219,7 @@ class Budget(models.Model):
         if reference_date is None:
             reference_date = date.today()
 
-        start_date, end_date = self.get_period_dates(reference_date)
+        start_date, _end_date = self.get_period_dates(reference_date)
 
         # Días transcurridos desde el inicio del período
         days_elapsed = (reference_date - start_date).days + 1
@@ -251,7 +249,7 @@ class Budget(models.Model):
         if reference_date is None:
             reference_date = date.today()
 
-        start_date, end_date = self.get_period_dates(reference_date)
+        _start_date, end_date = self.get_period_dates(reference_date)
 
         # Total de días en el período
         if self.period == self.MONTHLY:
@@ -320,7 +318,7 @@ class Budget(models.Model):
         """
         if self.is_over_budget(reference_date):
             return "exceeded"
-        elif self.is_alert_triggered(reference_date):
+        if self.is_alert_triggered(reference_date):
             return "warning"
         return "good"
 
@@ -386,7 +384,7 @@ class Budget(models.Model):
         # Convertir cada transacción a la moneda del presupuesto
         from utils.currency_converter import FxService
 
-        total_decimal = Decimal("0")
+        total_decimal = Decimal(0)
         for transaction in queryset:
             # Obtener la moneda de la transacción
             txn_currency = transaction.transaction_currency or (
@@ -411,7 +409,7 @@ class Budget(models.Model):
                     continue
 
             # Convertir de centavos a decimal y sumar
-            amount_decimal = (Decimal(str(amount_cents)) / Decimal("100")).quantize(Decimal("0.01"))
+            amount_decimal = (Decimal(str(amount_cents)) / Decimal(100)).quantize(Decimal("0.01"))
             total_decimal += amount_decimal
 
         return total_decimal

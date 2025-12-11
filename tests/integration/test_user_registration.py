@@ -3,9 +3,10 @@
 Script para probar el registro de usuario y ver los enlaces de activación
 """
 
-import requests
 import json
 import time
+
+import requests
 
 
 def test_user_registration():

@@ -2,10 +2,11 @@
 Modelos para gestión de categorías de ingresos y gastos
 """
 
-from django.db import models
+import re
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-import re
+from django.db import models
 
 User = get_user_model()
 
@@ -13,9 +14,8 @@ User = get_user_model()
 def validate_hex_color(value):
     """Validar que el color sea un código hexadecimal válido"""
     if not re.match(r"^#[0-9A-Fa-f]{6}$", value):
-        raise ValidationError(
-            f"{value} no es un código de color hexadecimal válido. Debe ser formato #RRGGBB"
-        )
+        msg = f"{value} no es un código de color hexadecimal válido. Debe ser formato #RRGGBB"
+        raise ValidationError(msg)
 
 
 def validate_color_contrast(value):
@@ -61,10 +61,11 @@ def validate_color_contrast(value):
     # WCAG AA requiere ratio mínimo de 4.5:1 para texto normal
     # Usamos 3.0 como mínimo para ser menos restrictivo con colores de UI
     if contrast_ratio < 3.0:
-        raise ValidationError(
+        msg = (
             f"El color {value} no tiene suficiente contraste con fondo blanco. "
             f"Ratio actual: {contrast_ratio:.2f}:1, mínimo requerido: 3.0:1"
         )
+        raise ValidationError(msg)
 
 
 class Category(models.Model):
@@ -259,9 +260,8 @@ class Category(models.Model):
         """
         # TODO: Implementar cuando existan transacciones
         # transactions_count = self.transactions.count()
-        budgets_count = self.budgets.count()
+        return self.budgets.count()
         # return transactions_count + budgets_count
-        return budgets_count
 
     def get_related_data(self):
         """

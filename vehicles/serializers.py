@@ -2,10 +2,11 @@
 Serializers para vehículos y SOAT
 """
 
-from rest_framework import serializers
-from vehicles.models import Vehicle, SOAT, SOATAlert
-from accounts.models import Account
 from django.utils import timezone
+from rest_framework import serializers
+
+from accounts.models import Account
+from vehicles.models import SOAT, SOATAlert, Vehicle
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -33,10 +34,11 @@ class VehicleSerializer(serializers.ModelSerializer):
         # Si estamos actualizando, excluir el vehículo actual
         if self.instance:
             if Vehicle.objects.filter(user=user, plate=plate).exclude(id=self.instance.id).exists():
-                raise serializers.ValidationError("Ya tienes un vehículo registrado con esta placa")
-        else:
-            if Vehicle.objects.filter(user=user, plate=plate).exists():
-                raise serializers.ValidationError("Ya tienes un vehículo registrado con esta placa")
+                msg = "Ya tienes un vehículo registrado con esta placa"
+                raise serializers.ValidationError(msg)
+        elif Vehicle.objects.filter(user=user, plate=plate).exists():
+            msg = "Ya tienes un vehículo registrado con esta placa"
+            raise serializers.ValidationError(msg)
 
         return plate
 
@@ -150,14 +152,16 @@ class SOATPaymentSerializer(serializers.Serializer):
         try:
             Account.objects.get(id=value, user=user)
         except Account.DoesNotExist:
-            raise serializers.ValidationError("La cuenta no existe o no te pertenece")
+            msg = "La cuenta no existe o no te pertenece"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate(self, data):
         """Validar que el SOAT no esté ya pagado"""
         soat = self.context.get("soat")
         if soat and soat.is_paid:
-            raise serializers.ValidationError("Este SOAT ya ha sido pagado")
+            msg = "Este SOAT ya ha sido pagado"
+            raise serializers.ValidationError(msg)
         return data
 
 

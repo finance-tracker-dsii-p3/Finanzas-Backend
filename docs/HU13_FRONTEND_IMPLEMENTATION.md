@@ -1359,4 +1359,3 @@ function App() {
 - El modo `base` muestra solo `base_amount`, el modo `total` muestra `total_amount` (con impuestos)
 - Las categorías pequeñas se agrupan en "Otros" según el `others_threshold` (default 5%)
 - El drill-down muestra hasta 50 transacciones por defecto (configurable con `limit`)
-

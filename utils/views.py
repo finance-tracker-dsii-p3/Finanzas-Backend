@@ -2,17 +2,18 @@
 Vistas para configuración de monedas y tipos de cambio
 """
 
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import api_view, permission_classes, action
+import logging
+from datetime import date, datetime
+
+from django.utils import timezone
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from datetime import datetime, date
-from django.utils import timezone
 
+from utils.currency_converter import CurrencyConverter, FxService
 from utils.models import BaseCurrencySetting, ExchangeRate
 from utils.serializers import BaseCurrencySerializer, ExchangeRateSerializer
-from utils.currency_converter import CurrencyConverter, FxService
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ def convert_currency(request):
     except ValueError as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        logger.error(f"Error en conversión de moneda: {str(e)}")
+        logger.exception(f"Error en conversión de moneda: {e!s}")
         return Response(
             {"error": "Error al convertir moneda"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

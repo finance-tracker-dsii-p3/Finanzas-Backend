@@ -1,10 +1,12 @@
-from django.core.management.base import BaseCommand
+import logging
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.conf import settings
+from django.core.management.base import BaseCommand
+
 from users.services import send_password_reset_email
-from users.utils import generate_raw_token, build_password_reset_url
-import logging
+from users.utils import build_password_reset_url, generate_raw_token
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +86,8 @@ class Command(BaseCommand):
             self.stdout.write("📧 Revisa la consola para ver el email (modo desarrollo)")
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Error enviando email: {str(e)}"))
-            logger.error(f"Error en prueba de email: {e}")
+            self.stdout.write(self.style.ERROR(f"❌ Error enviando email: {e!s}"))
+            logger.exception(f"Error en prueba de email: {e}")
 
     def create_test_user(self):
         """Crear usuario de prueba"""
@@ -135,5 +137,5 @@ class Command(BaseCommand):
                 self.stdout.write("ℹ️ Usuario monitor ya existe")
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Error creando usuarios: {str(e)}"))
-            logger.error(f"Error creando usuarios: {e}")
+            self.stdout.write(self.style.ERROR(f"❌ Error creando usuarios: {e!s}"))
+            logger.exception(f"Error creando usuarios: {e}")

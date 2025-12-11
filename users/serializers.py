@@ -1,10 +1,12 @@
-from rest_framework import serializers
-from django.utils import timezone
-from .utils import generate_raw_token, hash_token, build_password_reset_url
 from datetime import timedelta
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from rest_framework import serializers
+
 from .models import PasswordReset
 from .services import send_password_reset_email
+from .utils import build_password_reset_url, generate_raw_token, hash_token
 
 User = get_user_model()
 
@@ -65,8 +67,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop("password_confirm")
         password = validated_data.pop("password")
 
-        user = User.objects.create_user(password=password, **validated_data)
-        return user
+        return User.objects.create_user(password=password, **validated_data)
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -104,8 +105,8 @@ class UserLoginSerializer(serializers.Serializer):
 
             attrs["user"] = user
             return attrs
-        else:
-            raise serializers.ValidationError("Debe incluir username y password")
+        msg = "Debe incluir username y password"
+        raise serializers.ValidationError(msg)
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -125,7 +126,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return value  # No cambió, es válido
 
         if User.objects.filter(identification=value).exists():
-            raise serializers.ValidationError("Ya existe un usuario con esta identificación")
+            msg = "Ya existe un usuario con esta identificación"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_username(self, value):
@@ -136,7 +138,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return value  # No cambió, es válido
 
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Ya existe un usuario con este nombre de usuario")
+            msg = "Ya existe un usuario con este nombre de usuario"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_email(self, value):
@@ -147,7 +150,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return value  # No cambió, es válido
 
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Ya existe un usuario con este email")
+            msg = "Ya existe un usuario con este email"
+            raise serializers.ValidationError(msg)
         return value
 
 
@@ -355,7 +359,8 @@ class DeleteOwnAccountSerializer(serializers.Serializer):
         Validar que la contraseña sea correcta
         """
         if not value:
-            raise serializers.ValidationError("La contraseña es requerida")
+            msg = "La contraseña es requerida"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate(self, attrs):
@@ -366,7 +371,8 @@ class DeleteOwnAccountSerializer(serializers.Serializer):
 
         # Verificar que el usuario esté autenticado
         if not user or not user.is_authenticated:
-            raise serializers.ValidationError("Usuario no autenticado")
+            msg = "Usuario no autenticado"
+            raise serializers.ValidationError(msg)
 
         # Verificar la contraseña
         if not user.check_password(attrs["password"]):
@@ -374,8 +380,7 @@ class DeleteOwnAccountSerializer(serializers.Serializer):
 
         # Opcional: prevenir que administradores se eliminen
         if user.is_staff or user.is_superuser:
-            raise serializers.ValidationError(
-                "Los administradores no pueden eliminar sus cuentas mediante este endpoint"
-            )
+            msg = "Los administradores no pueden eliminar sus cuentas mediante este endpoint"
+            raise serializers.ValidationError(msg)
 
         return attrs

@@ -3,11 +3,12 @@
 Script completo para probar el sistema de exportación
 """
 
-import requests
 import json
-import time
 import os
-from datetime import datetime, date
+import time
+from datetime import date, datetime
+
+import requests
 
 # Configuración
 BASE_URL = "http://127.0.0.1:8000"
@@ -93,9 +94,8 @@ def test_pdf_export(token):
 
             # Monitorear progreso
             return monitor_export_progress(token, job_id, "PDF")
-        else:
-            print(f"❌ Error creando PDF: {response.status_code} - {response.text}")
-            return False
+        print(f"❌ Error creando PDF: {response.status_code} - {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en PDF: {e}")
@@ -127,9 +127,8 @@ def test_excel_export(token):
 
             # Monitorear progreso
             return monitor_export_progress(token, job_id, "Excel")
-        else:
-            print(f"❌ Error creando Excel: {response.status_code} - {response.text}")
-            return False
+        print(f"❌ Error creando Excel: {response.status_code} - {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en Excel: {e}")
@@ -142,7 +141,7 @@ def monitor_export_progress(token, job_id, format_name):
 
     print(f"⏳ Monitoreando progreso de {format_name}...")
 
-    for attempt in range(10):  # Máximo 10 intentos (20 segundos)
+    for _attempt in range(10):  # Máximo 10 intentos (20 segundos)
         try:
             response = requests.get(f"{API_BASE}/export/jobs/{job_id}/status/", headers=headers)
 
@@ -158,12 +157,11 @@ def monitor_export_progress(token, job_id, format_name):
                     print(f"📁 Archivo: {file_url}")
                     print(f"📏 Tamaño: {file_size} MB")
                     return True
-                elif status == "failed":
+                if status == "failed":
                     error = data.get("error_message", "Error desconocido")
                     print(f"❌ {format_name} falló: {error}")
                     return False
-                else:
-                    time.sleep(2)  # Esperar 2 segundos antes del siguiente intento
+                time.sleep(2)  # Esperar 2 segundos antes del siguiente intento
             else:
                 print(f"❌ Error verificando estado: {response.status_code}")
                 return False
@@ -201,9 +199,8 @@ def test_filtered_export(token):
             job_id = data["export_job_id"]
             print(f"✅ Trabajo con filtros creado: ID {job_id}")
             return True
-        else:
-            print(f"❌ Error con filtros: {response.status_code} - {response.text}")
-            return False
+        print(f"❌ Error con filtros: {response.status_code} - {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error con filtros: {e}")
@@ -227,9 +224,8 @@ def test_download_file(token, job_id):
             print(f"📄 Tipo: {content_type}")
             print(f"📏 Tamaño: {int(content_length) / 1024:.1f} KB")
             return True
-        else:
-            print(f"❌ Error descargando: {response.status_code}")
-            return False
+        print(f"❌ Error descargando: {response.status_code}")
+        return False
 
     except Exception as e:
         print(f"❌ Error descargando: {e}")

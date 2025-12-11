@@ -8,4 +8,3 @@ class ExportConfig(AppConfig):
 
     def ready(self):
         """Configuración cuando la app está lista"""
-        pass

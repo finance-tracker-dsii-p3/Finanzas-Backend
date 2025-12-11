@@ -6,7 +6,7 @@ Sistema completo de gestión de salas y turnos para monitores con validaciones a
 
 ### ✨ **Características Principales**
 - ✅ **Gestión completa de turnos** (CRUD para administradores)
-- ✅ **Control de acceso a salas** basado en turnos asignados  
+- ✅ **Control de acceso a salas** basado en turnos asignados
 - ✅ **Validaciones automáticas** de conflictos y múltiples monitores
 - ✅ **Notificaciones automáticas** por incumplimiento de turnos
 - ✅ **Cierre automático de sesiones** cuando terminan los turnos
@@ -113,7 +113,7 @@ Content-Type: application/json
   "password": "password123"
 }
 ```
-**Expected Status:** `200 OK`  
+**Expected Status:** `200 OK`
 **Variables to Set:** `auth_token` = `{{response.token}}`
 
 #### **🔴 1.2 Login - Credenciales Inválidas**
@@ -163,7 +163,7 @@ Content-Type: application/json
   "recurring": false
 }
 ```
-**Expected Status:** `201 Created`  
+**Expected Status:** `201 Created`
 **Variables to Set:** `schedule_id` = `{{response.id}}`
 
 #### **🟢 2.3 Ver Detalle de Turno**
@@ -207,7 +207,7 @@ Content-Type: application/json
   "notes": "Turno que debería generar conflicto"
 }
 ```
-**Expected Status:** `400 Bad Request`  
+**Expected Status:** `400 Bad Request`
 **Expected Response:** Mensaje de conflicto de horarios
 
 ### **📁 Carpeta: Schedule - Monitor**
@@ -311,7 +311,7 @@ Content-Type: application/json
   "notes": "Inicio de turno matutino"
 }
 ```
-**Expected Status:** `201 Created`  
+**Expected Status:** `201 Created`
 **Variables to Set:** `entry_id` = `{{response.entry.id}}`
 
 **Expected Response:**
@@ -483,7 +483,7 @@ Content-Type: application/json
   "description": "Sala creada para pruebas"
 }
 ```
-**Expected Status:** `201 Created`  
+**Expected Status:** `201 Created`
 **Variables to Set:** `new_room_id` = `{{response.id}}`
 
 #### **🟢 3.14 Admin - Ver Detalle de Sala**

@@ -5,6 +5,7 @@ Script para diagnosticar por qué los archivos se generan vacíos
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -12,13 +13,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
-from export.services import MonitorDataExporter
-from export.models import ExportJob
-from users.models import User
 from io import BytesIO
+
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+from export.models import ExportJob
+from export.services import MonitorDataExporter
+from users.models import User
 
 
 def test_simple_pdf_generation():
@@ -225,9 +228,8 @@ def test_real_export():
                     if len(file_content) == 0:
                         print("❌ PROBLEMA: Archivo real está vacío!")
                         return False
-                    else:
-                        print("✅ Archivo real tiene contenido")
-                        return True
+                    print("✅ Archivo real tiene contenido")
+                    return True
             else:
                 print("❌ PROBLEMA: No se generó archivo")
                 return False

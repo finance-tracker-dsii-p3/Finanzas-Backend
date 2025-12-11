@@ -1,11 +1,14 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.response import Response
-from users.permissions import IsVerifiedUser, IsAdminUser
-from .services import DashboardService
-from .serializers import DashboardDataSerializer
 import logging
+
+from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
+
+from users.permissions import IsAdminUser, IsVerifiedUser
+
+from .serializers import DashboardDataSerializer
+from .services import DashboardService
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +43,7 @@ def dashboard_view(request):
         )
 
     except Exception as e:
-        logger.error(f"Error en dashboard: {e}")
+        logger.exception(f"Error en dashboard: {e}")
         return Response(
             {"success": False, "error": "Error interno del servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -72,7 +75,7 @@ def mini_cards_view(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo mini cards: {e}")
+        logger.exception(f"Error obteniendo mini cards: {e}")
         return Response(
             {"success": False, "error": "Error interno del servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -104,7 +107,7 @@ def stats_view(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo estadísticas: {e}")
+        logger.exception(f"Error obteniendo estadísticas: {e}")
         return Response(
             {"success": False, "error": "Error interno del servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -136,7 +139,7 @@ def alerts_view(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo alertas: {e}")
+        logger.exception(f"Error obteniendo alertas: {e}")
         return Response(
             {"success": False, "error": "Error interno del servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -168,7 +171,7 @@ def charts_data_view(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo datos de gráficos: {e}")
+        logger.exception(f"Error obteniendo datos de gráficos: {e}")
         return Response(
             {"success": False, "error": "Error interno del servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -204,7 +207,7 @@ def admin_overview_view(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo resumen administrativo: {e}")
+        logger.exception(f"Error obteniendo resumen administrativo: {e}")
         return Response(
             {"success": False, "error": "Error interno del servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -5,6 +5,7 @@ Script para diagnosticar problemas con la generación de PDF
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -12,13 +13,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
-from export.services import MonitorDataExporter
-from export.models import ExportJob
-from users.models import User
 from io import BytesIO
+
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+from export.models import ExportJob
+from export.services import MonitorDataExporter
+from users.models import User
 
 
 def test_simple_pdf():
@@ -64,7 +67,7 @@ def test_simple_pdf():
         return True
 
     except Exception as e:
-        print(f"❌ Error generando PDF simple: {str(e)}")
+        print(f"❌ Error generando PDF simple: {e!s}")
         import traceback
 
         traceback.print_exc()
@@ -135,7 +138,7 @@ def test_export_pdf():
         return success
 
     except Exception as e:
-        print(f"❌ Error en exportación: {str(e)}")
+        print(f"❌ Error en exportación: {e!s}")
         import traceback
 
         traceback.print_exc()

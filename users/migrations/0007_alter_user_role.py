@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0006_passwordreset'),
+        ("users", "0006_passwordreset"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='role',
-            field=models.CharField(choices=[('admin', 'Administrador'), ('user', 'Usuario')], default='user', help_text='Rol del usuario en el sistema de gestión financiera', max_length=10),
+            model_name="user",
+            name="role",
+            field=models.CharField(
+                choices=[("admin", "Administrador"), ("user", "Usuario")],
+                default="user",
+                help_text="Rol del usuario en el sistema de gestión financiera",
+                max_length=10,
+            ),
         ),
     ]

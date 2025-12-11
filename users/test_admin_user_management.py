@@ -4,9 +4,10 @@ Tests esenciales para gestión completa de usuarios por administradores
 
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
 from users.models import User
 
 
@@ -43,6 +44,7 @@ class AdminUserManagementTestCase(TestCase):
         with transaction.atomic():
             # Desactivar señales temporalmente
             from django.db.models.signals import post_save
+
             from users.signals import auto_verify_new_users
 
             post_save.disconnect(auto_verify_new_users, sender=User)
@@ -80,13 +82,13 @@ class AdminUserManagementTestCase(TestCase):
         }
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("actualizado exitosamente", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "actualizado exitosamente" in response.data["message"]
 
         # Verificar que se actualizó
         self.user_user.refresh_from_db()
-        self.assertEqual(self.user_user.first_name, "user Updated")
-        self.assertEqual(self.user_user.email, "user_updated@test.com")
+        assert self.user_user.first_name == "user Updated"
+        assert self.user_user.email == "user_updated@test.com"
 
     def test_admin_cannot_edit_another_admin(self):
         """Test: Admin no puede editar otro admin"""
@@ -105,10 +107,8 @@ class AdminUserManagementTestCase(TestCase):
         data = {"first_name": "Hacked Admin"}
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertIn(
-            "No se puede editar información de otros administradores", response.data["error"]
-        )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert "No se puede editar información de otros administradores" in response.data["error"]
 
     def test_admin_can_view_user_detail(self):
         """Test: Admin puede ver detalles de un usuario"""
@@ -117,10 +117,10 @@ class AdminUserManagementTestCase(TestCase):
         url = reverse("admin_user_detail", kwargs={"user_id": self.user_user.id})
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["user"]["username"], "user_test")
-        self.assertEqual(response.data["user"]["role"], "user")
-        self.assertIn("date_joined", response.data["user"])
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["user"]["username"] == "user_test"
+        assert response.data["user"]["role"] == "user"
+        assert "date_joined" in response.data["user"]
 
     def test_admin_users_search_by_role(self):
         """Test: Admin puede filtrar usuarios por rol"""
@@ -129,10 +129,10 @@ class AdminUserManagementTestCase(TestCase):
         url = reverse("admin_users_search")
         response = self.client.get(url, {"role": "user"})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["users"]), 2)  # 2 useres
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["users"]) == 2  # 2 useres
         for user in response.data["users"]:
-            self.assertEqual(user["role"], "user")
+            assert user["role"] == "user"
 
     def test_admin_users_search_by_verification_status(self):
         """Test: Admin puede filtrar usuarios por estado de verificación"""
@@ -141,10 +141,10 @@ class AdminUserManagementTestCase(TestCase):
         url = reverse("admin_users_search")
         response = self.client.get(url, {"is_verified": "false"})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(len(response.data["users"]) >= 1)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["users"]) >= 1
         unverified_users = [u for u in response.data["users"] if not u["is_verified"]]
-        self.assertTrue(len(unverified_users) >= 1)
+        assert len(unverified_users) >= 1
 
     def test_admin_users_search_with_text(self):
         """Test: Admin puede buscar usuarios por texto"""
@@ -153,10 +153,10 @@ class AdminUserManagementTestCase(TestCase):
         url = reverse("admin_users_search")
         response = self.client.get(url, {"search": "user_test"})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(len(response.data["users"]) >= 1)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["users"]) >= 1
         found_user = next((u for u in response.data["users"] if u["username"] == "user_test"), None)
-        self.assertIsNotNone(found_user)
+        assert found_user is not None
 
     def test_user_cannot_access_admin_endpoints(self):
         """Test: user no puede acceder a endpoints de admin"""
@@ -165,17 +165,17 @@ class AdminUserManagementTestCase(TestCase):
         # Test edit
         url = reverse("admin_edit_user", kwargs={"user_id": self.user_user.id})
         response = self.client.patch(url, {"first_name": "Hacked"})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
         # Test detail
         url = reverse("admin_user_detail", kwargs={"user_id": self.user_user.id})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
         # Test search
         url = reverse("admin_users_search")
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_edit_user_invalid_fields(self):
         """Test: Editar usuario con campos completamente inválidos"""
@@ -189,8 +189,8 @@ class AdminUserManagementTestCase(TestCase):
         }
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("No se proporcionaron campos válidos", response.data["error"])
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "No se proporcionaron campos válidos" in response.data["error"]
 
     def test_pagination_in_search(self):
         """Test: Paginación en búsqueda de usuarios"""
@@ -209,11 +209,11 @@ class AdminUserManagementTestCase(TestCase):
         url = reverse("admin_users_search")
         response = self.client.get(url, {"page_size": 3, "page": 1})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["users"]), 3)
-        self.assertIn("pagination", response.data)
-        self.assertEqual(response.data["pagination"]["page"], 1)
-        self.assertEqual(response.data["pagination"]["page_size"], 3)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["users"]) == 3
+        assert "pagination" in response.data
+        assert response.data["pagination"]["page"] == 1
+        assert response.data["pagination"]["page_size"] == 3
 
     def test_admin_can_promote_user_via_edit(self):
         """Test: Admin puede ascender user a admin via endpoint edit"""
@@ -223,12 +223,12 @@ class AdminUserManagementTestCase(TestCase):
         data = {"role": "admin"}
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("ascendido a admin", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "ascendido a admin" in response.data["message"]
 
         # Verificar que se ascendió
         self.user_user.refresh_from_db()
-        self.assertEqual(self.user_user.role, "admin")
+        assert self.user_user.role == "admin"
 
     def test_admin_can_verify_user_via_edit(self):
         """Test: Admin puede verificar/desverificar usuario via endpoint edit"""
@@ -239,13 +239,13 @@ class AdminUserManagementTestCase(TestCase):
         data = {"is_verified": True}
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("verificado", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "verificado" in response.data["message"]
 
         # Verificar que se verificó
         self.unverified_user.refresh_from_db()
-        self.assertTrue(self.unverified_user.is_verified)
-        self.assertEqual(self.unverified_user.verified_by, self.admin_user)
+        assert self.unverified_user.is_verified
+        assert self.unverified_user.verified_by == self.admin_user
 
     def test_admin_can_unverify_user_via_edit(self):
         """Test: Admin puede desverificar usuario via endpoint edit"""
@@ -256,13 +256,13 @@ class AdminUserManagementTestCase(TestCase):
         data = {"is_verified": False}
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("desverificado", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "desverificado" in response.data["message"]
 
         # Verificar que se desverificó
         self.user_user.refresh_from_db()
-        self.assertFalse(self.user_user.is_verified)
-        self.assertIsNone(self.user_user.verified_by)
+        assert not self.user_user.is_verified
+        assert self.user_user.verified_by is None
 
     def test_admin_can_edit_multiple_fields_at_once(self):
         """Test: Admin puede editar múltiples campos a la vez"""
@@ -277,16 +277,16 @@ class AdminUserManagementTestCase(TestCase):
         }
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("ascendido a admin", response.data["message"])
-        self.assertIn("verificado", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "ascendido a admin" in response.data["message"]
+        assert "verificado" in response.data["message"]
 
         # Verificar todos los cambios
         self.unverified_user.refresh_from_db()
-        self.assertEqual(self.unverified_user.first_name, "Updated Name")
-        self.assertEqual(self.unverified_user.email, "updated@test.com")
-        self.assertEqual(self.unverified_user.role, "admin")
-        self.assertTrue(self.unverified_user.is_verified)
+        assert self.unverified_user.first_name == "Updated Name"
+        assert self.unverified_user.email == "updated@test.com"
+        assert self.unverified_user.role == "admin"
+        assert self.unverified_user.is_verified
 
     def test_invalid_role_change(self):
         """Test: Cambio de rol inválido debe fallar"""
@@ -296,8 +296,8 @@ class AdminUserManagementTestCase(TestCase):
         data = {"role": "invalid_role"}
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Rol inválido", response.data["error"])
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Rol inválido" in response.data["error"]
 
     def test_invalid_verification_value(self):
         """Test: Valor de verificación inválido debe fallar"""
@@ -307,8 +307,8 @@ class AdminUserManagementTestCase(TestCase):
         data = {"is_verified": "invalid_boolean"}
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("debe ser true o false", response.data["error"])
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "debe ser true o false" in response.data["error"]
 
     def test_no_changes_made(self):
         """Test: Sin cambios debe retornar mensaje apropiado"""
@@ -322,5 +322,5 @@ class AdminUserManagementTestCase(TestCase):
         }
         response = self.client.patch(url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("sin cambios realizados", response.data["message"])
+        assert response.status_code == status.HTTP_200_OK
+        assert "sin cambios realizados" in response.data["message"]

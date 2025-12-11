@@ -10,63 +10,218 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),  # Asegurar que User existe primero
-        ('transactions', '0009_add_currency_conversion_fields'),
-        ('accounts', '0005_account_account_number_account_bank_name'),
+        ("users", "0001_initial"),  # Asegurar que User existe primero
+        ("transactions", "0009_add_currency_conversion_fields"),
+        ("accounts", "0005_account_account_number_account_bank_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('categories', '0002_alter_category_icon'),
+        ("categories", "0002_alter_category_icon"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Bill',
+            name="Bill",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('provider', models.CharField(help_text='Nombre del proveedor del servicio o suscripción (ej: Netflix, EPM, Claro)', max_length=200, verbose_name='Proveedor')),
-                ('amount', models.DecimalField(decimal_places=2, help_text='Monto total de la factura', max_digits=15, verbose_name='Monto')),
-                ('due_date', models.DateField(help_text='Fecha límite para pagar la factura', verbose_name='Fecha de vencimiento')),
-                ('status', models.CharField(choices=[('pending', 'Pendiente'), ('paid', 'Pagada'), ('overdue', 'Atrasada')], default='pending', help_text='Estado actual de la factura', max_length=20, verbose_name='Estado')),
-                ('reminder_days_before', models.PositiveIntegerField(default=3, help_text='Días antes del vencimiento para crear recordatorio', verbose_name='Días de recordatorio')),
-                ('description', models.TextField(blank=True, help_text='Notas adicionales sobre la factura', null=True, verbose_name='Descripción')),
-                ('is_recurring', models.BooleanField(default=False, help_text='Indica si es una factura que se repite mensualmente', verbose_name='Es recurrente')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Fecha de actualización')),
-                ('category', models.ForeignKey(blank=True, help_text='Categoría de gasto asociada a la factura', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='bills', to='categories.category', verbose_name='Categoría')),
-                ('payment_transaction', models.OneToOneField(blank=True, help_text='Transacción generada al registrar el pago', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='bill_payment', to='transactions.transaction', verbose_name='Transacción de pago')),
-                ('suggested_account', models.ForeignKey(blank=True, help_text='Cuenta desde la cual se sugiere pagar la factura', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='suggested_bills', to='accounts.account', verbose_name='Cuenta sugerida')),
-                ('user', models.ForeignKey(help_text='Usuario propietario de la factura', on_delete=django.db.models.deletion.CASCADE, related_name='bills', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "provider",
+                    models.CharField(
+                        help_text="Nombre del proveedor del servicio o suscripción (ej: Netflix, EPM, Claro)",
+                        max_length=200,
+                        verbose_name="Proveedor",
+                    ),
+                ),
+                (
+                    "amount",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="Monto total de la factura",
+                        max_digits=15,
+                        verbose_name="Monto",
+                    ),
+                ),
+                (
+                    "due_date",
+                    models.DateField(
+                        help_text="Fecha límite para pagar la factura",
+                        verbose_name="Fecha de vencimiento",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pendiente"),
+                            ("paid", "Pagada"),
+                            ("overdue", "Atrasada"),
+                        ],
+                        default="pending",
+                        help_text="Estado actual de la factura",
+                        max_length=20,
+                        verbose_name="Estado",
+                    ),
+                ),
+                (
+                    "reminder_days_before",
+                    models.PositiveIntegerField(
+                        default=3,
+                        help_text="Días antes del vencimiento para crear recordatorio",
+                        verbose_name="Días de recordatorio",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True,
+                        help_text="Notas adicionales sobre la factura",
+                        null=True,
+                        verbose_name="Descripción",
+                    ),
+                ),
+                (
+                    "is_recurring",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Indica si es una factura que se repite mensualmente",
+                        verbose_name="Es recurrente",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                ),
+                (
+                    "category",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Categoría de gasto asociada a la factura",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="bills",
+                        to="categories.category",
+                        verbose_name="Categoría",
+                    ),
+                ),
+                (
+                    "payment_transaction",
+                    models.OneToOneField(
+                        blank=True,
+                        help_text="Transacción generada al registrar el pago",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="bill_payment",
+                        to="transactions.transaction",
+                        verbose_name="Transacción de pago",
+                    ),
+                ),
+                (
+                    "suggested_account",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Cuenta desde la cual se sugiere pagar la factura",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="suggested_bills",
+                        to="accounts.account",
+                        verbose_name="Cuenta sugerida",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Usuario propietario de la factura",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="bills",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Factura',
-                'verbose_name_plural': 'Facturas',
-                'ordering': ['due_date', '-created_at'],
+                "verbose_name": "Factura",
+                "verbose_name_plural": "Facturas",
+                "ordering": ["due_date", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='BillReminder',
+            name="BillReminder",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('reminder_type', models.CharField(choices=[('upcoming', 'Próxima a vencer'), ('due_today', 'Vence hoy'), ('overdue', 'Atrasada')], max_length=20, verbose_name='Tipo de recordatorio')),
-                ('message', models.TextField(help_text='Mensaje del recordatorio', verbose_name='Mensaje')),
-                ('is_read', models.BooleanField(default=False, verbose_name='Leído')),
-                ('read_at', models.DateTimeField(blank=True, null=True, verbose_name='Fecha de lectura')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('bill', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='bills.bill', verbose_name='Factura')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='bill_reminders', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "reminder_type",
+                    models.CharField(
+                        choices=[
+                            ("upcoming", "Próxima a vencer"),
+                            ("due_today", "Vence hoy"),
+                            ("overdue", "Atrasada"),
+                        ],
+                        max_length=20,
+                        verbose_name="Tipo de recordatorio",
+                    ),
+                ),
+                (
+                    "message",
+                    models.TextField(help_text="Mensaje del recordatorio", verbose_name="Mensaje"),
+                ),
+                ("is_read", models.BooleanField(default=False, verbose_name="Leído")),
+                (
+                    "read_at",
+                    models.DateTimeField(blank=True, null=True, verbose_name="Fecha de lectura"),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "bill",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reminders",
+                        to="bills.bill",
+                        verbose_name="Factura",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="bill_reminders",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Recordatorio de factura',
-                'verbose_name_plural': 'Recordatorios de facturas',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', 'is_read'], name='bills_billr_user_id_59a991_idx'), models.Index(fields=['bill', 'reminder_type'], name='bills_billr_bill_id_def869_idx')],
+                "verbose_name": "Recordatorio de factura",
+                "verbose_name_plural": "Recordatorios de facturas",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(fields=["user", "is_read"], name="bills_billr_user_id_59a991_idx"),
+                    models.Index(
+                        fields=["bill", "reminder_type"], name="bills_billr_bill_id_def869_idx"
+                    ),
+                ],
             },
         ),
         migrations.AddIndex(
-            model_name='bill',
-            index=models.Index(fields=['user', 'status'], name='bills_bill_user_id_bffc8e_idx'),
+            model_name="bill",
+            index=models.Index(fields=["user", "status"], name="bills_bill_user_id_bffc8e_idx"),
         ),
         migrations.AddIndex(
-            model_name='bill',
-            index=models.Index(fields=['due_date'], name='bills_bill_due_dat_cfdde0_idx'),
+            model_name="bill",
+            index=models.Index(fields=["due_date"], name="bills_bill_due_dat_cfdde0_idx"),
         ),
     ]

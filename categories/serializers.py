@@ -3,6 +3,7 @@ Serializers para gestión de categorías
 """
 
 from rest_framework import serializers
+
 from .models import Category
 
 
@@ -78,10 +79,12 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         value = value.strip().title()
 
         if len(value) < 2:
-            raise serializers.ValidationError("El nombre debe tener al menos 2 caracteres.")
+            msg = "El nombre debe tener al menos 2 caracteres."
+            raise serializers.ValidationError(msg)
 
         if len(value) > 100:
-            raise serializers.ValidationError("El nombre no puede tener más de 100 caracteres.")
+            msg = "El nombre no puede tener más de 100 caracteres."
+            raise serializers.ValidationError(msg)
 
         return value
 
@@ -93,7 +96,8 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 
         # Verificar que el usuario esté autenticado
         if not user or not user.is_authenticated:
-            raise serializers.ValidationError("Debes estar autenticado para crear categorías.")
+            msg = "Debes estar autenticado para crear categorías."
+            raise serializers.ValidationError(msg)
 
         # Verificar duplicidad
         existing = Category.objects.filter(user=user, name__iexact=name, type=cat_type)
@@ -133,10 +137,12 @@ class CategoryUpdateSerializer(serializers.ModelSerializer):
         value = value.strip().title()
 
         if len(value) < 2:
-            raise serializers.ValidationError("El nombre debe tener al menos 2 caracteres.")
+            msg = "El nombre debe tener al menos 2 caracteres."
+            raise serializers.ValidationError(msg)
 
         if len(value) > 100:
-            raise serializers.ValidationError("El nombre no puede tener más de 100 caracteres.")
+            msg = "El nombre no puede tener más de 100 caracteres."
+            raise serializers.ValidationError(msg)
 
         return value
 
@@ -146,7 +152,8 @@ class CategoryUpdateSerializer(serializers.ModelSerializer):
 
         # No permitir edición de categorías por defecto
         if instance.is_default:
-            raise serializers.ValidationError("No puedes editar una categoría del sistema.")
+            msg = "No puedes editar una categoría del sistema."
+            raise serializers.ValidationError(msg)
 
         # Verificar duplicidad si se cambia el nombre
         if "name" in attrs:
@@ -183,19 +190,18 @@ class CategoryReassignSerializer(serializers.Serializer):
         try:
             target_category = Category.objects.get(pk=value, user=user)
         except Category.DoesNotExist:
-            raise serializers.ValidationError("La categoría destino no existe o no te pertenece.")
+            msg = "La categoría destino no existe o no te pertenece."
+            raise serializers.ValidationError(msg)
 
         # Verificar que sea del mismo tipo
         if target_category.type != source_category.type:
-            raise serializers.ValidationError(
-                f"La categoría destino debe ser del mismo tipo ({source_category.get_type_display()})"
-            )
+            msg = f"La categoría destino debe ser del mismo tipo ({source_category.get_type_display()})"
+            raise serializers.ValidationError(msg)
 
         # No puede ser la misma categoría
         if target_category.pk == source_category.pk:
-            raise serializers.ValidationError(
-                "No puedes reasignar a la misma categoría que estás eliminando."
-            )
+            msg = "No puedes reasignar a la misma categoría que estás eliminando."
+            raise serializers.ValidationError(msg)
 
         return value
 
@@ -228,6 +234,7 @@ class CategoryBulkOrderSerializer(serializers.Serializer):
         existing_categories = Category.objects.filter(pk__in=category_ids, user=user).count()
 
         if existing_categories != len(category_ids):
-            raise serializers.ValidationError("Algunas categorías no existen o no te pertenecen.")
+            msg = "Algunas categorías no existen o no te pertenecen."
+            raise serializers.ValidationError(msg)
 
         return value

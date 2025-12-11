@@ -1,10 +1,12 @@
-from django.utils import timezone
-from datetime import timedelta
-from users.models import User
-from notifications.models import Notification
-from credit_cards.services import InstallmentPlanService
-from credit_cards.models import InstallmentPlan
 import logging
+from datetime import timedelta
+
+from django.utils import timezone
+
+from credit_cards.models import InstallmentPlan
+from credit_cards.services import InstallmentPlanService
+from notifications.models import Notification
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +91,7 @@ class DashboardService:
             }
 
         except Exception as e:
-            logger.error(f"Error generando dashboard de admin: {e}")
+            logger.exception(f"Error generando dashboard de admin: {e}")
             return DashboardService._get_error_dashboard()
 
     @staticmethod
@@ -180,7 +182,7 @@ class DashboardService:
             }
 
         except Exception as e:
-            logger.error(f"Error generando dashboard de usuario: {e}")
+            logger.exception(f"Error generando dashboard de usuario: {e}")
             return DashboardService._get_error_dashboard()
 
     @staticmethod
@@ -209,7 +211,7 @@ class DashboardService:
             return activities
 
         except Exception as e:
-            logger.error(f"Error obteniendo actividades recientes: {e}")
+            logger.exception(f"Error obteniendo actividades recientes: {e}")
             return []
 
     @staticmethod
@@ -235,7 +237,7 @@ class DashboardService:
             return activities
 
         except Exception as e:
-            logger.error(f"Error obteniendo actividades del usuario: {e}")
+            logger.exception(f"Error obteniendo actividades del usuario: {e}")
             return []
 
     @staticmethod
@@ -262,7 +264,7 @@ class DashboardService:
             return alerts
 
         except Exception as e:
-            logger.error(f"Error obteniendo alertas: {e}")
+            logger.exception(f"Error obteniendo alertas: {e}")
             return []
 
     @staticmethod
@@ -300,7 +302,7 @@ class DashboardService:
             return alerts
 
         except Exception as e:
-            logger.error(f"Error obteniendo alertas del usuario: {e}")
+            logger.exception(f"Error obteniendo alertas del usuario: {e}")
             return []
 
     @staticmethod

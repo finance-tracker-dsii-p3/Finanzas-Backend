@@ -3,8 +3,9 @@
 Script simple para probar datos de usuarios
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_user_data():

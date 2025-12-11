@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import ExportJob
+
 from users.models import User
+
+from .models import ExportJob
 
 
 class ExportJobSerializer(serializers.ModelSerializer):

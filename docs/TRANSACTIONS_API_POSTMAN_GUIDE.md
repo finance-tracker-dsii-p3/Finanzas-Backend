@@ -29,7 +29,7 @@ Authorization: {{token}}
 
 ### 1. Listar Todas las Transacciones
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/transactions/`
 
 **Headers:**
@@ -99,7 +99,7 @@ GET {{base_url}}/api/transactions/?type=2&date_from=2025-11-01&ordering=-date
 
 ### 2. Crear Nueva Transacción
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/transactions/`
 
 **Headers:**
@@ -211,7 +211,7 @@ GET {{base_url}}/api/accounts/
 
 ### 3. Ver Detalle de Transacción
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/transactions/{id}/`
 
 **Headers:**
@@ -250,7 +250,7 @@ GET {{base_url}}/api/transactions/1/
 
 ### 4. Actualizar Transacción Completa
 
-**Método:** `PUT`  
+**Método:** `PUT`
 **URL:** `{{base_url}}/api/transactions/{id}/`
 
 **Headers:**
@@ -294,7 +294,7 @@ Content-Type: application/json
 
 ### 5. Actualizar Transacción Parcial
 
-**Método:** `PATCH`  
+**Método:** `PATCH`
 **URL:** `{{base_url}}/api/transactions/{id}/`
 
 **Headers:**
@@ -333,7 +333,7 @@ Content-Type: application/json
 
 ### 6. Eliminar Transacción
 
-**Método:** `DELETE`  
+**Método:** `DELETE`
 **URL:** `{{base_url}}/api/transactions/{id}/`
 
 **Headers:**
@@ -483,7 +483,7 @@ GET {{base_url}}/api/transactions/?type=2&category=17&date_from=2025-11-01
 ## ❌ Errores Comunes y Soluciones
 
 ### Error 400 - Datos inválidos
-**Causa:** Datos requeridos faltantes o formato incorrecto  
+**Causa:** Datos requeridos faltantes o formato incorrecto
 **Ejemplo de respuesta:**
 ```json
 {
@@ -494,15 +494,15 @@ GET {{base_url}}/api/transactions/?type=2&category=17&date_from=2025-11-01
 **Solución:** Verificar que todos los campos obligatorios estén presentes y con formato correcto
 
 ### Error 401 - No autenticado
-**Causa:** Token no válido o no enviado  
+**Causa:** Token no válido o no enviado
 **Solución:** Verificar header `Authorization: Token xxxxx`
 
 ### Error 404 - Transacción no encontrada
-**Causa:** ID de transacción no existe o no pertenece al usuario  
+**Causa:** ID de transacción no existe o no pertenece al usuario
 **Solución:** Verificar que el ID sea correcto y que la transacción pertenezca al usuario autenticado
 
 ### Error 400 - Cuenta inexistente
-**Causa:** ID de cuenta no válido o no pertenece al usuario  
+**Causa:** ID de cuenta no válido o no pertenece al usuario
 **Ejemplo:**
 ```json
 {
@@ -512,7 +512,7 @@ GET {{base_url}}/api/transactions/?type=2&category=17&date_from=2025-11-01
 **Solución:** Verificar cuentas disponibles con `GET /api/accounts/` y usar un ID válido
 
 ### Error 400 - Campo requerido faltante
-**Causa:** Campos calculados incluidos como requeridos  
+**Causa:** Campos calculados incluidos como requeridos
 **Ejemplo:**
 ```json
 {
@@ -522,7 +522,7 @@ GET {{base_url}}/api/transactions/?type=2&category=17&date_from=2025-11-01
 **Solución:** NO incluir `total_amount`, `taxed_amount` en la petición - se calculan automáticamente
 
 ### Error 400 - Validación de transferencia
-**Causa:** Transferencia sin cuenta destino  
+**Causa:** Transferencia sin cuenta destino
 **Ejemplo:**
 ```json
 {
@@ -568,7 +568,7 @@ GET {{base_url}}/api/transactions/?type=2&category=17&date_from=2025-11-01
   "date": "2025-11-24"
 }
 ```
-**Resultado esperado:** 
+**Resultado esperado:**
 - `taxed_amount`: 19000
 - `total_amount`: 119000
 
@@ -576,7 +576,7 @@ GET {{base_url}}/api/transactions/?type=2&category=17&date_from=2025-11-01
 ```
 GET {{base_url}}/api/transactions/
 ```
-**Resultado esperado:** 
+**Resultado esperado:**
 ```json
 {
   "count": 0,

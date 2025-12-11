@@ -4,6 +4,7 @@ Script para obtener token de autenticación para testing
 
 import os
 import sys
+
 import django
 
 # Configurar Django

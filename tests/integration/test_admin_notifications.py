@@ -3,9 +3,10 @@
 Script para probar las notificaciones que recibe el admin
 """
 
-import requests
 import json
 import time
+
+import requests
 
 
 def test_admin_notifications():

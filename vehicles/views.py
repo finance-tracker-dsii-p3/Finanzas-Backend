@@ -2,18 +2,18 @@
 Vistas para gestión de vehículos y SOAT
 """
 
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from vehicles.models import Vehicle, SOAT, SOATAlert
+from vehicles.models import SOAT, SOATAlert, Vehicle
 from vehicles.serializers import (
-    VehicleSerializer,
-    SOATSerializer,
-    SOATPaymentSerializer,
     SOATAlertSerializer,
+    SOATPaymentSerializer,
+    SOATSerializer,
+    VehicleSerializer,
     VehicleWithSOATSerializer,
 )
 from vehicles.services import SOATService
@@ -106,6 +106,7 @@ class SOATViewSet(viewsets.ModelViewSet):
                 {"error": "El vehículo no te pertenece"}, status=status.HTTP_403_FORBIDDEN
             )
         serializer.save()
+        return None
 
     @action(detail=True, methods=["post"])
     def register_payment(self, request, pk=None):

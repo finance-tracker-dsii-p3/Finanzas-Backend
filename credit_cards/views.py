@@ -1,12 +1,13 @@
+from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
+
 from credit_cards.models import InstallmentPlan
 from credit_cards.serializers import (
-    InstallmentPlanSerializer,
-    InstallmentPlanCreateSerializer,
     InstallmentPaymentRecordSerializer,
+    InstallmentPlanCreateSerializer,
+    InstallmentPlanSerializer,
 )
 from credit_cards.services import InstallmentPlanService
 

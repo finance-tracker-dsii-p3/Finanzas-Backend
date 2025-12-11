@@ -7,14 +7,22 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0002_alter_category_icon'),
-        ('transactions', '0006_transaction_capital_amount_and_more'),
+        ("categories", "0002_alter_category_icon"),
+        ("transactions", "0006_transaction_capital_amount_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='transaction',
-            name='category',
-            field=models.ForeignKey(blank=True, help_text='Categoría de la transacción (requerida para ingresos y gastos, no aplica para transferencias)', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='transactions', to='categories.category', verbose_name='Categoría'),
+            model_name="transaction",
+            name="category",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Categoría de la transacción (requerida para ingresos y gastos, no aplica para transferencias)",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="transactions",
+                to="categories.category",
+                verbose_name="Categoría",
+            ),
         ),
     ]

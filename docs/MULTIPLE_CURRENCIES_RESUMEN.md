@@ -113,4 +113,3 @@ GET /api/utils/currency/exchange-rate/?from=USD&to=COP
 ## 📚 Documentación Completa
 
 Ver: `docs/MULTIPLE_CURRENCIES_IMPLEMENTATION.md`
-

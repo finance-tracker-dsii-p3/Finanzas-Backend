@@ -3,8 +3,9 @@
 Script para probar que el endpoint de usuarios devuelva identification y role
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_user_endpoints():

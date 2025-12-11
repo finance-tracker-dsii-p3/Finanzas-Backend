@@ -4,9 +4,10 @@ Script manual para probar los endpoints de autenticación
 No es un test automatizado; se omite en pytest.
 """
 
+import json
+
 import pytest
 import requests
-import json
 
 # Omitir TODO el archivo en pytest
 pytestmark = pytest.mark.skip(reason="Script manual; no forma parte de la suite de tests.")
@@ -42,7 +43,7 @@ def test_endpoint(method, url, data=None, headers=None):
         print("   Asegúrate de que el servidor Django esté ejecutándose")
         return None
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"❌ Error: {e!s}")
         return None
 
 

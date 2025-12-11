@@ -1,9 +1,12 @@
+import logging
+from datetime import timedelta
+
 from django.db import models
 from django.utils import timezone
-from datetime import timedelta
-from .models import Notification
+
 from users.models import User
-import logging
+
+from .models import Notification
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,7 @@ class NotificationService:
             return notification
 
         except Exception as e:
-            logger.error(f"Error creando notificación: {str(e)}")
+            logger.exception(f"Error creando notificación: {e!s}")
             return None
 
     @staticmethod
@@ -54,7 +57,28 @@ class NotificationService:
             )
             return False
         except Exception as e:
-            logger.error(f"Error marcando notificación como leída: {str(e)}")
+            logger.exception(f"Error marcando notificación como leída: {e!s}")
+            return False
+
+    @staticmethod
+    def mark_as_dismissed(notification_id, user):
+        """
+        Marcar una notificación como descartada
+        """
+        try:
+            notification = Notification.objects.get(id=notification_id, user=user)
+            notification.mark_as_dismissed()
+
+            logger.info(f"Notificación {notification_id} marcada como descartada")
+            return True
+
+        except Notification.DoesNotExist:
+            logger.warning(
+                f"Notificación {notification_id} no encontrada para usuario {user.username}"
+            )
+            return False
+        except Exception as e:
+            logger.exception(f"Error marcando notificación como descartada: {e!s}")
             return False
 
     @staticmethod
@@ -76,8 +100,46 @@ class NotificationService:
             return queryset
 
         except Exception as e:
-            logger.error(f"Error obteniendo notificaciones: {str(e)}")
+            logger.exception(f"Error obteniendo notificaciones: {e!s}")
             return Notification.objects.none()
+
+    @staticmethod
+    def get_user_notifications_summary(user):
+        """
+        Obtener resumen de notificaciones del usuario
+        """
+        try:
+            notifications = Notification.objects.filter(user=user)
+            total = notifications.count()
+            unread = notifications.filter(read=False).count()
+
+            # Notificaciones recientes (últimas 5)
+            recent = notifications.order_by("-created_at")[:5]
+
+            # Agrupar por tipo
+            from django.db.models import Count
+
+            by_type = (
+                notifications.values("notification_type")
+                .annotate(count=Count("id"))
+                .order_by("-count")
+            )
+
+            return {
+                "total": total,
+                "unread": unread,
+                "recent": recent,
+                "by_type": by_type,
+            }
+
+        except Exception as e:
+            logger.exception(f"Error obteniendo resumen de notificaciones: {e!s}")
+            return {
+                "total": 0,
+                "unread": 0,
+                "recent": Notification.objects.none(),
+                "by_type": [],
+            }
 
     @staticmethod
     def send_system_notification(title, message, user_ids=None):
@@ -105,7 +167,7 @@ class NotificationService:
             return notifications_created
 
         except Exception as e:
-            logger.error(f"Error enviando notificaciones del sistema: {str(e)}")
+            logger.exception(f"Error enviando notificaciones del sistema: {e!s}")
             return 0
 
 
@@ -140,7 +202,7 @@ class BasicCheckerService:
             return alerts
 
         except Exception as e:
-            logger.error(f"Error verificando notificaciones no leídas: {str(e)}")
+            logger.exception(f"Error verificando notificaciones no leídas: {e!s}")
             return []
 
     @staticmethod
@@ -171,7 +233,7 @@ class BasicCheckerService:
             return alerts
 
         except Exception as e:
-            logger.error(f"Error verificando usuarios inactivos: {str(e)}")
+            logger.exception(f"Error verificando usuarios inactivos: {e!s}")
             return []
 
 

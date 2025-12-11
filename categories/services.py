@@ -2,9 +2,11 @@
 Services para lógica de negocio de categorías
 """
 
-from django.db import transaction
-from .models import Category
 import logging
+
+from django.db import transaction
+
+from .models import Category
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +98,8 @@ class CategoryService:
         user_categories_count = Category.objects.filter(user=user).count()
 
         if user_categories_count >= 100:
-            raise ValueError("Has alcanzado el límite máximo de categorías (100)")
+            msg = "Has alcanzado el límite máximo de categorías (100)"
+            raise ValueError(msg)
 
         # Crear la categoría
         category_data["user"] = user
@@ -121,7 +124,8 @@ class CategoryService:
         """
         # No permitir editar categorías del sistema
         if category.is_default:
-            raise ValueError("No puedes editar categorías del sistema")
+            msg = "No puedes editar categorías del sistema"
+            raise ValueError(msg)
 
         # Actualizar campos
         for field, value in update_data.items():
@@ -152,7 +156,8 @@ class CategoryService:
         """
         # No permitir eliminar categorías del sistema
         if category.is_default:
-            raise ValueError("No puedes eliminar categorías del sistema")
+            msg = "No puedes eliminar categorías del sistema"
+            raise ValueError(msg)
 
         # Verificar si tiene datos relacionados
         related_data = category.get_related_data()
@@ -161,10 +166,11 @@ class CategoryService:
         )
 
         if has_related_data and not target_category_id:
-            raise ValueError(
+            msg = (
                 "Esta categoría tiene transacciones o presupuestos asociados. "
                 "Debes proporcionar una categoría destino para reasignar."
             )
+            raise ValueError(msg)
 
         result = {
             "reassigned_transactions": 0,
@@ -179,7 +185,8 @@ class CategoryService:
                     pk=target_category_id, user=category.user, type=category.type
                 )
             except Category.DoesNotExist:
-                raise ValueError("La categoría destino no existe o no es válida para reasignación.")
+                msg = "La categoría destino no existe o no es válida para reasignación."
+                raise ValueError(msg)
 
             # TODO: Reasignar transacciones cuando se implemente el modelo
             # transactions_updated = category.transactions.update(category=target_category)
@@ -217,7 +224,8 @@ class CategoryService:
         """
         # No permitir desactivar categorías del sistema
         if category.is_default and category.is_active:
-            raise ValueError("No puedes desactivar categorías del sistema")
+            msg = "No puedes desactivar categorías del sistema"
+            raise ValueError(msg)
 
         category.is_active = not category.is_active
         category.save(update_fields=["is_active", "updated_at"])

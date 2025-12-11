@@ -280,7 +280,7 @@ services:
     buildCommand: "./build.sh"
     startCommand: "gunicorn finanzas_back.wsgi:application --bind 0.0.0.0:$PORT --workers 3"
     healthCheckPath: "/health/"
-    
+
 databases:
   - name: finanzas-db
     databaseName: finanzas_back_db
@@ -545,7 +545,7 @@ python manage.py shell
 ## 🎉 **PRÓXIMOS PASOS RECOMENDADOS**
 
 1. **📊 Implementar métricas de uso**
-2. **🔔 Mejorar sistema de notificaciones**  
+2. **🔔 Mejorar sistema de notificaciones**
 3. **📈 Agregar analytics y reporting**
 4. **🔒 Implementar rate limiting**
 5. **📱 Documentación API completa con Swagger**

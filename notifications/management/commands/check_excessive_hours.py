@@ -1,7 +1,9 @@
+import logging
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from notifications.services import NotificationService, ExcessiveHoursChecker
-import logging
+
+from notifications.services import ExcessiveHoursChecker, NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +73,6 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING("⚠️ No se enviaron nuevas notificaciones"))
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Error durante la verificación: {str(e)}"))
-            logger.error(f"Error en verificación de exceso de horas: {e}")
+            self.stdout.write(self.style.ERROR(f"❌ Error durante la verificación: {e!s}"))
+            logger.exception(f"Error en verificación de exceso de horas: {e}")
             raise

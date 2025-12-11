@@ -2,13 +2,14 @@
 Servicios para gestión de SOAT y alertas
 """
 
-from django.utils import timezone
 from django.db import transaction as db_transaction
-from vehicles.models import SOAT, SOATAlert
-from transactions.models import Transaction
+from django.utils import timezone
+
 from accounts.models import Account
 from categories.models import Category
 from notifications.engine import NotificationEngine
+from transactions.models import Transaction
+from vehicles.models import SOAT, SOATAlert
 
 
 class SOATService:
@@ -34,14 +35,16 @@ class SOATService:
             ValueError: Si el SOAT ya está pagado o la cuenta no existe
         """
         if soat.is_paid:
-            raise ValueError("Este SOAT ya ha sido pagado")
+            msg = "Este SOAT ya ha sido pagado"
+            raise ValueError(msg)
 
         user = soat.vehicle.user
 
         try:
             account = Account.objects.get(id=account_id, user=user)
         except Account.DoesNotExist:
-            raise ValueError("La cuenta no existe o no te pertenece")
+            msg = "La cuenta no existe o no te pertenece"
+            raise ValueError(msg)
 
         # Buscar o crear categoría "Seguros/Vehículo"
         category, _ = Category.objects.get_or_create(
@@ -185,13 +188,11 @@ class SOATService:
             QuerySet: Transacciones de pago de SOAT
         """
         soat_ids = vehicle.soats.values_list("id", flat=True)
-        transactions = (
+        return (
             Transaction.objects.filter(soat_payment__id__in=soat_ids)
             .select_related("origin_account", "category")
             .order_by("-date")
         )
-
-        return transactions
 
     @staticmethod
     def mark_alert_as_read(alert_id, user):
@@ -214,4 +215,5 @@ class SOATService:
             alert.save(update_fields=["is_read"])
             return alert
         except SOATAlert.DoesNotExist:
-            raise ValueError("La alerta no existe o no te pertenece")
+            msg = "La alerta no existe o no te pertenece"
+            raise ValueError(msg)

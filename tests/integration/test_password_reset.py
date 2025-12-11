@@ -3,8 +3,9 @@
 Script para probar el restablecimiento de contraseña
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_password_reset():

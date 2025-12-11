@@ -29,7 +29,7 @@ Authorization: {{token}}
 
 ### 1. Dashboard Completo de Analytics
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/analytics/dashboard/`
 
 **Headers:**
@@ -180,7 +180,7 @@ GET {{base_url}}/api/analytics/dashboard/?period=current_month&mode=base&others_
 
 ### 2. Solo Indicadores KPI
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/analytics/indicators/`
 
 **Headers:**
@@ -233,7 +233,7 @@ GET {{base_url}}/api/analytics/indicators/?period=last_month&mode=total
 
 ### 3. Gráfico de Dona - Gastos por Categoría
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/analytics/expenses-chart/`
 
 **Headers:**
@@ -325,7 +325,7 @@ GET {{base_url}}/api/analytics/expenses-chart/?period=2025-10&mode=base&others_t
 
 ### 4. Gráfico de Líneas - Flujo Diario
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/analytics/daily-flow-chart/`
 
 **Headers:**
@@ -390,7 +390,7 @@ GET {{base_url}}/api/analytics/daily-flow-chart/?period=last_7_days&mode=total
 
 ### 5. Drill-down: Transacciones por Categoría
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/analytics/category/{category_id}/transactions/`
 
 **Path Parameters:**
@@ -475,7 +475,7 @@ GET {{base_url}}/api/analytics/category/uncategorized/transactions/?period=last_
 
 ### 6. Períodos Disponibles
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/analytics/periods/`
 
 **Headers:**
@@ -619,11 +619,11 @@ GET {{base_url}}/api/analytics/dashboard/?period=2025-11-01,2025-11-15&mode=tota
 ## ❌ Errores Comunes y Soluciones
 
 ### Error 400 - Modo inválido
-**Causa:** Parámetro `mode` no es 'base' o 'total'  
+**Causa:** Parámetro `mode` no es 'base' o 'total'
 **Solución:** Usar solo `mode=base` o `mode=total`
 
 ### Error 400 - Período inválido
-**Causa:** Formato de período no reconocido  
+**Causa:** Formato de período no reconocido
 **Ejemplo de respuesta:**
 ```json
 {
@@ -639,11 +639,11 @@ GET {{base_url}}/api/analytics/dashboard/?period=2025-11-01,2025-11-15&mode=tota
 **Solución:** Usar formatos válidos de período
 
 ### Error 404 - Categoría no encontrada
-**Causa:** `category_id` no existe o no pertenece al usuario  
+**Causa:** `category_id` no existe o no pertenece al usuario
 **Solución:** Verificar IDs con el gráfico de categorías primero
 
 ### Error 401 - No autenticado
-**Causa:** Token no válido o no enviado  
+**Causa:** Token no válido o no enviado
 **Solución:** Verificar header `Authorization: Token xxxxx`
 
 ---

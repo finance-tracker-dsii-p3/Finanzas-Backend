@@ -5,6 +5,7 @@ Script para probar descarga directa con ID específico
 
 import os
 import sys
+
 import django
 import requests
 
@@ -13,8 +14,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
-from users.models import User
 from django.contrib.auth import authenticate
+
+from users.models import User
 
 
 def get_auth_token():
@@ -30,7 +32,7 @@ def get_auth_token():
 
         from rest_framework.authtoken.models import Token
 
-        token, created = Token.objects.get_or_create(user=user)
+        token, _created = Token.objects.get_or_create(user=user)
         return token.key
 
     except Exception as e:
@@ -75,16 +77,14 @@ def test_download_with_id():
                 print("✅ Archivo tiene contenido")
                 print(f"   - Inicio del archivo: {response.content[:50]}")
                 return True
-            else:
-                print("❌ Archivo descargado está vacío")
-                return False
-        elif response.status_code == 404:
+            print("❌ Archivo descargado está vacío")
+            return False
+        if response.status_code == 404:
             print("❌ Attendance no encontrado")
             return False
-        else:
-            print(f"❌ Error en descarga: {response.status_code}")
-            print(f"   - Respuesta: {response.text}")
-            return False
+        print(f"❌ Error en descarga: {response.status_code}")
+        print(f"   - Respuesta: {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en descarga: {e}")
@@ -121,13 +121,11 @@ def test_list_attendances():
                 for item in data:
                     print(f"     * ID: {item.get('id')} - {item.get('title')}")
                 return True
-            else:
-                print("⚠️  No hay registros")
-                return False
-        else:
-            print(f"❌ Error en listado: {response.status_code}")
-            print(f"   - Respuesta: {response.text}")
+            print("⚠️  No hay registros")
             return False
+        print(f"❌ Error en listado: {response.status_code}")
+        print(f"   - Respuesta: {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en listado: {e}")

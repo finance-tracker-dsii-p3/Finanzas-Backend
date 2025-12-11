@@ -95,18 +95,18 @@ def validate_color_contrast(value):
     """
     # Remover el # y convertir a RGB
     hex_color = value.lstrip('#')
-    
+
     # Si el formato no es válido (longitud incorrecta), saltear validación
     # El validate_hex_color se encargará de mostrar el error correcto
     if len(hex_color) != 6:
         return
-    
+
     try:
         r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     except ValueError:
         # Si hay caracteres inválidos, saltear validación
         return
-    
+
     # ... resto de la validación
 ```
 

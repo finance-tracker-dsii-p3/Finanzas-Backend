@@ -84,10 +84,10 @@ Authorization: Bearer <token>
 1. ✅ Si `transaction_currency` != `account.currency`:
    - Requiere `exchange_rate` y `original_amount`
    - Convierte automáticamente `base_amount` a moneda de cuenta
-   
+
 2. ✅ Si hay `goal`:
    - Valida que `goal.currency == account.currency`
-   
+
 3. ✅ Si es transferencia:
    - Valida que ambas cuentas tengan misma moneda
 
@@ -161,7 +161,7 @@ Esto aplicará:
    ```javascript
    GET /api/utils/currency/exchange-rate/?from=USD&to=COP
    → { rate: 4000.0 }
-   
+
    GET /api/utils/currency/convert/?amount=10000&from=USD&to=COP
    → { converted_amount: 40000000 }
    ```
@@ -248,4 +248,3 @@ Esto aplicará:
 3. **Monedas soportadas:** Actualmente COP, USD, EUR. Para agregar más:
    - Agregar a `Account.CURRENCY_CHOICES`
    - Agregar tasas en `CurrencyConverter.EXCHANGE_RATES`
-

@@ -74,7 +74,7 @@ RENDER_SERVICE_URL_PROD      # URL de producción (opcional)
 - ✅ Verifica código
 - ✅ Runs en Python 3.13
 
-### **2. `.github/workflows/deploy.yml`** 
+### **2. `.github/workflows/deploy.yml`**
 - ✅ Despliegue a producción
 - ✅ Health checks avanzados
 - ✅ Rollback automático en fallo

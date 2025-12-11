@@ -4,6 +4,7 @@ Admin configuration for users app
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+
 from users.models import User, UserNotificationPreferences
 
 
@@ -15,7 +16,8 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ["role", "is_verified", "is_active"]
     search_fields = ["username", "email", "identification"]
 
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (
+        *UserAdmin.fieldsets,
         (
             "Additional Info",
             {

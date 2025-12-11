@@ -15,11 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.contrib import admin
-from django.urls import path, include
-from django.http import JsonResponse
-from django.db import connection
 import django
+from django.contrib import admin
+from django.db import connection
+from django.http import JsonResponse
+from django.urls import include, path
 
 
 def health_check(request):
@@ -34,9 +34,11 @@ def health_check(request):
                 "status": "healthy",
                 "django_version": django.VERSION,
                 "database": "connected",
-                "timestamp": django.utils.timezone.now().isoformat()
-                if hasattr(django.utils.timezone, "now")
-                else "unknown",
+                "timestamp": (
+                    django.utils.timezone.now().isoformat()
+                    if hasattr(django.utils.timezone, "now")
+                    else "unknown"
+                ),
             }
         )
     except Exception as e:

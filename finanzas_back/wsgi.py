@@ -3,6 +3,7 @@ WSGI config for finanzas_back project.
 """
 
 import os
+
 from django.core.wsgi import get_wsgi_application
 
 # Para producción, asegurar que use settings de producción

@@ -5,7 +5,7 @@ import json
 import os
 
 if os.path.exists("coverage.json"):
-    with open("coverage.json", "r", encoding="utf-8") as f:
+    with open("coverage.json", encoding="utf-8") as f:
         data = json.load(f)
 
     # Archivos de la Fase 1 (probar con diferentes formatos de path)
@@ -32,8 +32,8 @@ if os.path.exists("coverage.json"):
 
         if file_data is None:
             # Buscar por nombre de archivo
-            for key in data["files"].keys():
-                if key.endswith(name.replace("/", "\\")) or key.endswith(name):
+            for key in data["files"]:
+                if key.endswith((name.replace("/", "\\"), name)):
                     file_data = data["files"][key]
                     break
 

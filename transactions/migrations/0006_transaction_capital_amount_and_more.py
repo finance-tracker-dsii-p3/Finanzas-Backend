@@ -6,18 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transactions', '0005_transaction_gmf_amount_and_more'),
+        ("transactions", "0005_transaction_gmf_amount_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='capital_amount',
-            field=models.IntegerField(blank=True, help_text='Monto que va al capital (solo para pagos a tarjetas de crédito). Si no se especifica, se asume que todo el pago es capital.', null=True, verbose_name='Monto capital'),
+            model_name="transaction",
+            name="capital_amount",
+            field=models.IntegerField(
+                blank=True,
+                help_text="Monto que va al capital (solo para pagos a tarjetas de crédito). Si no se especifica, se asume que todo el pago es capital.",
+                null=True,
+                verbose_name="Monto capital",
+            ),
         ),
         migrations.AddField(
-            model_name='transaction',
-            name='interest_amount',
-            field=models.IntegerField(blank=True, help_text='Monto que va a intereses (solo para pagos a tarjetas de crédito). Si no se especifica, se calcula automáticamente.', null=True, verbose_name='Monto intereses'),
+            model_name="transaction",
+            name="interest_amount",
+            field=models.IntegerField(
+                blank=True,
+                help_text="Monto que va a intereses (solo para pagos a tarjetas de crédito). Si no se especifica, se calcula automáticamente.",
+                null=True,
+                verbose_name="Monto intereses",
+            ),
         ),
     ]

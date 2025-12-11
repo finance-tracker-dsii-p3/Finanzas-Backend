@@ -1,6 +1,7 @@
 import django_filters
-from .models import Transaction
 from django.db import models
+
+from .models import Transaction
 
 
 class TransactionFilter(django_filters.FilterSet):

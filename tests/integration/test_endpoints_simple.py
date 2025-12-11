@@ -3,9 +3,10 @@
 Script para probar todos los endpoints funcionando (sin emojis)
 """
 
-import requests
 import json
 import time
+
+import requests
 
 
 def test_all_endpoints():

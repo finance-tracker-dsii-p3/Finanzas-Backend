@@ -5,8 +5,9 @@ Ejecutar diariamente con cron job
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from notifications.engine import NotificationEngine
+
 from bills.services import BillService
+from notifications.engine import NotificationEngine
 from vehicles.services import SOATService
 
 
@@ -55,9 +56,7 @@ class Command(BaseCommand):
                 )
             )
         except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f"  ✗ Error en recordatorios personalizados: {str(e)}")
-            )
+            self.stdout.write(self.style.ERROR(f"  ✗ Error en recordatorios personalizados: {e!s}"))
 
         # 2. Verificar recordatorios de fin de mes
         self.stdout.write(
@@ -73,9 +72,7 @@ class Command(BaseCommand):
                 )
             )
         except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f"  ✗ Error en recordatorios de fin de mes: {str(e)}")
-            )
+            self.stdout.write(self.style.ERROR(f"  ✗ Error en recordatorios de fin de mes: {e!s}"))
 
         # 3. Verificar recordatorios de facturas (esto crea BillReminders y Notifications)
         self.stdout.write(self.style.HTTP_INFO("\n[3/4] Verificando facturas pendientes..."))
@@ -92,7 +89,7 @@ class Command(BaseCommand):
             # Los recordatorios de facturas ya generan notificaciones automáticamente
             total_notifications += bill_stats["reminders_created"]
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"  ✗ Error en recordatorios de facturas: {str(e)}"))
+            self.stdout.write(self.style.ERROR(f"  ✗ Error en recordatorios de facturas: {e!s}"))
 
         # 4. Verificar alertas de SOAT (esto crea SOATAlerts y Notifications)
         self.stdout.write(self.style.HTTP_INFO("\n[4/4] Verificando SOATs pendientes..."))
@@ -110,7 +107,7 @@ class Command(BaseCommand):
             # Las alertas de SOAT ya generan notificaciones automáticamente
             total_notifications += len(soat_alerts)
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"  ✗ Error en alertas de SOAT: {str(e)}"))
+            self.stdout.write(self.style.ERROR(f"  ✗ Error en alertas de SOAT: {e!s}"))
 
         # Resumen final
         self.stdout.write(self.style.WARNING(f"\n{'=' * 60}\n  Resumen Final\n{'=' * 60}"))

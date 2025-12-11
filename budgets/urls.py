@@ -2,8 +2,9 @@
 URLs para la API de presupuestos
 """
 
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from .views import BudgetViewSet
 
 # Router para el ViewSet
@@ -14,9 +15,9 @@ urlpatterns = [
     path("", include(router.urls)),
 ]
 
-""" 
+"""
     urls disponibles:
-    
+
     - GET /budgets/ - Listar presupuestos
     - POST /budgets/ - Crear presupuesto
     - GET /budgets/{id}/ - Ver detalle

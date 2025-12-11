@@ -1,9 +1,10 @@
-import json
-from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
-import secrets
 import hashlib
+import json
+import secrets
 from urllib.parse import quote
+
 from django.conf import settings
+from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
 _SIGNER = TimestampSigner(salt="user-approval-links")
 
@@ -18,9 +19,11 @@ def verify_action_token(token: str, max_age_seconds: int = 86400) -> dict:
         payload = _SIGNER.unsign(token, max_age=max_age_seconds)  # por defecto 24h
         return json.loads(payload)
     except SignatureExpired:
-        raise ValueError("El enlace expiró")
+        msg = "El enlace expiró"
+        raise ValueError(msg)
     except BadSignature:
-        raise ValueError("Enlace inválido")
+        msg = "Enlace inválido"
+        raise ValueError(msg)
 
 
 def generate_raw_token() -> str:

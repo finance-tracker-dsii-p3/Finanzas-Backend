@@ -58,12 +58,12 @@ python manage.py check
 #### notifications/views.py (líneas 167-168 y 410-411)
 - ✅ **Problema**: Referencias a `rooms.models` y `rooms.services` en funciones de notificaciones
 - ✅ **Solución**: Funciones simplificadas y adaptadas para proyecto financiero
-- ✅ **Cambios**: 
+- ✅ **Cambios**:
   - `excessive_hours_summary` → `system_alerts_summary`
   - Eliminadas referencias a RoomEntry y cálculos de horas
   - Mantenida funcionalidad básica de resumen de notificaciones
 
-#### notifications/serializers.py 
+#### notifications/serializers.py
 - ✅ **Problema**: Código duplicado y referencias a rooms en serializers
 - ✅ **Solución**: Serializers simplificados sin dependencias de apps eliminados
 - ✅ **Cambios**:

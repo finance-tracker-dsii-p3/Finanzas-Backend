@@ -2,24 +2,24 @@
 Vistas para API de Analytics Financieros (HU-13)
 """
 
+import logging
 from datetime import date
+
+from django.db import models
 from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db import models
 
-from .services import FinancialAnalyticsService
 from .serializers import (
     AnalyticsDashboardSerializer,
-    PeriodIndicatorsSerializer,
-    ExpensesCategoryChartSerializer,
-    DailyFlowChartSerializer,
     CategoryTransactionsSerializer,
+    DailyFlowChartSerializer,
+    ExpensesCategoryChartSerializer,
+    PeriodIndicatorsSerializer,
 )
-
-import logging
+from .services import FinancialAnalyticsService
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +222,7 @@ def analytics_dashboard(request):
         )
 
     except Exception as e:
-        logger.error(f"Error en analytics dashboard para usuario {request.user.id}: {e}")
+        logger.exception(f"Error en analytics dashboard para usuario {request.user.id}: {e}")
         return Response(
             {
                 "success": False,
@@ -307,7 +307,7 @@ def period_indicators(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo indicadores: {e}")
+        logger.exception(f"Error obteniendo indicadores: {e}")
         return Response(
             {"success": False, "error": "Error obteniendo indicadores", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -386,7 +386,7 @@ def expenses_by_category(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo gráfico de categorías: {e}")
+        logger.exception(f"Error obteniendo gráfico de categorías: {e}")
         return Response(
             {
                 "success": False,
@@ -433,7 +433,7 @@ def daily_flow_chart(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo gráfico de flujo diario: {e}")
+        logger.exception(f"Error obteniendo gráfico de flujo diario: {e}")
         return Response(
             {
                 "success": False,
@@ -500,7 +500,7 @@ def category_transactions(request, category_id):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo transacciones de categoría: {e}")
+        logger.exception(f"Error obteniendo transacciones de categoría: {e}")
         return Response(
             {
                 "success": False,
@@ -577,7 +577,7 @@ def available_periods(request):
         )
 
     except Exception as e:
-        logger.error(f"Error obteniendo períodos disponibles: {e}")
+        logger.exception(f"Error obteniendo períodos disponibles: {e}")
         return Response(
             {"success": False, "error": "Error obteniendo períodos disponibles", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -770,7 +770,7 @@ def compare_periods(request):
         )
 
     except Exception as e:
-        logger.error(f"Error en comparación de períodos para usuario {request.user.id}: {e}")
+        logger.exception(f"Error en comparación de períodos para usuario {request.user.id}: {e}")
         return Response(
             {
                 "success": False,

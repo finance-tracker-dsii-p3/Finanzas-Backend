@@ -54,7 +54,7 @@ Authorization: {{token}}
 
 ### 1. Listar Categorías
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/categories/`
 
 **Headers:**
@@ -107,7 +107,7 @@ GET {{base_url}}/api/categories/?active_only=true&type=expense
 
 ### 2. Crear Categoría Nueva
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/categories/`
 
 **Headers:**
@@ -197,7 +197,7 @@ Content-Type: application/json
 
 ### 3. Ver Detalle de una Categoría
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/categories/{id}/`
 
 **Ejemplo:**
@@ -238,7 +238,7 @@ Authorization: {{token}}
 
 ### 4. Actualizar Categoría (PATCH)
 
-**Método:** `PATCH`  
+**Método:** `PATCH`
 **URL:** `{{base_url}}/api/categories/{id}/`
 
 **Ejemplo:**
@@ -315,7 +315,7 @@ Content-Type: application/json
 
 ### 5. Eliminar Categoría (sin datos relacionados)
 
-**Método:** `DELETE`  
+**Método:** `DELETE`
 **URL:** `{{base_url}}/api/categories/{id}/`
 
 **Ejemplo:**
@@ -346,7 +346,7 @@ Authorization: {{token}}
 
 ### 6. Eliminar Categoría con Reasignación
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/categories/{id}/delete_with_reassignment/`
 
 **Ejemplo:**
@@ -393,7 +393,7 @@ Content-Type: application/json
 
 ### 7. Activar/Desactivar Categoría
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/categories/{id}/toggle_active/`
 
 **Ejemplo:**
@@ -428,7 +428,7 @@ Authorization: {{token}}
 
 ### 8. Validar si se Puede Eliminar
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/categories/{id}/validate_deletion/`
 
 **Ejemplo:**
@@ -497,7 +497,7 @@ Authorization: {{token}}
 
 ### 9. Obtener Estadísticas de Categorías
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/categories/stats/`
 
 **Headers:**
@@ -545,7 +545,7 @@ Authorization: {{token}}
 
 ### 10. Listar Solo Categorías de Ingresos
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/categories/income/`
 
 **Headers:**
@@ -587,7 +587,7 @@ Authorization: {{token}}
 
 ### 11. Listar Solo Categorías de Gastos
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/categories/expense/`
 
 **Headers:**
@@ -629,7 +629,7 @@ Authorization: {{token}}
 
 ### 12. Crear Categorías Por Defecto
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/categories/create_defaults/`
 
 **Headers:**
@@ -682,7 +682,7 @@ Authorization: {{token}}
 
 ### 13. Actualizar Orden de Múltiples Categorías
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/categories/bulk_update_order/`
 
 **Headers:**
@@ -870,23 +870,23 @@ Content-Type: application/json
 ## ❌ Errores Comunes y Soluciones
 
 ### Error 401 Unauthorized
-**Causa:** Token no válido o no enviado  
+**Causa:** Token no válido o no enviado
 **Solución:** Verifica el header `Authorization: Token xxxxx`
 
 ### Error 400 - Categoría duplicada
-**Causa:** Ya existe una categoría con ese nombre y tipo  
+**Causa:** Ya existe una categoría con ese nombre y tipo
 **Solución:** Cambia el nombre o verifica tus categorías existentes
 
 ### Error 400 - Color inválido
-**Causa:** El color no es formato hexadecimal válido  
+**Causa:** El color no es formato hexadecimal válido
 **Solución:** Usa formato `#RRGGBB` (ej: `#EF4444`)
 
 ### Error 400 - Contraste insuficiente
-**Causa:** El color es muy claro y no tiene buen contraste  
+**Causa:** El color es muy claro y no tiene buen contraste
 **Solución:** Usa colores más oscuros (ver lista recomendada)
 
 ### Error 400 - No se puede eliminar
-**Causa:** La categoría tiene transacciones o presupuestos  
+**Causa:** La categoría tiene transacciones o presupuestos
 **Solución:** Usa `/delete_with_reassignment/` para reasignar primero
 
 ---

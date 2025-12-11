@@ -10,7 +10,7 @@ jobs:
   deploy-develop:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -38,14 +38,14 @@ jobs:
           echo "⏳ Render is processing the deployment..."
           echo "🌐 Your service will be available at: ${{ secrets.RENDER_SERVICE_URL }}"
           sleep 60
-          
+
           # Optional: Test if service is responding
           if [[ -n "${{ secrets.RENDER_SERVICE_URL }}" ]]; then
             echo "🔍 Testing service connectivity..."
-            
+
             # Wait a bit more for deployment to complete
             sleep 60
-            
+
             # Test basic connectivity
             if curl -f -s "${{ secrets.RENDER_SERVICE_URL }}/" > /dev/null; then
               echo "✅ Service is responding!"

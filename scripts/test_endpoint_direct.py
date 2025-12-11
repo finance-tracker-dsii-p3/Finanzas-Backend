@@ -2,11 +2,12 @@
 Script para probar el endpoint de analytics directamente
 """
 
+import json
 import os
 import sys
+
 import django
 import requests
-import json
 
 # No configurar Django aquí para simular petición externa
 

@@ -8,23 +8,40 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ("accounts", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='account',
-            name='credit_limit',
-            field=models.DecimalField(blank=True, decimal_places=2, help_text='Límite de crédito de la tarjeta (solo para tarjetas de crédito)', max_digits=15, null=True, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='Límite de crédito'),
+            model_name="account",
+            name="credit_limit",
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                help_text="Límite de crédito de la tarjeta (solo para tarjetas de crédito)",
+                max_digits=15,
+                null=True,
+                validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                verbose_name="Límite de crédito",
+            ),
         ),
         migrations.AddField(
-            model_name='account',
-            name='expiration_date',
-            field=models.DateField(blank=True, help_text='Fecha de vencimiento de la tarjeta (solo para tarjetas de crédito)', null=True, verbose_name='Fecha de vencimiento'),
+            model_name="account",
+            name="expiration_date",
+            field=models.DateField(
+                blank=True,
+                help_text="Fecha de vencimiento de la tarjeta (solo para tarjetas de crédito)",
+                null=True,
+                verbose_name="Fecha de vencimiento",
+            ),
         ),
         migrations.AddField(
-            model_name='account',
-            name='gmf_exempt',
-            field=models.BooleanField(default=False, help_text='Si está marcada, la cuenta está exenta del GMF (4x1000)', verbose_name='Exenta GMF'),
+            model_name="account",
+            name="gmf_exempt",
+            field=models.BooleanField(
+                default=False,
+                help_text="Si está marcada, la cuenta está exenta del GMF (4x1000)",
+                verbose_name="Exenta GMF",
+            ),
         ),
     ]

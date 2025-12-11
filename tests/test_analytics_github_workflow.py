@@ -3,15 +3,17 @@ Test de GitHub Workflow para Analytics (HU-13)
 Tests esenciales para CI/CD de endpoints de analíticas financieras
 """
 
+import json
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
+
+from accounts.models import Account
 from categories.models import Category
 from transactions.models import Transaction
-from accounts.models import Account
-from decimal import Decimal
-import json
 
 User = get_user_model()
 
@@ -65,22 +67,22 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
         # El endpoint debe retornar 200 incluso sin datos
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Para usuario sin transacciones, debe retornar error controlado
         if not data.get("success"):
-            self.assertIn("error", data)
-            self.assertIn("code", data)
+            assert "error" in data
+            assert "code" in data
             # Es válido que retorne NO_DATA_AVAILABLE para usuario sin transacciones
-            self.assertIn(data["code"], ["NO_DATA_AVAILABLE", "NO_TRANSACTIONS"])
+            assert data["code"] in ["NO_DATA_AVAILABLE", "NO_TRANSACTIONS"]
         else:
             # Si tiene datos, verificar estructura
-            self.assertTrue(data["success"])
+            assert data["success"]
             analytics_data = data["data"]
-            self.assertIn("indicators", analytics_data)
-            self.assertIn("expenses_chart", analytics_data)
-            self.assertIn("daily_flow_chart", analytics_data)
+            assert "indicators" in analytics_data
+            assert "expenses_chart" in analytics_data
+            assert "daily_flow_chart" in analytics_data
 
     def test_analytics_dashboard_with_data(self):
         """Test dashboard con transacciones reales"""
@@ -110,26 +112,26 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         url = reverse("analytics_dashboard")
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Debe tener datos exitosos
-        self.assertTrue(data["success"])
+        assert data["success"]
         analytics_data = data["data"]
 
         # Verificar cálculos
         indicators = analytics_data["indicators"]
         # Puede tener ingresos (type=1) y gastos (type=2)
-        self.assertIn("income", indicators)
-        self.assertIn("expenses", indicators)
-        self.assertIn("balance", indicators)
+        assert "income" in indicators
+        assert "expenses" in indicators
+        assert "balance" in indicators
 
         # Verificar gráfico de gastos por categoría
         expenses_chart = analytics_data["expenses_chart"]
         # Con al menos una transacción de gasto, debe tener datos
         if expenses_chart.get("chart_data"):
-            self.assertGreater(len(expenses_chart["chart_data"]), 0)
-        self.assertIn("categories_count", expenses_chart)
+            assert len(expenses_chart["chart_data"]) > 0
+        assert "categories_count" in expenses_chart
 
     def test_analytics_period_indicators(self):
         """Test endpoint de indicadores por período"""
@@ -138,80 +140,80 @@ class AnalyticsGitHubWorkflowTests(TestCase):
             url + "?period=current_month", HTTP_AUTHORIZATION=self.auth_header
         )
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Para usuario sin transacciones, puede retornar error controlado
         if not data.get("success"):
-            self.assertIn("error", data)
-            self.assertIn("code", data)
+            assert "error" in data
+            assert "code" in data
             # Es válido que no tenga transacciones
-            self.assertEqual(data["code"], "NO_TRANSACTIONS")
+            assert data["code"] == "NO_TRANSACTIONS"
         else:
             # Si tiene datos, verificar estructura
-            self.assertTrue(data["success"])
+            assert data["success"]
             indicators = data["data"]
-            self.assertIn("income", indicators)
-            self.assertIn("expenses", indicators)
-            self.assertIn("balance", indicators)
+            assert "income" in indicators
+            assert "expenses" in indicators
+            assert "balance" in indicators
 
     def test_analytics_expenses_chart(self):
         """Test endpoint de gráfico de gastos por categoría"""
         url = reverse("expenses_by_category")
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Para usuario sin gastos, puede retornar error controlado
         if not data.get("success"):
-            self.assertIn("error", data)
-            self.assertIn("code", data)
+            assert "error" in data
+            assert "code" in data
             # Es válido que no tenga gastos
-            self.assertEqual(data["code"], "NO_EXPENSES")
+            assert data["code"] == "NO_EXPENSES"
         else:
             # Si tiene datos, verificar estructura
-            self.assertTrue(data["success"])
+            assert data["success"]
             chart_data = data["data"]
-            self.assertIn("chart_data", chart_data)
-            self.assertIn("categories_count", chart_data)
-            self.assertIn("total_expenses", chart_data)
+            assert "chart_data" in chart_data
+            assert "categories_count" in chart_data
+            assert "total_expenses" in chart_data
 
             # categories_count debe existir (corrige el KeyError reportado)
-            self.assertIsInstance(chart_data["categories_count"], int)
+            assert isinstance(chart_data["categories_count"], int)
 
     def test_analytics_daily_flow_chart(self):
         """Test endpoint de gráfico de flujo diario"""
         url = reverse("daily_flow_chart")
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Debe retornar datos exitosos (puede tener transacciones o no)
-        self.assertTrue(data["success"])
+        assert data["success"]
         chart_data = data["data"]
 
         # Verificar estructura del flujo diario
-        self.assertIn("dates", chart_data)
-        self.assertIn("series", chart_data)
-        self.assertIsInstance(chart_data["dates"], list)
+        assert "dates" in chart_data
+        assert "series" in chart_data
+        assert isinstance(chart_data["dates"], list)
 
     def test_analytics_available_periods(self):
         """Test endpoint de períodos disponibles"""
         url = reverse("available_periods")
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Debe retornar datos exitosos
-        self.assertTrue(data["success"])
+        assert data["success"]
         periods_data = data["data"]
 
         # Verificar lista de períodos
-        self.assertIn("available_periods", periods_data)
-        self.assertIsInstance(periods_data["available_periods"], list)
+        assert "available_periods" in periods_data
+        assert isinstance(periods_data["available_periods"], list)
 
     def test_analytics_category_transactions(self):
         """Test endpoint de transacciones por categoría"""
@@ -233,17 +235,17 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         )
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Debe retornar datos exitosos
-        self.assertTrue(data["success"])
+        assert data["success"]
         transactions_data = data["data"]
 
         # Verificar estructura de transacciones
-        self.assertIn("transactions", transactions_data)
-        self.assertIn("category_name", transactions_data)
-        self.assertIn("total_count", transactions_data)
+        assert "transactions" in transactions_data
+        assert "category_name" in transactions_data
+        assert "total_count" in transactions_data
 
     def test_analytics_authentication_required(self):
         """Test que todos los endpoints requieren autenticación"""
@@ -260,9 +262,9 @@ class AnalyticsGitHubWorkflowTests(TestCase):
             response = self.client.get(url)  # Sin autenticación
 
             # Debe retornar 401 sin token
-            self.assertEqual(
-                response.status_code, 401, f"Endpoint {endpoint_name} debe requerir autenticación"
-            )
+            assert (
+                response.status_code == 401
+            ), f"Endpoint {endpoint_name} debe requerir autenticación"
 
     def test_analytics_user_isolation(self):
         """Test que analytics respeta aislamiento por usuario"""
@@ -294,20 +296,20 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         url = reverse("analytics_dashboard")
         response = self.client.get(url, HTTP_AUTHORIZATION=other_auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # El otro usuario no debe ver datos del primero
         # Puede retornar error por no tener transacciones o indicadores en cero
         if not data.get("success"):
-            self.assertIn("error", data)
-            self.assertEqual(data["code"], "NO_DATA_AVAILABLE")
+            assert "error" in data
+            assert data["code"] == "NO_DATA_AVAILABLE"
         else:
             # Si retorna datos, deben estar en cero
             analytics_data = data["data"]
             indicators = analytics_data["indicators"]
-            self.assertEqual(indicators["expenses"]["amount"], 0)
-            self.assertEqual(indicators["income"]["amount"], 0)
+            assert indicators["expenses"]["amount"] == 0
+            assert indicators["income"]["amount"] == 0
 
     def test_analytics_edge_cases(self):
         """Test casos extremos (usuario sin datos)"""
@@ -315,19 +317,19 @@ class AnalyticsGitHubWorkflowTests(TestCase):
         url = reverse("expenses_by_category")
         response = self.client.get(url, HTTP_AUTHORIZATION=self.auth_header)
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Para usuario sin gastos, debe retornar error controlado
         if not data.get("success"):
-            self.assertIn("error", data)
-            self.assertEqual(data["code"], "NO_EXPENSES")
+            assert "error" in data
+            assert data["code"] == "NO_EXPENSES"
         else:
             # Si retorna datos, verificar estructura vacía
             chart_data = data["data"]
-            self.assertEqual(len(chart_data.get("chart_data", [])), 0)
-            self.assertEqual(chart_data["categories_count"], 0)  # El fix del KeyError
-            self.assertEqual(chart_data["total_expenses"], 0)
+            assert len(chart_data.get("chart_data", [])) == 0
+            assert chart_data["categories_count"] == 0  # El fix del KeyError
+            assert chart_data["total_expenses"] == 0
 
 
 class AnalyticsPerformanceTests(TestCase):
@@ -404,24 +406,22 @@ class AnalyticsPerformanceTests(TestCase):
         end_time = time.time()
 
         # Verificar respuesta exitosa
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
 
         # Verificar tiempo de respuesta razonable (< 2 segundos)
         response_time = end_time - start_time
-        self.assertLess(
-            response_time, 2.0, f"Dashboard tardó {response_time:.2f}s, muy lento para CI/CD"
-        )
+        assert response_time < 2.0, f"Dashboard tardó {response_time:.2f}s, muy lento para CI/CD"
 
         # Verificar que retorna datos
         data = response.json()
-        self.assertTrue(data["success"])
+        assert data["success"]
         analytics_data = data["data"]
-        self.assertIn("indicators", analytics_data)
+        assert "indicators" in analytics_data
 
         # Con múltiples transacciones debe tener datos de gastos
         expenses_chart = analytics_data["expenses_chart"]
         if expenses_chart.get("chart_data"):
-            self.assertGreater(len(expenses_chart["chart_data"]), 0)
+            assert len(expenses_chart["chart_data"]) > 0
 
 
 class AnalyticsPeriodComparisonTests(TestCase):
@@ -520,33 +520,33 @@ class AnalyticsPeriodComparisonTests(TestCase):
             HTTP_AUTHORIZATION=self.auth_header,
         )
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Verificar respuesta exitosa
-        self.assertTrue(data["success"])
+        assert data["success"]
         comparison_data = data["data"]
 
         # Verificar estructura de respuesta
-        self.assertIn("comparison_summary", comparison_data)
-        self.assertIn("period_data", comparison_data)
-        self.assertIn("differences", comparison_data)
-        self.assertIn("insights", comparison_data)
+        assert "comparison_summary" in comparison_data
+        assert "period_data" in comparison_data
+        assert "differences" in comparison_data
+        assert "insights" in comparison_data
 
         # Verificar que puede comparar
-        self.assertTrue(comparison_data["comparison_summary"]["can_compare"])
+        assert comparison_data["comparison_summary"]["can_compare"]
 
         # Verificar diferencias calculadas
         differences = comparison_data["differences"]
-        self.assertIn("income", differences)
-        self.assertIn("expenses", differences)
-        self.assertIn("balance", differences)
+        assert "income" in differences
+        assert "expenses" in differences
+        assert "balance" in differences
 
         # Los ingresos deben haber aumentado (2500 > 2000)
-        self.assertTrue(differences["income"]["is_increase"])
+        assert differences["income"]["is_increase"]
 
         # Los gastos deben haber disminuido (400 < 500)
-        self.assertFalse(differences["expenses"]["is_increase"])
+        assert not differences["expenses"]["is_increase"]
 
     def test_compare_periods_missing_parameters(self):
         """Test error por parámetros faltantes"""
@@ -556,12 +556,12 @@ class AnalyticsPeriodComparisonTests(TestCase):
             HTTP_AUTHORIZATION=self.auth_header,
         )
 
-        self.assertEqual(response.status_code, 400)
+        assert response.status_code == 400
         data = response.json()
 
-        self.assertFalse(data["success"])
-        self.assertEqual(data["code"], "MISSING_PERIODS")
-        self.assertIn("period1 y period2 son requeridos", data["error"])
+        assert not data["success"]
+        assert data["code"] == "MISSING_PERIODS"
+        assert "period1 y period2 son requeridos" in data["error"]
 
     def test_compare_periods_invalid_format(self):
         """Test error por formato de período inválido"""
@@ -570,12 +570,12 @@ class AnalyticsPeriodComparisonTests(TestCase):
             url + "?period1=invalid&period2=also-invalid", HTTP_AUTHORIZATION=self.auth_header
         )
 
-        self.assertEqual(response.status_code, 400)
+        assert response.status_code == 400
         data = response.json()
 
-        self.assertFalse(data["success"])
-        self.assertEqual(data["code"], "INVALID_PERIOD_FORMAT")
-        self.assertIn("supported_formats", data)
+        assert not data["success"]
+        assert data["code"] == "INVALID_PERIOD_FORMAT"
+        assert "supported_formats" in data
 
     def test_compare_periods_no_data(self):
         """Test comparación cuando no hay datos en períodos"""
@@ -598,12 +598,12 @@ class AnalyticsPeriodComparisonTests(TestCase):
             url + "?period1=2020-01&period2=2020-02&mode=total", HTTP_AUTHORIZATION=self.auth_header
         )
 
-        self.assertEqual(response.status_code, 200)  # 200 pero con error controlado
+        assert response.status_code == 200  # 200 pero con error controlado
         data = response.json()
 
-        self.assertFalse(data["success"])
+        assert not data["success"]
         # Ahora debe ser NO_DATA_IN_PERIODS porque el usuario tiene transacciones, pero no en esos períodos
-        self.assertEqual(data["code"], "NO_DATA_IN_PERIODS")
+        assert data["code"] == "NO_DATA_IN_PERIODS"
 
     def test_compare_periods_predefined_periods(self):
         """Test comparación usando períodos predefinidos"""
@@ -627,15 +627,15 @@ class AnalyticsPeriodComparisonTests(TestCase):
         )
 
         # Debe manejar correctamente incluso si un período no tiene datos
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
         data = response.json()
 
         # Puede ser exitoso o fallar dependiendo de si hay datos en ambos períodos
         if data["success"]:
-            self.assertIn("comparison_summary", data["data"])
+            assert "comparison_summary" in data["data"]
         else:
             # Error controlado por falta de datos
-            self.assertIn("NO_DATA", data["code"])
+            assert "NO_DATA" in data["code"]
 
     def test_compare_periods_authentication_required(self):
         """Test que comparación requiere autenticación"""
@@ -644,4 +644,4 @@ class AnalyticsPeriodComparisonTests(TestCase):
             url + "?period1=2025-09&period2=2025-10"
         )  # Sin token de autorización
 
-        self.assertEqual(response.status_code, 401)
+        assert response.status_code == 401

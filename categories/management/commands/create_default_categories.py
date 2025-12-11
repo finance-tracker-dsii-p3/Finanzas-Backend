@@ -2,10 +2,11 @@
 Management command para crear categorías por defecto para usuarios
 """
 
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from categories.services import CategoryService
+from django.core.management.base import BaseCommand
+
 from categories.models import Category
+from categories.services import CategoryService
 
 User = get_user_model()
 
@@ -123,7 +124,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.ERROR(
                     f"✗ Error al crear categorías para usuario {user.username} "
-                    f"(ID: {user.id}): {str(e)}"
+                    f"(ID: {user.id}): {e!s}"
                 )
             )
             return False

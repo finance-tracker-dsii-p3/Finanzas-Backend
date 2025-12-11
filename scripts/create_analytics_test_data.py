@@ -4,6 +4,7 @@ Script para crear datos de prueba para analytics - HU-13
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -13,10 +14,12 @@ django.setup()
 
 from datetime import date
 from decimal import Decimal
+
 from django.contrib.auth import get_user_model
-from transactions.models import Transaction
-from categories.models import Category
+
 from accounts.models import Account
+from categories.models import Category
+from transactions.models import Transaction
 
 User = get_user_model()
 
@@ -44,7 +47,7 @@ def create_test_data():
         defaults={
             "account_type": Account.ASSET,
             "category": Account.BANK_ACCOUNT,
-            "current_balance": Decimal("1000000"),  # Balance inicial
+            "current_balance": Decimal(1000000),  # Balance inicial
             "description": "Cuenta principal para pruebas",
         },
     )

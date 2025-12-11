@@ -6,18 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0001_initial'),
+        ("reports", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='report',
-            name='format',
-            field=models.CharField(choices=[('pdf', 'PDF'), ('excel', 'Excel'), ('csv', 'CSV')], default='pdf', help_text='Formato de exportación del reporte', max_length=10, verbose_name='Formato'),
+            model_name="report",
+            name="format",
+            field=models.CharField(
+                choices=[("pdf", "PDF"), ("excel", "Excel"), ("csv", "CSV")],
+                default="pdf",
+                help_text="Formato de exportación del reporte",
+                max_length=10,
+                verbose_name="Formato",
+            ),
         ),
         migrations.AlterField(
-            model_name='report',
-            name='report_type',
-            field=models.CharField(choices=[('financial_summary', 'Resumen financiero'), ('user_activity', 'Actividad de usuarios'), ('system_stats', 'Estadísticas del sistema'), ('general', 'Reporte general')], default='general', help_text='Tipo de información incluida en el reporte', max_length=30, verbose_name='Tipo de reporte'),
+            model_name="report",
+            name="report_type",
+            field=models.CharField(
+                choices=[
+                    ("financial_summary", "Resumen financiero"),
+                    ("user_activity", "Actividad de usuarios"),
+                    ("system_stats", "Estadísticas del sistema"),
+                    ("general", "Reporte general"),
+                ],
+                default="general",
+                help_text="Tipo de información incluida en el reporte",
+                max_length=30,
+                verbose_name="Tipo de reporte",
+            ),
         ),
     ]

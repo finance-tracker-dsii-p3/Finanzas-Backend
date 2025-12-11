@@ -1,11 +1,13 @@
-from django.db import models
+from decimal import ROUND_HALF_UP, Decimal
+
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from decimal import Decimal, ROUND_HALF_UP
+from django.db import models
+
 from accounts.models import Account
 from categories.models import Category
 from transactions.models import Transaction
-from dateutil.relativedelta import relativedelta
 
 User = get_user_model()
 
@@ -71,19 +73,23 @@ class InstallmentPlan(models.Model):
 
     def clean(self):
         if self.credit_card_account.category != Account.CREDIT_CARD:
-            raise ValidationError("La cuenta debe ser una tarjeta de crédito.")
+            msg = "La cuenta debe ser una tarjeta de crédito."
+            raise ValidationError(msg)
         if self.financing_category.type != Category.EXPENSE:
-            raise ValidationError("La categoría de financiamiento debe ser de gasto.")
+            msg = "La categoría de financiamiento debe ser de gasto."
+            raise ValidationError(msg)
         if self.purchase_transaction.user_id != self.user_id:
-            raise ValidationError("La transacción de compra debe pertenecer al usuario.")
+            msg = "La transacción de compra debe pertenecer al usuario."
+            raise ValidationError(msg)
         if self.purchase_transaction.origin_account_id != self.credit_card_account_id:
-            raise ValidationError(
-                "La compra debe haberse hecho con la tarjeta de crédito seleccionada."
-            )
+            msg = "La compra debe haberse hecho con la tarjeta de crédito seleccionada."
+            raise ValidationError(msg)
         if self.number_of_installments < 1:
-            raise ValidationError("El número de cuotas debe ser al menos 1.")
+            msg = "El número de cuotas debe ser al menos 1."
+            raise ValidationError(msg)
         if self.interest_rate < 0:
-            raise ValidationError("La tasa de interés no puede ser negativa.")
+            msg = "La tasa de interés no puede ser negativa."
+            raise ValidationError(msg)
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -97,7 +103,7 @@ class InstallmentPlan(models.Model):
 
     def calculate_installment_amount(self):
         principal = Decimal(self.purchase_amount)
-        rate = Decimal(self.interest_rate) / Decimal("100")
+        rate = Decimal(self.interest_rate) / Decimal(100)
         n = Decimal(self.number_of_installments)
 
         if rate == 0:
@@ -105,7 +111,7 @@ class InstallmentPlan(models.Model):
         else:
             # Sistema francés: A = P * r / (1 - (1+r)^-n)
             r = rate
-            installment = principal * r / (Decimal("1") - (Decimal("1") + r) ** (-n))
+            installment = principal * r / (Decimal(1) - (Decimal(1) + r) ** (-n))
 
         return int(installment.quantize(Decimal("1."), rounding=ROUND_HALF_UP))
 
@@ -113,18 +119,18 @@ class InstallmentPlan(models.Model):
         """Genera calendario con desglose capital/interés y saldo."""
         schedule = []
         principal_remaining = Decimal(self.purchase_amount)
-        rate = Decimal(self.interest_rate) / Decimal("100")
+        rate = Decimal(self.interest_rate) / Decimal(100)
         installment_amount = Decimal(self.installment_amount or self.calculate_installment_amount())
 
         for i in range(1, self.number_of_installments + 1):
             interest_amount = (
                 (principal_remaining * rate).quantize(Decimal("1."), rounding=ROUND_HALF_UP)
                 if rate > 0
-                else Decimal("0")
+                else Decimal(0)
             )
             principal_amount = installment_amount - interest_amount
             if principal_amount < 0:
-                principal_amount = Decimal("0")
+                principal_amount = Decimal(0)
             if i == self.number_of_installments:
                 principal_amount = principal_remaining
                 installment_amt = principal_amount + interest_amount
@@ -133,7 +139,7 @@ class InstallmentPlan(models.Model):
 
             principal_remaining = principal_remaining - principal_amount
             if principal_remaining < 0:
-                principal_remaining = Decimal("0")
+                principal_remaining = Decimal(0)
 
             schedule.append(
                 {

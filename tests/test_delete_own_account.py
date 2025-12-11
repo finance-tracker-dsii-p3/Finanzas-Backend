@@ -2,11 +2,11 @@
 Tests para el endpoint de eliminación de cuenta propia
 """
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+from django.test import TestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -37,14 +37,14 @@ class DeleteOwnAccountViewTestCase(TestCase):
         response = self.client.delete(self.url, data)
 
         # Verificaciones
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("message", response.data)
-        self.assertIn("user_info", response.data)
-        self.assertEqual(response.data["user_info"]["username"], "testuser")
-        self.assertEqual(response.data["user_info"]["email"], "test@example.com")
+        assert response.status_code == status.HTTP_200_OK
+        assert "message" in response.data
+        assert "user_info" in response.data
+        assert response.data["user_info"]["username"] == "testuser"
+        assert response.data["user_info"]["email"] == "test@example.com"
 
         # Verificar que el usuario fue eliminado de la base de datos
-        self.assertFalse(User.objects.filter(id=self.user.id).exists())
+        assert not User.objects.filter(id=self.user.id).exists()
 
     def test_delete_own_account_wrong_password(self):
         """Test con contraseña incorrecta"""
@@ -53,9 +53,9 @@ class DeleteOwnAccountViewTestCase(TestCase):
         data = {"password": "wrongpassword"}
         response = self.client.delete(self.url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
-        self.assertTrue(User.objects.filter(id=self.user.id).exists())  # Usuario no eliminado
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in response.data
+        assert User.objects.filter(id=self.user.id).exists()  # Usuario no eliminado
 
     def test_delete_own_account_missing_password(self):
         """Test sin proporcionar contraseña"""
@@ -63,16 +63,16 @@ class DeleteOwnAccountViewTestCase(TestCase):
 
         response = self.client.delete(self.url, {})
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(User.objects.filter(id=self.user.id).exists())
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert User.objects.filter(id=self.user.id).exists()
 
     def test_delete_own_account_unauthenticated(self):
         """Test sin autenticación"""
         data = {"password": "testpass123"}
         response = self.client.delete(self.url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertTrue(User.objects.filter(id=self.user.id).exists())
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert User.objects.filter(id=self.user.id).exists()
 
     def test_delete_own_account_admin_prevention(self):
         """Test que administradores no puedan eliminar sus cuentas"""
@@ -92,8 +92,8 @@ class DeleteOwnAccountViewTestCase(TestCase):
         data = {"password": "adminpass123"}
         response = self.client.delete(self.url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(User.objects.filter(id=admin_user.id).exists())  # Admin no eliminado
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert User.objects.filter(id=admin_user.id).exists()  # Admin no eliminado
 
     def test_delete_own_account_superuser_prevention(self):
         """Test que superusuarios no puedan eliminar sus cuentas"""
@@ -111,8 +111,8 @@ class DeleteOwnAccountViewTestCase(TestCase):
         data = {"password": "superpass123"}
         response = self.client.delete(self.url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(User.objects.filter(id=super_user.id).exists())  # Superuser no eliminado
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert User.objects.filter(id=super_user.id).exists()  # Superuser no eliminado
 
     def test_delete_own_account_token_invalidated(self):
         """Test que el token se invalide después de eliminar la cuenta"""
@@ -121,8 +121,8 @@ class DeleteOwnAccountViewTestCase(TestCase):
         data = {"password": "testpass123"}
         response = self.client.delete(self.url, data)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert response.status_code == status.HTTP_200_OK
 
         # Intentar usar el token después de eliminación
         response = self.client.get("/api/auth/profile/")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED

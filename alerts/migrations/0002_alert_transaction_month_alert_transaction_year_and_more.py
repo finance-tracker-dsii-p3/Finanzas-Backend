@@ -6,23 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('alerts', '0001_initial'),
+        ("alerts", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='alert',
-            name='transaction_month',
-            field=models.IntegerField(blank=True, help_text='Mes de la transacción que generó la alerta', null=True),
+            model_name="alert",
+            name="transaction_month",
+            field=models.IntegerField(
+                blank=True, help_text="Mes de la transacción que generó la alerta", null=True
+            ),
         ),
         migrations.AddField(
-            model_name='alert',
-            name='transaction_year',
-            field=models.IntegerField(blank=True, help_text='Año de la transacción que generó la alerta', null=True),
+            model_name="alert",
+            name="transaction_year",
+            field=models.IntegerField(
+                blank=True, help_text="Año de la transacción que generó la alerta", null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='alert',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, help_text='Fecha de creación de la alerta'),
+            model_name="alert",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True, help_text="Fecha de creación de la alerta"
+            ),
         ),
     ]

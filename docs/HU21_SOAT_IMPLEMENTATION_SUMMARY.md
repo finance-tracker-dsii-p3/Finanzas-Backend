@@ -2,8 +2,8 @@
 
 ## ✅ Implementación Completada
 
-**Fecha:** 2024-01-20  
-**Estado:** Funcional y testeado  
+**Fecha:** 2024-01-20
+**Estado:** Funcional y testeado
 **Tests:** 11/11 pasando ✓
 
 ---
@@ -20,13 +20,13 @@
 #### SOAT
 - **Campos:** vehicle, issue_date, expiry_date, cost, insurance_company, policy_number, status, alert_days_before, payment_transaction
 - **Estados:** vigente, por_vencer, vencido, pendiente_pago, atrasado
-- **Propiedades calculadas:** 
+- **Propiedades calculadas:**
   - `days_until_expiry`: Días hasta vencimiento
   - `is_expired`: Booleano si está vencido
   - `is_near_expiry`: Booleano si está próximo a vencer
   - `is_paid`: Booleano si está pagado
 - **Métodos:** `update_status()` - Actualiza estado automáticamente
-- **Relaciones:** 
+- **Relaciones:**
   - ForeignKey a Vehicle
   - OneToOne a Transaction (pago)
 
@@ -292,23 +292,23 @@ schtasks /create /tn "SOAT Alerts" /tr "python C:\ruta\manage.py check_soat_aler
 
 ## 🎯 Criterios de Aceptación Cumplidos
 
-✅ **CA-01:** Registro de vehículo con placa, marca, modelo, año  
-✅ **CA-02:** Registro de SOAT con fechas y costo  
-✅ **CA-03:** Alertas configurables (alert_days_before)  
-✅ **CA-04:** Alertas automáticas diarias (comando cron)  
-✅ **CA-05:** Registro de pago con movimiento contable automático  
-✅ **CA-06:** Estado "atrasado" si no se paga después del vencimiento  
-✅ **CA-07:** Historial de pagos de SOAT por vehículo  
+✅ **CA-01:** Registro de vehículo con placa, marca, modelo, año
+✅ **CA-02:** Registro de SOAT con fechas y costo
+✅ **CA-03:** Alertas configurables (alert_days_before)
+✅ **CA-04:** Alertas automáticas diarias (comando cron)
+✅ **CA-05:** Registro de pago con movimiento contable automático
+✅ **CA-06:** Estado "atrasado" si no se paga después del vencimiento
+✅ **CA-07:** Historial de pagos de SOAT por vehículo
 
 ---
 
 ## ✅ Definition of Done Cumplido
 
-✅ **Modelos funcionales** con validaciones y propiedades calculadas  
-✅ **Alertas programadas** con cron + timezone del usuario  
-✅ **Movimiento contable único** por pago de SOAT  
-✅ **Consistencia UI/Backend** en estados y flujos  
-✅ **Tests** de notificaciones, fechas y flujo de pago (11/11)  
+✅ **Modelos funcionales** con validaciones y propiedades calculadas
+✅ **Alertas programadas** con cron + timezone del usuario
+✅ **Movimiento contable único** por pago de SOAT
+✅ **Consistencia UI/Backend** en estados y flujos
+✅ **Tests** de notificaciones, fechas y flujo de pago (11/11)
 
 ---
 

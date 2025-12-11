@@ -1,5 +1,7 @@
-from rest_framework import serializers
 from decimal import Decimal
+
+from rest_framework import serializers
+
 from .models import Account, AccountOption
 
 
@@ -185,7 +187,8 @@ class AccountCreateSerializer(serializers.ModelSerializer):
     def validate_name(self, value):
         user = self.context["request"].user
         if Account.objects.filter(user=user, name__iexact=value).exists():
-            raise serializers.ValidationError("Ya tienes una cuenta con este nombre.")
+            msg = "Ya tienes una cuenta con este nombre."
+            raise serializers.ValidationError(msg)
         return value
 
     def create(self, validated_data):
@@ -270,7 +273,8 @@ class AccountUpdateSerializer(serializers.ModelSerializer):
             .exclude(id=self.instance.id)
             .exists()
         ):
-            raise serializers.ValidationError("Ya tienes una cuenta con este nombre.")
+            msg = "Ya tienes una cuenta con este nombre."
+            raise serializers.ValidationError(msg)
         return value
 
 
@@ -284,13 +288,11 @@ class AccountBalanceUpdateSerializer(serializers.Serializer):
         account = self.context.get("account")
         if account:
             if account.account_type == Account.LIABILITY and value > 0:
-                raise serializers.ValidationError(
-                    "Las cuentas de pasivo no pueden tener saldo positivo."
-                )
-            elif account.account_type == Account.ASSET and value < 0:
-                raise serializers.ValidationError(
-                    "Las cuentas de activo no pueden tener saldo negativo."
-                )
+                msg = "Las cuentas de pasivo no pueden tener saldo positivo."
+                raise serializers.ValidationError(msg)
+            if account.account_type == Account.ASSET and value < 0:
+                msg = "Las cuentas de activo no pueden tener saldo negativo."
+                raise serializers.ValidationError(msg)
         return value
 
 

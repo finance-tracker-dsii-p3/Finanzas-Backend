@@ -97,7 +97,7 @@ export const transactionService = {
   // Listar con filtros
   async getTransactions(filters: TransactionFilters = {}): Promise<TransactionListResponse> {
     const params = new URLSearchParams();
-    
+
     if (filters.search) params.append('search', filters.search);
     if (filters.category) params.append('category', filters.category.toString());
     if (filters.origin_account) params.append('origin_account', filters.origin_account.toString());
@@ -106,17 +106,17 @@ export const transactionService = {
     if (filters.start_date) params.append('start_date', filters.start_date);
     if (filters.end_date) params.append('end_date', filters.end_date);
     if (filters.ordering) params.append('ordering', filters.ordering);
-    
+
     const response = await fetch(`/api/transactions/?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${getToken()}`,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al obtener transacciones');
     }
-    
+
     return response.json();
   },
 
@@ -130,12 +130,12 @@ export const transactionService = {
       },
       body: JSON.stringify({ ids }),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Error al eliminar transacciones');
     }
-    
+
     return response.json();
   },
 };
@@ -315,13 +315,13 @@ export const TransactionList: React.FC = () => {
 
     try {
       const result = await transactionService.bulkDelete(selectedIds);
-      
+
       if (result.errors && result.errors.length > 0) {
         alert(`Se eliminaron ${result.deleted_count} transacciones, pero hubo ${result.errors.length} errores.`);
       } else {
         alert(`Se eliminaron ${result.deleted_count} transacciones exitosamente.`);
       }
-      
+
       setSelectedIds([]);
       loadTransactions(); // Recargar lista
     } catch (error) {
@@ -333,7 +333,7 @@ export const TransactionList: React.FC = () => {
   return (
     <div className="transaction-list">
       <TransactionFilters onFilterChange={setFilters} />
-      
+
       {/* Contador y acciones */}
       <div className="list-header">
         <div>
@@ -343,7 +343,7 @@ export const TransactionList: React.FC = () => {
             <p>{count} transacción(es) encontrada(s)</p>
           )}
         </div>
-        
+
         {selectedIds.length > 0 && (
           <div className="bulk-actions">
             <span>{selectedIds.length} seleccionada(s)</span>
@@ -511,8 +511,8 @@ const TransactionPage = () => {
 
   // 2. Usuario selecciona transacciones
   const handleSelect = (id: number) => {
-    setSelectedIds(prev => 
-      prev.includes(id) 
+    setSelectedIds(prev =>
+      prev.includes(id)
         ? prev.filter(i => i !== id)
         : [...prev, id]
     );
@@ -521,7 +521,7 @@ const TransactionPage = () => {
   // 3. Usuario elimina seleccionadas
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    
+
     try {
       await transactionService.bulkDelete(selectedIds);
       setSelectedIds([]);
@@ -534,7 +534,7 @@ const TransactionPage = () => {
   return (
     <div>
       <TransactionFilters onFilterChange={handleFilterChange} />
-      
+
       {count === 0 ? (
         <p>No hay transacciones que coincidan con los filtros.</p>
       ) : (
@@ -545,7 +545,7 @@ const TransactionPage = () => {
               Eliminar {selectedIds.length} seleccionada(s)
             </button>
           )}
-          <TransactionTable 
+          <TransactionTable
             transactions={transactions}
             selectedIds={selectedIds}
             onSelect={handleSelect}
@@ -589,4 +589,3 @@ const TransactionPage = () => {
 ```
 
 Esto busca "uber" en texto, filtra por categoría 5, rango de fechas, tipo 2 (gastos) y ordena por fecha descendente.
-

@@ -1,5 +1,5 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 from django.utils import timezone as dj_timezone
 
 
@@ -88,6 +88,17 @@ class Notification(models.Model):
         verbose_name="Fecha de lectura",
         help_text="Fecha y hora en que se leyó la notificación",
     )
+    is_dismissed = models.BooleanField(
+        default=False,
+        verbose_name="Descartada",
+        help_text="Indica si la notificación ha sido descartada por el usuario",
+    )
+    dismissed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Descartada en",
+        help_text="Fecha y hora en que se descartó la notificación",
+    )
 
     # Campos de auditoría
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,6 +110,7 @@ class Notification(models.Model):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["user", "read"]),
+            models.Index(fields=["user", "is_dismissed"]),
             models.Index(fields=["notification_type"]),
             models.Index(fields=["scheduled_for"]),
         ]
@@ -118,6 +130,13 @@ class Notification(models.Model):
             self.read = True
             self.read_timestamp = dj_timezone.now()
             self.save(update_fields=["read", "read_timestamp"])
+
+    def mark_as_dismissed(self):
+        """Marca la notificación como descartada"""
+        if not self.is_dismissed:
+            self.is_dismissed = True
+            self.dismissed_at = dj_timezone.now()
+            self.save(update_fields=["is_dismissed", "dismissed_at"])
 
 
 class CustomReminder(models.Model):

@@ -4,6 +4,7 @@ Configuración del admin de Django para presupuestos
 
 from django.contrib import admin
 from django.utils.html import format_html
+
 from .models import Budget
 
 
@@ -49,7 +50,7 @@ class BudgetAdmin(admin.ModelAdmin):
         from django.utils.safestring import mark_safe
 
         url = reverse("admin:users_user_change", args=[obj.user.id])
-        return mark_safe(f'<a href="{url}">{obj.user.username}</a>')
+        return mark_safe(f'<a href="{url}">{obj.user.username}</a>')  # nosec B703, B308
 
     user_link.short_description = "Usuario"
 

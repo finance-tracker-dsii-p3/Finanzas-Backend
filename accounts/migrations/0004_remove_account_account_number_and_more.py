@@ -6,35 +6,86 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0003_account_account_number_account_bank_name'),
+        ("accounts", "0003_account_account_number_account_bank_name"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='account',
-            name='account_number',
+            model_name="account",
+            name="account_number",
         ),
         migrations.RemoveField(
-            model_name='account',
-            name='bank_name',
+            model_name="account",
+            name="bank_name",
         ),
         migrations.CreateModel(
-            name='AccountOption',
+            name="AccountOption",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Nombre del banco, billetera o entidad', max_length=100, verbose_name='Nombre')),
-                ('option_type', models.CharField(choices=[('bank', 'Banco'), ('wallet', 'Billetera'), ('credit_card_bank', 'Banco para Tarjeta de Crédito')], help_text='Tipo de opción: banco, billetera o banco para tarjeta', max_length=20, verbose_name='Tipo de opción')),
-                ('is_active', models.BooleanField(default=True, help_text='Si está desactivado, no aparecerá en los listados del frontend', verbose_name='Activo')),
-                ('order', models.IntegerField(default=0, help_text='Orden de aparición (menor número aparece primero)', verbose_name='Orden')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Nombre del banco, billetera o entidad",
+                        max_length=100,
+                        verbose_name="Nombre",
+                    ),
+                ),
+                (
+                    "option_type",
+                    models.CharField(
+                        choices=[
+                            ("bank", "Banco"),
+                            ("wallet", "Billetera"),
+                            ("credit_card_bank", "Banco para Tarjeta de Crédito"),
+                        ],
+                        help_text="Tipo de opción: banco, billetera o banco para tarjeta",
+                        max_length=20,
+                        verbose_name="Tipo de opción",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Si está desactivado, no aparecerá en los listados del frontend",
+                        verbose_name="Activo",
+                    ),
+                ),
+                (
+                    "order",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Orden de aparición (menor número aparece primero)",
+                        verbose_name="Orden",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
             ],
             options={
-                'verbose_name': 'Opción de Cuenta',
-                'verbose_name_plural': 'Opciones de Cuentas',
-                'ordering': ['option_type', 'order', 'name'],
-                'indexes': [models.Index(fields=['option_type', 'is_active'], name='accounts_ac_option__b84d32_idx'), models.Index(fields=['option_type', 'order'], name='accounts_ac_option__fdd71e_idx')],
-                'unique_together': {('name', 'option_type')},
+                "verbose_name": "Opción de Cuenta",
+                "verbose_name_plural": "Opciones de Cuentas",
+                "ordering": ["option_type", "order", "name"],
+                "indexes": [
+                    models.Index(
+                        fields=["option_type", "is_active"], name="accounts_ac_option__b84d32_idx"
+                    ),
+                    models.Index(
+                        fields=["option_type", "order"], name="accounts_ac_option__fdd71e_idx"
+                    ),
+                ],
+                "unique_together": {("name", "option_type")},
             },
         ),
     ]

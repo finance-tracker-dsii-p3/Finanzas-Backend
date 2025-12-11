@@ -6,18 +6,34 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('notifications', '0006_add_schedule_non_compliance'),
+        ("notifications", "0006_add_schedule_non_compliance"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='notification',
-            name='notification_type',
-            field=models.CharField(choices=[('general', 'Notificación general'), ('admin_verification', 'Verificación de usuario'), ('system_alert', 'Alerta del sistema'), ('user_action', 'Acción del usuario')], default='general', help_text='Tipo de notificación', max_length=30, verbose_name='Tipo'),
+            model_name="notification",
+            name="notification_type",
+            field=models.CharField(
+                choices=[
+                    ("general", "Notificación general"),
+                    ("admin_verification", "Verificación de usuario"),
+                    ("system_alert", "Alerta del sistema"),
+                    ("user_action", "Acción del usuario"),
+                ],
+                default="general",
+                help_text="Tipo de notificación",
+                max_length=30,
+                verbose_name="Tipo",
+            ),
         ),
         migrations.AlterField(
-            model_name='notification',
-            name='related_object_id',
-            field=models.IntegerField(blank=True, help_text='ID del objeto relacionado con la notificación', null=True, verbose_name='ID de objeto relacionado'),
+            model_name="notification",
+            name="related_object_id",
+            field=models.IntegerField(
+                blank=True,
+                help_text="ID del objeto relacionado con la notificación",
+                null=True,
+                verbose_name="ID de objeto relacionado",
+            ),
         ),
     ]

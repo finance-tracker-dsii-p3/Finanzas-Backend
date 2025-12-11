@@ -2,20 +2,21 @@
 Views para la gestión de cuentas financieras
 """
 
-from rest_framework import viewsets, status, permissions
+import logging
+from decimal import Decimal
+
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from decimal import Decimal
-import logging
 
 from .models import Account, AccountOption, AccountOptionType
 from .serializers import (
-    AccountListSerializer,
-    AccountDetailSerializer,
-    AccountCreateSerializer,
-    AccountUpdateSerializer,
     AccountBalanceUpdateSerializer,
+    AccountCreateSerializer,
+    AccountDetailSerializer,
+    AccountListSerializer,
     AccountSummarySerializer,
+    AccountUpdateSerializer,
 )
 from .services import AccountService
 
@@ -40,18 +41,17 @@ class AccountViewSet(viewsets.ModelViewSet):
         """Seleccionar serializer según la acción"""
         if self.action == "list":
             return AccountListSerializer
-        elif self.action == "retrieve":
+        if self.action == "retrieve":
             return AccountDetailSerializer
-        elif self.action == "create":
+        if self.action == "create":
             return AccountCreateSerializer
-        elif self.action in ["update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
             return AccountUpdateSerializer
-        elif self.action == "update_balance":
+        if self.action == "update_balance":
             return AccountBalanceUpdateSerializer
-        elif self.action == "summary":
+        if self.action == "summary":
             return AccountSummarySerializer
-        else:
-            return AccountDetailSerializer
+        return AccountDetailSerializer
 
     def perform_create(self, serializer):
         """Crear cuenta asignando el usuario autenticado"""
@@ -65,8 +65,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            logger.warning(f"Error al crear cuenta para usuario {self.request.user.id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al crear cuenta para usuario {self.request.user.id}: {e!s}")
+            raise
 
     def perform_update(self, serializer):
         """Actualizar cuenta"""
@@ -77,8 +77,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} actualizó cuenta: {account.name}")
 
         except Exception as e:
-            logger.warning(f"Error al actualizar cuenta {self.get_object().id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al actualizar cuenta {self.get_object().id}: {e!s}")
+            raise
 
     def perform_destroy(self, instance):
         """Eliminar cuenta con validaciones"""
@@ -97,8 +97,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} eliminó cuenta: {instance.name}")
 
         except ValueError as e:
-            logger.warning(f"Error al eliminar cuenta {instance.id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al eliminar cuenta {instance.id}: {e!s}")
+            raise
 
     @action(detail=False, methods=["get"])
     def summary(self, request):
@@ -116,7 +116,7 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Response(summary_data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Error al generar resumen para usuario {request.user.id}: {str(e)}")
+            logger.exception(f"Error al generar resumen para usuario {request.user.id}: {e!s}")
             return Response(
                 {"error": "Error interno al generar resumen"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -171,8 +171,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Response(summary, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(
-                f"Error al generar resumen de tarjetas para usuario {request.user.id}: {str(e)}"
+            logger.exception(
+                f"Error al generar resumen de tarjetas para usuario {request.user.id}: {e!s}"
             )
             return Response(
                 {"error": "Error interno al generar resumen de tarjetas"},
@@ -213,7 +213,7 @@ class AccountViewSet(viewsets.ModelViewSet):
                 return Response(response_serializer.data, status=status.HTTP_200_OK)
 
             except ValueError as e:
-                logger.warning(f"Error al actualizar saldo de cuenta {account.id}: {str(e)}")
+                logger.warning(f"Error al actualizar saldo de cuenta {account.id}: {e!s}")
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -245,7 +245,7 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Response(validation_result, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Error al validar eliminación de cuenta {account.id}: {str(e)}")
+            logger.exception(f"Error al validar eliminación de cuenta {account.id}: {e!s}")
             return Response(
                 {"error": "Error interno en validación"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -288,8 +288,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Response(stats, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(
-                f"Error al generar estadísticas por categoría para usuario {request.user.id}: {str(e)}"
+            logger.exception(
+                f"Error al generar estadísticas por categoría para usuario {request.user.id}: {e!s}"
             )
             return Response(
                 {"error": "Error interno al generar estadísticas"},
@@ -319,7 +319,7 @@ class AccountViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Error al cambiar estado de cuenta {account.id}: {str(e)}")
+            logger.exception(f"Error al cambiar estado de cuenta {account.id}: {e!s}")
             return Response(
                 {"error": "Error interno al cambiar estado"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -411,7 +411,7 @@ def get_account_options(request):
         )
 
     except Exception as e:
-        logger.error(f"Error al obtener opciones de cuentas: {str(e)}")
+        logger.exception(f"Error al obtener opciones de cuentas: {e!s}")
         return Response(
             {"error": "Error al obtener opciones de cuentas"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,

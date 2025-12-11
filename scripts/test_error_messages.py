@@ -3,8 +3,9 @@
 Script para probar los nuevos mensajes de error mejorados de la API de reglas
 """
 
-import requests
 import json
+
+import requests
 
 # Configuración
 BASE_URL = "http://localhost:8000"

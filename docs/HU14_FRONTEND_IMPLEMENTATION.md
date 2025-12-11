@@ -1131,4 +1131,3 @@ useEffect(() => {
 - Un cambio se considera significativo si es >= 5%
 - El backend excluye automáticamente las transferencias de los cálculos
 - Los insights se generan automáticamente según los cambios detectados
-

@@ -3,8 +3,9 @@ Serializers para gestión de facturas personales
 """
 
 from rest_framework import serializers
-from bills.models import Bill, BillReminder
+
 from accounts.models import Account
+from bills.models import Bill, BillReminder
 
 
 class BillSerializer(serializers.ModelSerializer):
@@ -92,20 +93,23 @@ class BillSerializer(serializers.ModelSerializer):
         """Validar que la cuenta pertenezca al usuario"""
         request = self.context.get("request")
         if value and request and value.user != request.user:
-            raise serializers.ValidationError("La cuenta sugerida debe pertenecerte")
+            msg = "La cuenta sugerida debe pertenecerte"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_category(self, value):
         """Validar que la categoría pertenezca al usuario"""
         request = self.context.get("request")
         if value and request and value.user != request.user:
-            raise serializers.ValidationError("La categoría debe pertenecerte")
+            msg = "La categoría debe pertenecerte"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_amount(self, value):
         """Validar que el monto sea positivo"""
         if value <= 0:
-            raise serializers.ValidationError("El monto debe ser mayor a cero")
+            msg = "El monto debe ser mayor a cero"
+            raise serializers.ValidationError(msg)
         return value
 
 
@@ -129,12 +133,14 @@ class BillPaymentSerializer(serializers.Serializer):
         """Validar que la cuenta exista y pertenezca al usuario"""
         request = self.context.get("request")
         if not request:
-            raise serializers.ValidationError("Contexto de request requerido")
+            msg = "Contexto de request requerido"
+            raise serializers.ValidationError(msg)
 
         try:
             Account.objects.get(id=value, user=request.user)
         except Account.DoesNotExist:
-            raise serializers.ValidationError("La cuenta no existe o no te pertenece")
+            msg = "La cuenta no existe o no te pertenece"
+            raise serializers.ValidationError(msg)
 
         return value
 

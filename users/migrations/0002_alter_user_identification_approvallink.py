@@ -8,28 +8,55 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='identification',
-            field=models.CharField(error_messages={'unique': 'Ya existe un usuario con esta identificación'}, help_text='Número de identificación del usuario', max_length=20, unique=True, verbose_name='Número de Identificación'),
+            model_name="user",
+            name="identification",
+            field=models.CharField(
+                error_messages={"unique": "Ya existe un usuario con esta identificación"},
+                help_text="Número de identificación del usuario",
+                max_length=20,
+                unique=True,
+                verbose_name="Número de Identificación",
+            ),
         ),
         migrations.CreateModel(
-            name='ApprovalLink',
+            name="ApprovalLink",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('approve', 'Approve'), ('reject', 'Reject')], max_length=10)),
-                ('token_hash', models.CharField(max_length=128, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField()),
-                ('used_at', models.DateTimeField(blank=True, null=True)),
-                ('user', models.ForeignKey(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, related_name='approval_links', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[("approve", "Approve"), ("reject", "Reject")], max_length=10
+                    ),
+                ),
+                ("token_hash", models.CharField(max_length=128, unique=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("expires_at", models.DateTimeField()),
+                ("used_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        db_constraint=False,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="approval_links",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'indexes': [models.Index(fields=['token_hash'], name='users_appro_token_h_12b7bb_idx'), models.Index(fields=['user', 'action'], name='users_appro_user_id_b9b640_idx')],
+                "indexes": [
+                    models.Index(fields=["token_hash"], name="users_appro_token_h_12b7bb_idx"),
+                    models.Index(fields=["user", "action"], name="users_appro_user_id_b9b640_idx"),
+                ],
             },
         ),
     ]

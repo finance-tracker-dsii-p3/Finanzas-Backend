@@ -293,4 +293,3 @@ La implementación de la HU-16 está **completa y correcta**. Todos los criterio
 - ✅ Interfaz clara y fácil de usar
 
 **La funcionalidad está lista para producción.**
-

@@ -5,6 +5,7 @@ Verificar datos y posibles errores en el servicio de analytics
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -12,11 +13,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
 
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+
 from django.contrib.auth import get_user_model
-from transactions.models import Transaction
-from categories.models import Category
+
 from analytics.services import FinancialAnalyticsService
+from categories.models import Category
+from transactions.models import Transaction
 
 User = get_user_model()
 
@@ -127,7 +130,7 @@ def test_analytics_debug():
         print(f"      - Balance: {indicators.get('balance', {}).get('amount', 'N/A')}")
 
     except Exception as e:
-        print(f"   ❌ Error en el servicio: {str(e)}")
+        print(f"   ❌ Error en el servicio: {e!s}")
         import traceback
 
         print(f"   📍 Traceback:")

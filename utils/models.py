@@ -2,10 +2,11 @@
 Modelos de utilidades para el sistema
 """
 
-from django.db import models
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from datetime import date
+from django.db import models
 
 User = get_user_model()
 

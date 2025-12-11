@@ -3,12 +3,12 @@ Middleware personalizado para el proyecto de finanzas
 """
 
 import logging
-from django.conf import settings
-from django.http import JsonResponse
-from django.core.exceptions import ValidationError
-from rest_framework.views import exception_handler
-from rest_framework import status
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from rest_framework import status
+from rest_framework.views import exception_handler
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class APIErrorHandlerMiddleware:
     def process_exception(self, request, exception):
         """Manejar excepciones no capturadas en rutas de API"""
         if request.path.startswith("/api/"):
-            logger.error(f"API Exception: {type(exception).__name__}: {str(exception)}")
+            logger.error(f"API Exception: {type(exception).__name__}: {exception!s}")
 
             # Diferentes tipos de errores
             if isinstance(exception, ValidationError):
@@ -60,7 +60,7 @@ class APIErrorHandlerMiddleware:
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            elif isinstance(exception, PermissionError):
+            if isinstance(exception, PermissionError):
                 return JsonResponse(
                     {
                         "error": "Sin permisos",
@@ -70,18 +70,15 @@ class APIErrorHandlerMiddleware:
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-            else:
-                # Error genérico
-                return JsonResponse(
-                    {
-                        "error": "Error interno del servidor",
-                        "message": str(exception)
-                        if settings.DEBUG
-                        else "Ha ocurrido un error interno",
-                        "type": type(exception).__name__,
-                    },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+            # Error genérico
+            return JsonResponse(
+                {
+                    "error": "Error interno del servidor",
+                    "message": str(exception) if settings.DEBUG else "Ha ocurrido un error interno",
+                    "type": type(exception).__name__,
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         # Si no es una ruta de API, dejar que Django maneje la excepción normalmente
         return None

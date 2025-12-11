@@ -11,7 +11,8 @@ def send_email_via_resend(to, subject, html_content, text_content=None):
     """
     api_key = getattr(settings, "RESEND_API_KEY", None)
     if not api_key:
-        raise ValueError("RESEND_API_KEY no configurado")
+        msg = "RESEND_API_KEY no configurado"
+        raise ValueError(msg)
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
@@ -41,4 +42,5 @@ def send_email_via_resend(to, subject, html_content, text_content=None):
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"[RESEND_ERROR] Request exception: {e}")
-        raise Exception(f"Error enviando email via Resend: {e}")
+        msg = f"Error enviando email via Resend: {e}"
+        raise Exception(msg)

@@ -2,15 +2,17 @@
 Tests para funcionalidad de multi-moneda (HU-17)
 """
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
-from rest_framework import status
 from datetime import date
 from decimal import Decimal
 
-from utils.models import ExchangeRate
+import pytest
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APIClient
+
 from utils.currency_converter import FxService
+from utils.models import ExchangeRate
 
 User = get_user_model()
 
@@ -30,20 +32,20 @@ class BaseCurrencySettingTest(TestCase):
     def test_default_base_currency(self):
         """Usuario sin configuración debe retornar COP por defecto"""
         base = FxService.get_base_currency(self.user)
-        self.assertEqual(base, "COP")
+        assert base == "COP"
 
     def test_set_base_currency(self):
         """Establecer moneda base del usuario"""
         FxService.set_base_currency(self.user, "USD")
         base = FxService.get_base_currency(self.user)
-        self.assertEqual(base, "USD")
+        assert base == "USD"
 
     def test_update_base_currency(self):
         """Actualizar moneda base existente"""
         FxService.set_base_currency(self.user, "COP")
         FxService.set_base_currency(self.user, "EUR")
         base = FxService.get_base_currency(self.user)
-        self.assertEqual(base, "EUR")
+        assert base == "EUR"
 
 
 class ExchangeRateTest(TestCase):
@@ -61,13 +63,13 @@ class ExchangeRateTest(TestCase):
 
     def test_create_exchange_rate(self):
         """Crear tipo de cambio"""
-        self.assertEqual(self.rate.currency, "USD")
-        self.assertEqual(self.rate.rate, Decimal("3750.0"))
-        self.assertEqual(str(self.rate), "USD/COP 2025-01: 3750.0")
+        assert self.rate.currency == "USD"
+        assert self.rate.rate == Decimal("3750.0")
+        assert str(self.rate) == "USD/COP 2025-01: 3750.0"
 
     def test_unique_constraint(self):
         """No permitir duplicados del mismo período"""
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):
             ExchangeRate.objects.create(
                 base_currency="COP",
                 currency="USD",
@@ -99,34 +101,34 @@ class FxServiceTest(TestCase):
     def test_convert_same_currency(self):
         """Convertir misma moneda retorna igual"""
         converted, rate, warning = FxService.convert_amount(10000, "COP", "COP", date(2025, 1, 15))
-        self.assertEqual(converted, 10000)
-        self.assertEqual(rate, Decimal("1"))
-        self.assertIsNone(warning)
+        assert converted == 10000
+        assert rate == Decimal(1)
+        assert warning is None
 
     def test_convert_cop_to_usd(self):
         """Convertir COP a USD usando tasa inversa"""
-        converted, rate, warning = FxService.convert_amount(
+        converted, _rate, warning = FxService.convert_amount(
             400000000, "COP", "USD", date(2025, 1, 15)
         )
         # 4,000,000 COP / 4000 = 1,000 USD = 100,000 centavos
-        self.assertEqual(converted, 100000)
-        self.assertIsNone(warning)
+        assert converted == 100000
+        assert warning is None
 
     def test_convert_usd_to_cop(self):
         """Convertir USD a COP"""
         converted, rate, warning = FxService.convert_amount(10000, "USD", "COP", date(2025, 1, 15))
         # 100 USD * 4000 = 400,000 COP = 40,000,000 centavos
-        self.assertEqual(converted, 40000000)
-        self.assertEqual(rate, Decimal("4000.0"))
-        self.assertIsNone(warning)
+        assert converted == 40000000
+        assert rate == Decimal("4000.0")
+        assert warning is None
 
     def test_fallback_to_previous_month(self):
         """Usar tipo de cambio de mes anterior si no existe el actual"""
-        converted, rate, warning = FxService.convert_amount(10000, "USD", "COP", date(2025, 2, 15))
+        converted, _rate, warning = FxService.convert_amount(10000, "USD", "COP", date(2025, 2, 15))
         # Debe usar la tasa de enero 2025
-        self.assertEqual(converted, 40000000)
-        self.assertIsNotNone(warning)
-        self.assertIn("2025-02", warning)
+        assert converted == 40000000
+        assert warning is not None
+        assert "2025-02" in warning
 
 
 class BaseCurrencyAPITest(TestCase):
@@ -146,8 +148,8 @@ class BaseCurrencyAPITest(TestCase):
     def test_get_base_currency(self):
         """GET /api/utils/base-currency/"""
         response = self.client.get("/api/utils/base-currency/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["base_currency"], "COP")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["base_currency"] == "COP"
 
     def test_set_base_currency(self):
         """PUT /api/utils/base-currency/set_base/"""
@@ -156,8 +158,8 @@ class BaseCurrencyAPITest(TestCase):
             {"base_currency": "USD"},
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["base_currency"], "USD")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["base_currency"] == "USD"
 
     def test_set_invalid_currency(self):
         """Rechazar moneda no soportada"""
@@ -166,7 +168,7 @@ class BaseCurrencyAPITest(TestCase):
             {"base_currency": "GBP"},
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 class ExchangeRateAPITest(TestCase):
@@ -194,8 +196,8 @@ class ExchangeRateAPITest(TestCase):
             "source": "test",
         }
         response = self.client.post("/api/utils/exchange-rates/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["currency"], "USD")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["currency"] == "USD"
 
     def test_list_exchange_rates(self):
         """GET /api/utils/exchange-rates/"""
@@ -207,8 +209,8 @@ class ExchangeRateAPITest(TestCase):
             rate=Decimal("3750.0"),
         )
         response = self.client.get("/api/utils/exchange-rates/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(response.data["count"], 1)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] >= 1
 
     def test_convert_endpoint(self):
         """GET /api/utils/exchange-rates/convert/"""
@@ -223,6 +225,6 @@ class ExchangeRateAPITest(TestCase):
             "/api/utils/exchange-rates/convert/",
             {"amount": "10000", "from": "USD", "to": "COP", "date": "2025-01-15"},
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["converted_amount"], 40000000)
-        self.assertEqual(response.data["exchange_rate"], 4000.0)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["converted_amount"] == 40000000
+        assert response.data["exchange_rate"] == 4000.0

@@ -787,4 +787,3 @@ Esto mejora la UX, pero el backend siempre validará también.
 
 **Última actualización:** 2025-01-15
 **Versión del API:** 1.0
-

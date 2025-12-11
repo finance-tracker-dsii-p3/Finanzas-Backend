@@ -10,27 +10,73 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
-        ('budgets', '0001_initial'),
+        ("users", "0001_initial"),
+        ("budgets", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Alert',
+            name="Alert",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('alert_type', models.CharField(choices=[('warning', 'Umbral alcanzado'), ('exceeded', 'Umbral excedido')], help_text='Tipo de alerta: umbral alcanzado o excedido', max_length=20, verbose_name='Tipo de alerta')),
-                ('is_read', models.BooleanField(default=False, help_text='Indica si la alerta ha sido leída por el usuario', verbose_name='Leída')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Fecha de creación de la transacción')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Fecha de última actualización')),
-                ('budget', models.ForeignKey(help_text='Presupuesto asociado a la alerta', on_delete=django.db.models.deletion.CASCADE, related_name='alerts', to='budgets.budget', verbose_name='Presupuesto')),
-                ('user', models.ForeignKey(help_text='Usuario propietario de la alerta', on_delete=django.db.models.deletion.CASCADE, related_name='alerts', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "alert_type",
+                    models.CharField(
+                        choices=[("warning", "Umbral alcanzado"), ("exceeded", "Umbral excedido")],
+                        help_text="Tipo de alerta: umbral alcanzado o excedido",
+                        max_length=20,
+                        verbose_name="Tipo de alerta",
+                    ),
+                ),
+                (
+                    "is_read",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Indica si la alerta ha sido leída por el usuario",
+                        verbose_name="Leída",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="Fecha de creación de la transacción"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, help_text="Fecha de última actualización"),
+                ),
+                (
+                    "budget",
+                    models.ForeignKey(
+                        help_text="Presupuesto asociado a la alerta",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="alerts",
+                        to="budgets.budget",
+                        verbose_name="Presupuesto",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Usuario propietario de la alerta",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="alerts",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Alerta',
-                'verbose_name_plural': 'Alertas',
-                'ordering': ['-created_at'],
+                "verbose_name": "Alerta",
+                "verbose_name_plural": "Alertas",
+                "ordering": ["-created_at"],
             },
         ),
     ]

@@ -33,16 +33,16 @@
 **Archivos actualizados:**
 - `manage.py`: `'ds2_back.settings'` → `'finanzas_back.settings'`
 - `finanzas_back/wsgi.py`: Comentarios y referencias actualizadas
-- `finanzas_back/asgi.py`: Comentarios y referencias actualizadas  
+- `finanzas_back/asgi.py`: Comentarios y referencias actualizadas
 - `finanzas_back/urls.py`: Comentario de configuración actualizado
-- `finanzas_back/settings/base.py`: 
+- `finanzas_back/settings/base.py`:
   - `ROOT_URLCONF = 'finanzas_back.urls'`
   - `WSGI_APPLICATION = 'finanzas_back.wsgi.application'`
 - `finanzas_back/settings.py`: Referencias actualizadas
 - `finanzas_back/settings_backup.py`: Referencias actualizadas
 
 **Archivos de deployment:**
-- `render.yaml`: 
+- `render.yaml`:
   - `"gunicorn finanzas_back.wsgi:application"`
   - `databaseName: finanzas_back_db`
 - `.github/workflows/ci-cd.yml`: `DJANGO_SETTINGS_MODULE: finanzas_back.settings`
@@ -51,7 +51,7 @@
 
 **Scripts actualizados:**
 - `scripts/check_database.py`
-- `scripts/print_db_settings.py` 
+- `scripts/print_db_settings.py`
 - `scripts/print_email_settings.py`
 
 ### 3. Migraciones Aplicadas
@@ -84,7 +84,7 @@
 ## Estado del Proyecto
 
 El proyecto ha sido completamente adaptado para la aplicación financiera:
-- ✅ Nomenclatura actualizada de monitors → users  
+- ✅ Nomenclatura actualizada de monitors → users
 - ✅ Configuración Django renombrada ds2_back → finanzas_back
 - ✅ Archivos de deployment actualizados
 - ✅ Sistema funcionando correctamente
@@ -93,7 +93,7 @@ El proyecto ha sido completamente adaptado para la aplicación financiera:
 ## Apps Preservadas y Limpias
 
 - `users/` - Sistema de autenticación y usuarios
-- `notifications/` - Sistema de notificaciones  
+- `notifications/` - Sistema de notificaciones
 - `dashboard/` - Dashboard de estadísticas
 - `reports/` - Sistema de reportes
 - `export/` - Exportación de datos

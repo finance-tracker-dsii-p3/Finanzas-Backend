@@ -4,6 +4,7 @@ Utilidades para envío de emails con Brevo API
 
 from django.conf import settings
 from django.core.mail import send_mail
+
 from .brevo_service import send_email_via_brevo
 
 

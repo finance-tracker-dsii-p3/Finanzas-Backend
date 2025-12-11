@@ -1,11 +1,12 @@
-from rest_framework import viewsets, status, permissions
-from rest_framework.response import Response
 import logging
+
+from rest_framework import permissions, status, viewsets
+from rest_framework.response import Response
 
 from .models import Goal
 from .serializers import (
-    GoalSerializer,
     GoalDetailSerializer,
+    GoalSerializer,
     GoalUpdateSerializer,
 )
 
@@ -21,12 +22,11 @@ class GoalViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "create":
             return GoalSerializer
-        elif self.action in ["retrieve", "list"]:
+        if self.action in ["retrieve", "list"]:
             return GoalDetailSerializer
-        elif self.action in ["update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
             return GoalUpdateSerializer
-        else:
-            return GoalDetailSerializer
+        return GoalDetailSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -55,8 +55,8 @@ class GoalViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} creó una meta: {goal.name} ")
 
         except Exception as e:
-            logger.warning(f"Error al crear meta para usuario {self.request.user.id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al crear meta para usuario {self.request.user.id}: {e!s}")
+            raise
 
     def perform_update(self, serializer):
         try:
@@ -64,8 +64,8 @@ class GoalViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} actualizó la meta {goal.name}")
 
         except Exception as e:
-            logger.warning(f"Error al actualizar meta {self.get_object().id}: {str(e)}")
-            raise e
+            logger.warning(f"Error al actualizar meta {self.get_object().id}: {e!s}")
+            raise
 
     def perform_destroy(self, instance):
         try:
@@ -73,5 +73,5 @@ class GoalViewSet(viewsets.ModelViewSet):
 
             logger.info(f"Usuario {self.request.user.id} eliminó una meta")
         except Exception as e:
-            logger.warning(f"Error al eliminar transacción {instance.id}: {str(e)}")
+            logger.warning(f"Error al eliminar transacción {instance.id}: {e!s}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

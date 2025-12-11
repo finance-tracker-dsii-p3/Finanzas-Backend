@@ -1,10 +1,11 @@
 from django.urls import path
+
 from .views import (
-    AlertListView,
-    AlertDetailView,
-    AlertMarkAsReadView,
-    AlertMarkAllAsReadView,
     AlertDeleteView,
+    AlertDetailView,
+    AlertListView,
+    AlertMarkAllAsReadView,
+    AlertMarkAsReadView,
 )
 
 urlpatterns = [

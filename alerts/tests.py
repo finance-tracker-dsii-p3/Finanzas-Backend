@@ -1,5 +1,5 @@
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -9,7 +9,6 @@ from alerts.models import Alert
 from budgets.models import Budget
 from categories.models import Category
 from transactions.models import Transaction
-
 
 User = get_user_model()
 
@@ -79,10 +78,10 @@ class BudgetAlertsTests(TestCase):
         self._create_expense(base_amount=32000000, tx_date=date(2025, 11, 10))
 
         alerts = Alert.objects.filter(user=self.user, budget=self.budget)
-        self.assertEqual(alerts.count(), 1)
+        assert alerts.count() == 1
         alert = alerts.first()
-        self.assertEqual(alert.alert_type, "warning")
-        self.assertFalse(alert.is_read)
+        assert alert.alert_type == "warning"
+        assert not alert.is_read
 
     def test_exceeded_alert_created_at_100_percent(self):
         """
@@ -95,7 +94,7 @@ class BudgetAlertsTests(TestCase):
         self._create_expense(base_amount=20000000, tx_date=date(2025, 11, 15))
 
         alerts = Alert.objects.filter(user=self.user, budget=self.budget, alert_type="exceeded")
-        self.assertEqual(alerts.count(), 1)
+        assert alerts.count() == 1
 
     def test_only_one_alert_per_month_and_type(self):
         """
@@ -115,7 +114,7 @@ class BudgetAlertsTests(TestCase):
             transaction_year=2025,
             transaction_month=11,
         ).count()
-        self.assertEqual(warnings_count, 1)
+        assert warnings_count == 1
 
     def test_new_month_generates_new_alert(self):
         """
@@ -142,5 +141,5 @@ class BudgetAlertsTests(TestCase):
             transaction_month=12,
         ).count()
 
-        self.assertEqual(warnings_nov, 1)
-        self.assertEqual(warnings_dec, 1)
+        assert warnings_nov == 1
+        assert warnings_dec == 1

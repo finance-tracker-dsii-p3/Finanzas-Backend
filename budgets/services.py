@@ -2,12 +2,15 @@
 Servicios de lógica de negocio para presupuestos
 """
 
-from decimal import Decimal
-from datetime import date
-from django.db.models import Sum
-from .models import Budget
-from categories.models import Category
 import logging
+from datetime import date
+from decimal import Decimal
+
+from django.db.models import Sum
+
+from categories.models import Category
+
+from .models import Budget
 
 logger = logging.getLogger(__name__)
 
@@ -193,18 +196,21 @@ class BudgetService:
         """
         # Validar que la categoría pertenezca al usuario
         if category.user != user:
-            raise ValueError("La categoría no pertenece al usuario.")
+            msg = "La categoría no pertenece al usuario."
+            raise ValueError(msg)
 
         # Validar que no exista presupuesto para esta categoría y período
         if Budget.objects.filter(user=user, category=category, period=period).exists():
-            raise ValueError(
+            msg = (
                 f"Ya existe un presupuesto {Budget(period=period).get_period_display().lower()} "
                 f"para la categoría {category.name}."
             )
+            raise ValueError(msg)
 
         # Validar que la categoría sea de tipo gasto
         if category.type != Category.EXPENSE:
-            raise ValueError("Solo se pueden crear presupuestos para categorías de gasto.")
+            msg = "Solo se pueden crear presupuestos para categorías de gasto."
+            raise ValueError(msg)
 
         if start_date is None:
             start_date = date.today()
@@ -311,11 +317,9 @@ class BudgetService:
         )
 
         # Obtener categorías de gasto sin presupuesto
-        categories_without_budget = Category.objects.filter(
-            user=user, type=Category.EXPENSE, is_active=True
-        ).exclude(id__in=budgeted_category_ids)
-
-        return categories_without_budget
+        return Category.objects.filter(user=user, type=Category.EXPENSE, is_active=True).exclude(
+            id__in=budgeted_category_ids
+        )
 
     @staticmethod
     def get_budget_alerts(user, reference_date=None):

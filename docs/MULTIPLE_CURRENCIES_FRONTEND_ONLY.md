@@ -30,7 +30,7 @@ El backend **YA ESTÁ COMPLETAMENTE IMPLEMENTADO** con:
   <h3>{goal.name}</h3>
   <p className="currency-badge">{goal.currency_display}</p>
   <p>
-    {formatMoney(goal.saved_amount, goal.currency)} / 
+    {formatMoney(goal.saved_amount, goal.currency)} /
     {formatMoney(goal.target_amount, goal.currency)}
   </p>
 </div>
@@ -42,7 +42,7 @@ El backend **YA ESTÁ COMPLETAMENTE IMPLEMENTADO** con:
   <h3>{budget.category_name}</h3>
   <p className="currency-badge">{budget.currency_display}</p>
   <p>
-    {formatMoney(budget.spent_amount, budget.currency)} / 
+    {formatMoney(budget.spent_amount, budget.currency)} /
     {formatMoney(budget.amount, budget.currency)}
   </p>
 </div>
@@ -53,7 +53,7 @@ El backend **YA ESTÁ COMPLETAMENTE IMPLEMENTADO** con:
 ```javascript
 const formatMoney = (centavos, currency) => {
   const amount = centavos / 100;
-  
+
   const formatters = {
     'COP': new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -74,7 +74,7 @@ const formatMoney = (centavos, currency) => {
       maximumFractionDigits: 2
     })
   };
-  
+
   return formatters[currency]?.format(amount) || `${amount} ${currency}`;
 };
 
@@ -91,30 +91,30 @@ formatMoney(5000, 'EUR')      // "5.000,00 €"
 ```jsx
 const CreateSavingTransaction = ({ account, goal }) => {
   const [showWarning, setShowWarning] = useState(false);
-  
+
   useEffect(() => {
     if (goal && account.currency !== goal.currency) {
       setShowWarning(true);
     }
   }, [account, goal]);
-  
+
   return (
     <form>
       {showWarning && (
         <div className="alert alert-warning">
           <strong>⚠️ Advertencia de Moneda</strong>
           <p>
-            La cuenta está en <strong>{account.currency_display}</strong> pero 
+            La cuenta está en <strong>{account.currency_display}</strong> pero
             la meta está en <strong>{goal.currency_display}</strong>.
           </p>
           <p>
             Las transacciones deben estar en la misma moneda que la meta.
-            Por favor, selecciona una cuenta en {goal.currency_display} o 
+            Por favor, selecciona una cuenta en {goal.currency_display} o
             crea una nueva meta en {account.currency_display}.
           </p>
         </div>
       )}
-      
+
       {/* Resto del formulario */}
     </form>
   );
@@ -130,7 +130,7 @@ const CreateTransactionForm = ({ account }) => {
   const [convertedAmount, setConvertedAmount] = useState(null);
   const [exchangeRate, setExchangeRate] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Cuando cambia la moneda o el monto, obtener conversión
   useEffect(() => {
     if (transactionCurrency !== account.currency && amount) {
@@ -140,7 +140,7 @@ const CreateTransactionForm = ({ account }) => {
       setExchangeRate(null);
     }
   }, [transactionCurrency, amount, account.currency]);
-  
+
   const fetchConversion = async () => {
     setLoading(true);
     try {
@@ -153,7 +153,7 @@ const CreateTransactionForm = ({ account }) => {
       );
       const rateData = await rateResponse.json();
       setExchangeRate(rateData.rate);
-      
+
       // Convertir monto
       const amountInCents = Math.round(parseFloat(amount) * 100);
       const convertResponse = await fetch(
@@ -170,10 +170,10 @@ const CreateTransactionForm = ({ account }) => {
       setLoading(false);
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const payload = {
       type: 4, // Saving
       origin_account: account.id,
@@ -182,13 +182,13 @@ const CreateTransactionForm = ({ account }) => {
       date: formData.date,
       goal: formData.goal_id
     };
-    
+
     // Si hay conversión, agregar campos adicionales
     if (transactionCurrency !== account.currency) {
       payload.exchange_rate = exchangeRate;
       payload.original_amount = Math.round(parseFloat(amount) * 100);
     }
-    
+
     // Enviar al backend
     const response = await fetch('/api/transactions/', {
       method: 'POST',
@@ -198,10 +198,10 @@ const CreateTransactionForm = ({ account }) => {
       },
       body: JSON.stringify(payload)
     });
-    
+
     // ... manejar respuesta
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       <div>
@@ -215,7 +215,7 @@ const CreateTransactionForm = ({ account }) => {
           <option value="EUR">Euros (EUR)</option>
         </select>
       </div>
-      
+
       {transactionCurrency !== account.currency && (
         <div className="info-box">
           <p>
@@ -230,7 +230,7 @@ const CreateTransactionForm = ({ account }) => {
           ) : exchangeRate && convertedAmount ? (
             <div className="conversion-display">
               <p>
-                {formatMoney(Math.round(parseFloat(amount) * 100), transactionCurrency)} = 
+                {formatMoney(Math.round(parseFloat(amount) * 100), transactionCurrency)} =
                 {formatMoney(convertedAmount, account.currency)}
               </p>
               <p className="rate-info">
@@ -240,7 +240,7 @@ const CreateTransactionForm = ({ account }) => {
           ) : null}
         </div>
       )}
-      
+
       <div>
         <label>Monto (en {transactionCurrency})</label>
         <input
@@ -252,7 +252,7 @@ const CreateTransactionForm = ({ account }) => {
           step="0.01"
         />
       </div>
-      
+
       <button type="submit" disabled={loading}>
         Registrar Transacción
       </button>
@@ -266,7 +266,7 @@ const CreateTransactionForm = ({ account }) => {
 ```jsx
 const SelectAccountForGoal = ({ goal, onSelect }) => {
   const [accounts, setAccounts] = useState([]);
-  
+
   useEffect(() => {
     // Filtrar cuentas que tengan la misma moneda que la meta
     fetch(`/api/accounts/?currency=${goal.currency}`, {
@@ -275,7 +275,7 @@ const SelectAccountForGoal = ({ goal, onSelect }) => {
       .then(res => res.json())
       .then(data => setAccounts(data));
   }, [goal]);
-  
+
   return (
     <select onChange={(e) => onSelect(parseInt(e.target.value))}>
       <option value="">Seleccionar cuenta</option>
@@ -293,9 +293,9 @@ const SelectAccountForGoal = ({ goal, onSelect }) => {
 
 ```jsx
 const TransactionHistoryItem = ({ transaction }) => {
-  const hasConversion = transaction.transaction_currency && 
+  const hasConversion = transaction.transaction_currency &&
                         transaction.transaction_currency !== transaction.origin_account_currency;
-  
+
   return (
     <div className="transaction-item">
       <div className="transaction-main">
@@ -304,7 +304,7 @@ const TransactionHistoryItem = ({ transaction }) => {
           {formatMoney(transaction.total_amount, transaction.origin_account_currency)}
         </p>
       </div>
-      
+
       {hasConversion && (
         <div className="conversion-info">
           <p className="original">
@@ -491,7 +491,7 @@ Authorization: Bearer <token>
    ```
    GET /api/utils/currency/exchange-rate/?from=USD&to=COP
    → rate: 4000.0
-   
+
    GET /api/utils/currency/convert/?amount=10000&from=USD&to=COP
    → converted_amount: 40000000
    ```
@@ -525,4 +525,3 @@ Authorization: Bearer <token>
 4. Mostrar conversión en tiempo real
 5. Enviar campos de conversión al backend
 6. Formatear montos según moneda
-

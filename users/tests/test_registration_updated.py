@@ -1,6 +1,6 @@
-from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.test import TestCase, override_settings
 
 User = get_user_model()
 
@@ -36,22 +36,22 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 201)
+        assert response.status_code == 201
         response_data = response.json()
 
         # Verificar estructura de respuesta
-        self.assertIn("message", response_data)
-        self.assertIn("user", response_data)
+        assert "message" in response_data
+        assert "user" in response_data
 
         # Verificar mensaje específico para usuario (ahora auto-verificado)
-        self.assertIn("Usuario registrado y verificado exitosamente", response_data["message"])
+        assert "Usuario registrado y verificado exitosamente" in response_data["message"]
 
         # Verificar datos del usuario
         user_data = response_data["user"]
-        self.assertEqual(user_data["username"], "newuser")
-        self.assertEqual(user_data["email"], "newuser@example.com")
-        self.assertEqual(user_data["role"], "user")
-        self.assertTrue(user_data["is_verified"])  # Usuario auto-verificado
+        assert user_data["username"] == "newuser"
+        assert user_data["email"] == "newuser@example.com"
+        assert user_data["role"] == "user"
+        assert user_data["is_verified"]  # Usuario auto-verificado
 
     def test_admin_registration_returns_json_response(self):
         """Test que el registro de admin devuelve respuesta JSON"""
@@ -69,17 +69,17 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 201)
+        assert response.status_code == 201
         response_data = response.json()
 
         # Verificar mensaje específico para admin
-        self.assertIn("Administrador registrado y verificado", response_data["message"])
+        assert "Administrador registrado y verificado" in response_data["message"]
 
         # Verificar datos del usuario
         user_data = response_data["user"]
-        self.assertEqual(user_data["username"], "newadmin")
-        self.assertEqual(user_data["role"], "admin")
-        self.assertTrue(user_data["is_verified"])  # Admin verificado automáticamente
+        assert user_data["username"] == "newadmin"
+        assert user_data["role"] == "admin"
+        assert user_data["is_verified"]  # Admin verificado automáticamente
 
     def test_user_registration_no_email_to_admin(self):
         """Test que el registro de usuario ya NO envía email al admin (auto-verificación)"""
@@ -100,10 +100,10 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 201)
+        assert response.status_code == 201
 
         # Verificar que NO se envió email al admin (ahora es auto-verificación)
-        self.assertEqual(len(mail.outbox), 0)
+        assert len(mail.outbox) == 0
 
     def test_admin_registration_no_email_sent(self):
         """Test que el registro de admin no envía email de verificación"""
@@ -124,10 +124,10 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 201)
+        assert response.status_code == 201
 
         # Verificar que NO se envió email de verificación
-        self.assertEqual(len(mail.outbox), 0)
+        assert len(mail.outbox) == 0
 
     def test_registration_validation_errors(self):
         """Test que los errores de validación se devuelven correctamente"""
@@ -145,15 +145,15 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 400)
+        assert response.status_code == 400
         response_data = response.json()
 
         # Verificar que se devuelven errores específicos
-        self.assertIn("email", response_data)
-        self.assertIn("password", response_data)
+        assert "email" in response_data
+        assert "password" in response_data
         # password_confirm puede no aparecer si otros errores son más prioritarios
         # Verificar que al menos hay errores de validación
-        self.assertGreater(len(response_data), 0)
+        assert len(response_data) > 0
 
     def test_registration_duplicate_username(self):
         """Test manejo de username duplicado"""
@@ -181,9 +181,9 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 400)
+        assert response.status_code == 400
         response_data = response.json()
-        self.assertIn("username", response_data)
+        assert "username" in response_data
 
     def test_registration_duplicate_email(self):
         """Test manejo de email duplicado"""
@@ -211,9 +211,9 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 400)
+        assert response.status_code == 400
         response_data = response.json()
-        self.assertIn("email", response_data)
+        assert "email" in response_data
 
     def test_registration_duplicate_identification(self):
         """Test manejo de identificación duplicada"""
@@ -241,6 +241,6 @@ class RegistrationUpdatedTests(TestCase):
 
         response = self.client.post(url, data)
 
-        self.assertEqual(response.status_code, 400)
+        assert response.status_code == 400
         response_data = response.json()
-        self.assertIn("identification", response_data)
+        assert "identification" in response_data

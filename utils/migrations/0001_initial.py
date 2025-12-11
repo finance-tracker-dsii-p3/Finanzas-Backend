@@ -11,42 +11,118 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExchangeRate',
+            name="ExchangeRate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('base_currency', models.CharField(default='COP', help_text='Moneda base de referencia (ej: COP)', max_length=3, verbose_name='Moneda base')),
-                ('currency', models.CharField(help_text='Moneda a convertir (ej: USD, EUR)', max_length=3, verbose_name='Moneda')),
-                ('year', models.IntegerField(help_text='Año del tipo de cambio', verbose_name='Año')),
-                ('month', models.IntegerField(help_text='Mes del tipo de cambio (1-12)', verbose_name='Mes')),
-                ('rate', models.DecimalField(decimal_places=6, help_text='Valor de conversión (ej: 4000.0 significa 1 USD = 4000 COP)', max_digits=18, validators=[django.core.validators.MinValueValidator(0)], verbose_name='Tasa de cambio')),
-                ('source', models.CharField(blank=True, default='manual', help_text='Origen del tipo de cambio (manual, API, etc)', max_length=100, verbose_name='Fuente')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "base_currency",
+                    models.CharField(
+                        default="COP",
+                        help_text="Moneda base de referencia (ej: COP)",
+                        max_length=3,
+                        verbose_name="Moneda base",
+                    ),
+                ),
+                (
+                    "currency",
+                    models.CharField(
+                        help_text="Moneda a convertir (ej: USD, EUR)",
+                        max_length=3,
+                        verbose_name="Moneda",
+                    ),
+                ),
+                (
+                    "year",
+                    models.IntegerField(help_text="Año del tipo de cambio", verbose_name="Año"),
+                ),
+                (
+                    "month",
+                    models.IntegerField(
+                        help_text="Mes del tipo de cambio (1-12)", verbose_name="Mes"
+                    ),
+                ),
+                (
+                    "rate",
+                    models.DecimalField(
+                        decimal_places=6,
+                        help_text="Valor de conversión (ej: 4000.0 significa 1 USD = 4000 COP)",
+                        max_digits=18,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                        verbose_name="Tasa de cambio",
+                    ),
+                ),
+                (
+                    "source",
+                    models.CharField(
+                        blank=True,
+                        default="manual",
+                        help_text="Origen del tipo de cambio (manual, API, etc)",
+                        max_length=100,
+                        verbose_name="Fuente",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
             ],
             options={
-                'verbose_name': 'Tipo de cambio',
-                'verbose_name_plural': 'Tipos de cambio',
-                'ordering': ['-year', '-month', 'currency'],
-                'unique_together': {('base_currency', 'currency', 'year', 'month')},
+                "verbose_name": "Tipo de cambio",
+                "verbose_name_plural": "Tipos de cambio",
+                "ordering": ["-year", "-month", "currency"],
+                "unique_together": {("base_currency", "currency", "year", "month")},
             },
         ),
         migrations.CreateModel(
-            name='BaseCurrencySetting',
+            name="BaseCurrencySetting",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('base_currency', models.CharField(default='COP', help_text='Moneda base para cálculos y reportes del usuario (COP, USD, EUR)', max_length=3, verbose_name='Moneda base')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='base_currency_setting', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "base_currency",
+                    models.CharField(
+                        default="COP",
+                        help_text="Moneda base para cálculos y reportes del usuario (COP, USD, EUR)",
+                        max_length=3,
+                        verbose_name="Moneda base",
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="base_currency_setting",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Configuración de moneda base',
-                'verbose_name_plural': 'Configuraciones de moneda base',
+                "verbose_name": "Configuración de moneda base",
+                "verbose_name_plural": "Configuraciones de moneda base",
             },
         ),
     ]

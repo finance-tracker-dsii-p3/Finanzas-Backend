@@ -628,4 +628,3 @@ Si tienes dudas o encuentras problemas:
 **Última actualización:** 2025-01-15
 **Versión del API:** 1.0
 **HU Implementada:** HU-15
-

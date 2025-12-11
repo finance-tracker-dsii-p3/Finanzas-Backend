@@ -1,8 +1,9 @@
 # THIS FILE IS DEPRECATED. USE finanzas_back/settings/base.py INSTEAD.
 
-from pathlib import Path
-import environ
 import sys
+from pathlib import Path
+
+import environ
 
 """
 Django settings for finanzas_back project.
@@ -137,7 +138,7 @@ if 'test' in sys.argv or 'pytest' in sys.modules:
             'OPTIONS': {'timeout': 20},
         }
     }
-    
+
 else:
     database_url = env.str('DATABASE_URL', default='')
     if database_url:

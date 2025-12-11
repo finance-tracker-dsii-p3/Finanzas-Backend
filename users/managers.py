@@ -12,9 +12,11 @@ class CustomUserManager(BaseUserManager):
         Create and save a User with the given identification and password.
         """
         if not identification:
-            raise ValueError("The identification must be set")
+            msg = "The identification must be set"
+            raise ValueError(msg)
         if not email:
-            raise ValueError("The email must be set")
+            msg = "The email must be set"
+            raise ValueError(msg)
 
         email = self.normalize_email(email)
         extra_fields.setdefault("is_verified", False)
@@ -36,8 +38,10 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("role", "admin")
 
         if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
+            msg = "Superuser must have is_staff=True."
+            raise ValueError(msg)
         if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
+            msg = "Superuser must have is_superuser=True."
+            raise ValueError(msg)
 
         return self.create_user(identification, username, email, password, **extra_fields)

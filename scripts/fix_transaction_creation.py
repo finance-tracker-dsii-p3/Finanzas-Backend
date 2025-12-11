@@ -4,6 +4,7 @@ Script para verificar cuentas disponibles y crear transacción correctamente
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -12,8 +13,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
 
 from django.contrib.auth import get_user_model
-from accounts.models import Account
 from rest_framework.authtoken.models import Token
+
+from accounts.models import Account
 
 User = get_user_model()
 

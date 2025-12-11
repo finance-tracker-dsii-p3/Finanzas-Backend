@@ -3,14 +3,17 @@ Tests de integración completa entre Rules y Transactions (HU-12)
 Tests para validar que el motor de reglas funciona correctamente
 """
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from categories.models import Category
-from transactions.models import Transaction
-from rules.models import AutomaticRule
-from accounts.models import Account
-from rules.services import RuleEngineService
 from decimal import Decimal
+
+import pytest
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from accounts.models import Account
+from categories.models import Category
+from rules.models import AutomaticRule
+from rules.services import RuleEngineService
+from transactions.models import Transaction
 
 User = get_user_model()
 
@@ -71,8 +74,8 @@ class RulesTransactionsIntegrationTests(TestCase):
 
     def test_rule_engine_service_exists(self):
         """Verificar que el servicio del motor de reglas existe"""
-        self.assertTrue(hasattr(RuleEngineService, "apply_rules_to_transaction"))
-        self.assertTrue(hasattr(RuleEngineService, "preview_rule_application"))
+        assert hasattr(RuleEngineService, "apply_rules_to_transaction")
+        assert hasattr(RuleEngineService, "preview_rule_application")
 
     def test_transaction_matches_rule_correctly(self):
         """Verificar que las transacciones coinciden con reglas correctamente"""
@@ -81,18 +84,18 @@ class RulesTransactionsIntegrationTests(TestCase):
             user=self.user,
             origin_account=self.account,
             type=2,
-            base_amount=Decimal("12000"),
+            base_amount=Decimal(12000),
             date="2025-11-23",
             description="Pago Uber centro",
         )
 
         # Verificar que la regla coincide
         matches = self.uber_rule.matches_transaction(transaction)
-        self.assertTrue(matches)
+        assert matches
 
         # Verificar que la otra regla NO coincide
         no_matches = self.restaurant_rule.matches_transaction(transaction)
-        self.assertFalse(no_matches)
+        assert not no_matches
 
     def test_rule_application_priority(self):
         """Verificar que las reglas se aplican por prioridad correcta"""
@@ -116,8 +119,8 @@ class RulesTransactionsIntegrationTests(TestCase):
         )
 
         # La primera regla debe ser la de mayor prioridad
-        self.assertTrue(len(matching_rules) >= 1)
-        self.assertEqual(matching_rules[0], high_priority_rule)
+        assert len(matching_rules) >= 1
+        assert matching_rules[0] == high_priority_rule
 
     def test_inactive_rules_dont_apply(self):
         """Verificar que las reglas inactivas no se aplican"""
@@ -131,7 +134,7 @@ class RulesTransactionsIntegrationTests(TestCase):
         )
 
         # No debe incluir la regla inactiva
-        self.assertNotIn(self.uber_rule, matching_rules)
+        assert self.uber_rule not in matching_rules
 
     def test_rule_statistics_calculation(self):
         """Verificar que las estadísticas de reglas se calculan correctamente"""
@@ -150,7 +153,7 @@ class RulesTransactionsIntegrationTests(TestCase):
 
         # Verificar conteo de aplicaciones
         applied_count = self.uber_rule.applied_transactions.count()
-        self.assertEqual(applied_count, 3)
+        assert applied_count == 3
 
     def test_database_constraints_work(self):
         """Verificar que las restricciones de base de datos funcionan"""
@@ -167,7 +170,7 @@ class RulesTransactionsIntegrationTests(TestCase):
         )
 
         # Intentar crear otra regla con el mismo nombre debe fallar
-        with self.assertRaises(Exception):  # IntegrityError o ValidationError
+        with pytest.raises(Exception):  # IntegrityError o ValidationError
             AutomaticRule.objects.create(
                 user=self.user,
                 name="Test Unique Name",  # Nombre duplicado
@@ -186,7 +189,7 @@ class RulesTransactionsIntegrationTests(TestCase):
             user=self.user,
             origin_account=self.account,
             type=2,
-            base_amount=Decimal("8000"),
+            base_amount=Decimal(8000),
             date="2025-11-23",
             description="Test transaction",
             category=self.transport_category,
@@ -194,7 +197,7 @@ class RulesTransactionsIntegrationTests(TestCase):
         )
 
         # Verificar que la transacción tiene regla aplicada
-        self.assertEqual(transaction.applied_rule, self.uber_rule)
+        assert transaction.applied_rule == self.uber_rule
 
         # Eliminar la regla
         rule_id = self.uber_rule.id
@@ -202,4 +205,4 @@ class RulesTransactionsIntegrationTests(TestCase):
 
         # Verificar que la transacción aún existe pero sin regla aplicada
         transaction.refresh_from_db()
-        self.assertIsNone(transaction.applied_rule)
+        assert transaction.applied_rule is None

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from goals.models import Goal
 
 
@@ -64,18 +65,16 @@ class GoalSerializer(serializers.ModelSerializer):
 
     def validate_target_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError(
-                "El monto objetivo debe ser un valor positivo mayor que cero."
-            )
+            msg = "El monto objetivo debe ser un valor positivo mayor que cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate(self, data):
         user = self.context["request"].user
 
         if not user or not user.is_authenticated:
-            raise serializers.ValidationError(
-                "El usuario debe estar autenticado para crear una meta."
-            )
+            msg = "El usuario debe estar autenticado para crear una meta."
+            raise serializers.ValidationError(msg)
         return data
 
     def create(self, validated_data):
@@ -99,7 +98,6 @@ class GoalUpdateSerializer(serializers.ModelSerializer):
 
     def validate_target_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError(
-                "El monto objetivo debe ser un valor positivo mayor que cero."
-            )
+            msg = "El monto objetivo debe ser un valor positivo mayor que cero."
+            raise serializers.ValidationError(msg)
         return value

@@ -5,6 +5,7 @@ Script para probar que la exportación funciona sin WinError 32
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -12,8 +13,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
-from export.services import MonitorDataExporter
 from export.models import ExportJob
+from export.services import MonitorDataExporter
 from users.models import User
 
 
@@ -91,7 +92,7 @@ def test_export_fix():
             print("\n❌ Algunas exportaciones fallaron")
 
     except Exception as e:
-        print(f"❌ Error durante la prueba: {str(e)}")
+        print(f"❌ Error durante la prueba: {e!s}")
         import traceback
 
         traceback.print_exc()

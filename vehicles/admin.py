@@ -3,7 +3,8 @@ Admin para gestión de vehículos y SOAT
 """
 
 from django.contrib import admin
-from vehicles.models import Vehicle, SOAT, SOATAlert
+
+from vehicles.models import SOAT, SOATAlert, Vehicle
 
 
 @admin.register(Vehicle)

@@ -1,26 +1,27 @@
-from rest_framework import status, permissions
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout, update_session_auth_hash
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import permissions, status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
 from .models import User
+from .permissions import IsAdminUser, IsVerifiedUser
 from .serializers import (
-    UserRegistrationSerializer,
-    UserLoginSerializer,
-    UserProfileSerializer,
-    UserProfileCompleteSerializer,
     AdminUserListSerializer,
     AdminUserVerificationSerializer,
     ChangePasswordSerializer,
     DeleteOwnAccountSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    UserLoginSerializer,
+    UserProfileCompleteSerializer,
+    UserProfileSerializer,
+    UserRegistrationSerializer,
 )
-from .permissions import IsAdminUser, IsVerifiedUser
-from django.utils import timezone
-
-from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 def _html_message(text: str, ok: bool) -> str:
@@ -86,7 +87,7 @@ def login_view(request):
         user = serializer.validated_data["user"]
 
         # Crear o obtener token
-        token, created = Token.objects.get_or_create(user=user)
+        token, _created = Token.objects.get_or_create(user=user)
 
         # Login del usuario
         login(request, user)
@@ -118,7 +119,7 @@ def logout_view(request):
         return Response({"message": "Logout exitoso"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
-            {"error": f"Error durante el logout: {str(e)}"},
+            {"error": f"Error durante el logout: {e!s}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -376,7 +377,7 @@ def admin_edit_user_view(request, user_id):
         target_user.save()
     except Exception as e:
         return Response(
-            {"error": f"Error al actualizar usuario: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": f"Error al actualizar usuario: {e!s}"}, status=status.HTTP_400_BAD_REQUEST
         )
 
     # Mensaje de respuesta descriptivo
@@ -479,10 +480,7 @@ def admin_users_search_view(request):
 
     # Ordenamiento
     order_by = request.query_params.get("order_by", "date_joined")
-    if order_by.startswith("-"):
-        order_field = order_by[1:]
-    else:
-        order_field = order_by
+    order_field = order_by.removeprefix("-")
 
     valid_order_fields = ["username", "email", "role", "is_verified", "date_joined"]
     if order_field in valid_order_fields:
@@ -561,19 +559,18 @@ def dashboard_view(request):
             }
         )
 
-    else:
-        # Dashboard para usuarios regulares
-        return Response(
-            {
-                "user": UserProfileCompleteSerializer(user).data,
-                "dashboard_type": "user",
-                "stats": {
-                    "account_status": "verified" if user.is_verified else "pending",
-                    "verification_date": user.verification_date,
-                },
-                "message": f"Bienvenido, {user.get_full_name()}",
-            }
-        )
+    # Dashboard para usuarios regulares
+    return Response(
+        {
+            "user": UserProfileCompleteSerializer(user).data,
+            "dashboard_type": "user",
+            "stats": {
+                "account_status": "verified" if user.is_verified else "pending",
+                "verification_date": user.verification_date,
+            },
+            "message": f"Bienvenido, {user.get_full_name()}",
+        }
+    )
 
 
 @api_view(["DELETE"])
@@ -635,7 +632,7 @@ def delete_own_account_view(request):
 
     except Exception as e:
         return Response(
-            {"error": f"Error interno al eliminar la cuenta: {str(e)}"},
+            {"error": f"Error interno al eliminar la cuenta: {e!s}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -675,8 +672,9 @@ def password_reset_confirm_view(request):
             return Response({"error": "Token no proporcionado"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Verificar que el token existe y es válido
-        from users.models import PasswordReset
         import hashlib
+
+        from users.models import PasswordReset
 
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         try:

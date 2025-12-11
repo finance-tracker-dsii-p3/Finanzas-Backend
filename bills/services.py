@@ -2,13 +2,16 @@
 Servicios de negocio para gestión de facturas
 """
 
+import contextlib
+
 from django.db import transaction as db_transaction
 from django.utils import timezone
-from bills.models import Bill, BillReminder
+
 from accounts.models import Account
+from bills.models import Bill, BillReminder
 from categories.models import Category
-from transactions.models import Transaction
 from notifications.engine import NotificationEngine
+from transactions.models import Transaction
 
 
 class BillService:
@@ -35,13 +38,15 @@ class BillService:
 
         # Validar que la factura no esté pagada
         if bill.is_paid:
-            raise ValueError("Esta factura ya está pagada")
+            msg = "Esta factura ya está pagada"
+            raise ValueError(msg)
 
         # Obtener la cuenta
         try:
             account = Account.objects.get(id=account_id, user=user)
         except Account.DoesNotExist:
-            raise ValueError("La cuenta no existe o no te pertenece")
+            msg = "La cuenta no existe o no te pertenece"
+            raise ValueError(msg)
 
         # Obtener o crear la categoría (usar la de la factura o crear genérica)
         if bill.category:
@@ -118,12 +123,10 @@ class BillService:
                     created_reminders.append(reminder)
 
                     # Crear notificación (HU-18)
-                    try:
+                    with contextlib.suppress(Exception):
                         NotificationEngine.create_bill_reminder(
                             user=bill.user, bill=bill, reminder_type="upcoming", days=days_until_due
                         )
-                    except Exception:
-                        pass
 
             # Recordatorio: Vence hoy
             elif days_until_due == 0:
@@ -137,12 +140,10 @@ class BillService:
                     created_reminders.append(reminder)
 
                     # Crear notificación (HU-18)
-                    try:
+                    with contextlib.suppress(Exception):
                         NotificationEngine.create_bill_reminder(
                             user=bill.user, bill=bill, reminder_type="due_today"
                         )
-                    except Exception:
-                        pass
 
             # Recordatorio: Atrasada
             elif days_until_due < 0 and bill.status != Bill.PAID:
@@ -157,12 +158,10 @@ class BillService:
                     created_reminders.append(reminder)
 
                     # Crear notificación (HU-18)
-                    try:
+                    with contextlib.suppress(Exception):
                         NotificationEngine.create_bill_reminder(
                             user=bill.user, bill=bill, reminder_type="overdue", days=days_overdue
                         )
-                    except Exception:
-                        pass
 
                     # Actualizar estado a overdue si no lo está
                     if bill.status != Bill.OVERDUE:

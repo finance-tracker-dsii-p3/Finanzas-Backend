@@ -4,6 +4,7 @@ Script para mostrar todas las URLs disponibles en el proyecto
 """
 
 import os
+
 import django
 from django.urls import get_resolver
 

@@ -32,7 +32,7 @@ Headers: { Authorization: "Bearer <token>" }
 ### 2. Crear Meta
 ```javascript
 POST /api/goals/
-Headers: { 
+Headers: {
   Authorization: "Bearer <token>",
   "Content-Type": "application/json"
 }
@@ -47,7 +47,7 @@ Body: {
 ### 3. Asignar Ahorro a Meta
 ```javascript
 POST /api/transactions/
-Headers: { 
+Headers: {
   Authorization: "Bearer <token>",
   "Content-Type": "application/json"
 }
@@ -121,7 +121,7 @@ const GoalsList = () => {
   return (
     <div className="goals-container">
       <h2>Mis Metas de Ahorro</h2>
-      
+
       {goals.length === 0 ? (
         <p>No tienes metas creadas. ¡Crea una nueva!</p>
       ) : (
@@ -129,15 +129,15 @@ const GoalsList = () => {
           <div key={goal.id} className="goal-card">
             <h3>{goal.name}</h3>
             {goal.description && <p>{goal.description}</p>}
-            
+
             {/* Barra de progreso */}
             <div className="progress-bar">
-              <div 
+              <div
                 className="progress-fill"
                 style={{ width: `${goal.progress_percentage}%` }}
               />
             </div>
-            
+
             {/* Información */}
             <div className="progress-info">
               <span>
@@ -147,7 +147,7 @@ const GoalsList = () => {
                 → {goal.progress_percentage.toFixed(1)}%
               </span>
             </div>
-            
+
             {/* Estado */}
             {goal.is_completed ? (
               <p className="success">¡Meta alcanzada! 🎉</p>
@@ -156,11 +156,11 @@ const GoalsList = () => {
                 Faltan {formatMoney(goal.remaining_amount)}
               </p>
             )}
-            
+
             <p className="date">
               Fecha objetivo: {new Date(goal.date).toLocaleDateString('es-CO')}
             </p>
-            
+
             <div className="actions">
               <button onClick={() => editGoal(goal.id)}>Editar</button>
               <button onClick={() => deleteGoal(goal.id)}>Eliminar</button>
@@ -168,7 +168,7 @@ const GoalsList = () => {
           </div>
         ))
       )}
-      
+
       <button onClick={() => showCreateForm()}>+ Crear Nueva Meta</button>
     </div>
   );
@@ -191,7 +191,7 @@ const CreateGoalForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Convertir pesos a centavos
     const payload = {
       name: formData.name,
@@ -199,7 +199,7 @@ const CreateGoalForm = ({ onSuccess }) => {
       date: formData.date,
       description: formData.description || undefined
     };
-    
+
     try {
       const response = await fetch('/api/goals/', {
         method: 'POST',
@@ -209,7 +209,7 @@ const CreateGoalForm = ({ onSuccess }) => {
         },
         body: JSON.stringify(payload)
       });
-      
+
       if (response.ok) {
         alert('Meta creada exitosamente');
         onSuccess(); // Recargar lista
@@ -227,7 +227,7 @@ const CreateGoalForm = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="goal-form">
       <h3>Crear Nueva Meta</h3>
-      
+
       <div>
         <label>Nombre de la meta *</label>
         <input
@@ -239,7 +239,7 @@ const CreateGoalForm = ({ onSuccess }) => {
           placeholder="Ej: Viaje a San Andres"
         />
       </div>
-      
+
       <div>
         <label>Monto objetivo (en pesos) *</label>
         <input
@@ -253,7 +253,7 @@ const CreateGoalForm = ({ onSuccess }) => {
         />
         <small>El sistema convertirá automáticamente a centavos</small>
       </div>
-      
+
       <div>
         <label>Fecha objetivo *</label>
         <input
@@ -263,7 +263,7 @@ const CreateGoalForm = ({ onSuccess }) => {
           required
         />
       </div>
-      
+
       <div>
         <label>Descripción (opcional)</label>
         <textarea
@@ -273,7 +273,7 @@ const CreateGoalForm = ({ onSuccess }) => {
           placeholder="Describe tu meta..."
         />
       </div>
-      
+
       <button type="submit">Crear Meta</button>
       <button type="button" onClick={() => onSuccess()}>Cancelar</button>
     </form>
@@ -305,7 +305,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const payload = {
       type: 4, // ⚠️ OBLIGATORIO: 4 = Saving
       origin_account: parseInt(formData.origin_account),
@@ -314,7 +314,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
       goal: goalId, // ⚠️ ID de la meta
       description: formData.description || undefined
     };
-    
+
     try {
       const response = await fetch('/api/transactions/', {
         method: 'POST',
@@ -324,7 +324,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
         },
         body: JSON.stringify(payload)
       });
-      
+
       if (response.ok) {
         alert('Ahorro registrado y asignado a la meta exitosamente');
         // El backend automáticamente:
@@ -343,7 +343,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
   return (
     <form onSubmit={handleSubmit}>
       <h3>Registrar Ahorro para Meta</h3>
-      
+
       <div>
         <label>Cuenta *</label>
         <select
@@ -357,7 +357,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
           ))}
         </select>
       </div>
-      
+
       <div>
         <label>Monto a ahorrar (en pesos) *</label>
         <input
@@ -370,7 +370,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
           placeholder="200000"
         />
       </div>
-      
+
       <div>
         <label>Fecha *</label>
         <input
@@ -380,7 +380,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
           required
         />
       </div>
-      
+
       <div>
         <label>Descripción (opcional)</label>
         <textarea
@@ -389,7 +389,7 @@ const CreateSavingTransaction = ({ goalId, onSuccess }) => {
           rows={2}
         />
       </div>
-      
+
       <button type="submit">Registrar Ahorro</button>
     </form>
   );
@@ -423,7 +423,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // 1. Crear el ingreso
     const incomePayload = {
       type: 1, // Income
@@ -432,7 +432,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
       date: formData.date,
       category: parseInt(formData.category)
     };
-    
+
     try {
       const incomeResponse = await fetch('/api/transactions/', {
         method: 'POST',
@@ -442,11 +442,11 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
         },
         body: JSON.stringify(incomePayload)
       });
-      
+
       if (!incomeResponse.ok) {
         throw new Error('Error al crear ingreso');
       }
-      
+
       // 2. Si el usuario quiere asignar parte a una meta, crear transacción Saving
       if (formData.assign_to_goal && formData.goal_id && formData.saving_amount) {
         const savingPayload = {
@@ -457,7 +457,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
           goal: parseInt(formData.goal_id),
           description: `Ahorro asignado desde ingreso`
         };
-        
+
         const savingResponse = await fetch('/api/transactions/', {
           method: 'POST',
           headers: {
@@ -466,12 +466,12 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
           },
           body: JSON.stringify(savingPayload)
         });
-        
+
         if (!savingResponse.ok) {
           throw new Error('Error al asignar ahorro a meta');
         }
       }
-      
+
       alert('Transacción registrada exitosamente');
       onSuccess();
     } catch (error) {
@@ -482,7 +482,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit}>
       <h3>Registrar Ingreso</h3>
-      
+
       {/* Campos normales del ingreso */}
       <div>
         <label>Cuenta *</label>
@@ -494,7 +494,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
           {/* Opciones de cuentas */}
         </select>
       </div>
-      
+
       <div>
         <label>Monto (en pesos) *</label>
         <input
@@ -504,7 +504,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
           required
         />
       </div>
-      
+
       {/* Selector de meta */}
       <div>
         <label>
@@ -516,7 +516,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
           Asignar parte a una meta
         </label>
       </div>
-      
+
       {formData.assign_to_goal && (
         <>
           <div>
@@ -533,7 +533,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
               ))}
             </select>
           </div>
-          
+
           <div>
             <label>Monto a asignar a la meta (en pesos)</label>
             <input
@@ -547,7 +547,7 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
           </div>
         </>
       )}
-      
+
       <button type="submit">Registrar</button>
     </form>
   );
@@ -682,4 +682,3 @@ const CreateIncomeWithGoal = ({ onSuccess }) => {
 ## 📚 Documentación Completa
 
 Para más detalles, ver: `docs/HU11_METAS_AHORRO_FRONTEND.md`
-

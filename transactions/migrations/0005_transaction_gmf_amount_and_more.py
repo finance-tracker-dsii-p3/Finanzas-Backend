@@ -6,18 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transactions', '0004_transaction_note_alter_transaction_tag'),
+        ("transactions", "0004_transaction_note_alter_transaction_tag"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='gmf_amount',
-            field=models.IntegerField(blank=True, default=0, help_text='Monto del GMF (4x1000) calculado automáticamente si la cuenta no está exenta', null=True, verbose_name='Monto GMF'),
+            model_name="transaction",
+            name="gmf_amount",
+            field=models.IntegerField(
+                blank=True,
+                default=0,
+                help_text="Monto del GMF (4x1000) calculado automáticamente si la cuenta no está exenta",
+                null=True,
+                verbose_name="Monto GMF",
+            ),
         ),
         migrations.AlterField(
-            model_name='transaction',
-            name='total_amount',
-            field=models.IntegerField(help_text='Monto total de la transacción (incluyendo impuestos y GMF)', verbose_name='Monto total'),
+            model_name="transaction",
+            name="total_amount",
+            field=models.IntegerField(
+                help_text="Monto total de la transacción (incluyendo impuestos y GMF)",
+                verbose_name="Monto total",
+            ),
         ),
     ]

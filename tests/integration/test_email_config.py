@@ -5,14 +5,15 @@ Script para probar la configuración de email
 
 import os
 import sys
+
 import django
 
 # Configurar Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
 
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 
 
 def test_email_config():

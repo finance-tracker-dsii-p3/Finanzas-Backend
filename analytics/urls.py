@@ -3,6 +3,7 @@ URLs para Analytics Financieros (HU-13)
 """
 
 from django.urls import path
+
 from . import views
 
 urlpatterns = [

@@ -3,8 +3,9 @@
 Script para probar endpoints de notificaciones con autenticación
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_notifications_with_auth():
@@ -97,7 +98,7 @@ def test_notifications_with_auth():
         except requests.exceptions.ConnectionError:
             print(f"❌ ERROR: No se puede conectar")
         except Exception as e:
-            print(f"❌ ERROR: {str(e)}")
+            print(f"❌ ERROR: {e!s}")
 
     print("\n" + "=" * 60)
     print("RESUMEN:")

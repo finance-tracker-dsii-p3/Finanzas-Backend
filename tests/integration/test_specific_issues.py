@@ -3,8 +3,9 @@
 Script para probar los problemas específicos identificados
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_specific_issues():

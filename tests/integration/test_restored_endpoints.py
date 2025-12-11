@@ -3,8 +3,9 @@
 Script para probar todos los endpoints restaurados
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_restored_endpoints():

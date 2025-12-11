@@ -4,6 +4,7 @@ Script para probar específicamente el serializer de analytics
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -11,11 +12,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
 
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+
 from django.contrib.auth import get_user_model
+
+from analytics.serializers import AnalyticsDashboardSerializer, ExpensesCategoryChartSerializer
 from analytics.services import FinancialAnalyticsService
-from analytics.serializers import ExpensesCategoryChartSerializer, AnalyticsDashboardSerializer
 
 User = get_user_model()
 

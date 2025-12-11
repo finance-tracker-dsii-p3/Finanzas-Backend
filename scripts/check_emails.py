@@ -5,6 +5,7 @@ Script para ver qué emails existen en la base de datos
 
 import os
 import sys
+
 import django
 
 # Configurar Django

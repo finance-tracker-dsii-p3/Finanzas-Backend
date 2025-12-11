@@ -3,10 +3,11 @@ Servicio centralizado para gestión de notificaciones
 Motor de notificaciones que respeta preferencias del usuario, timezone y evita duplicados
 """
 
-from django.utils import timezone
 from datetime import datetime, timedelta
 
-from notifications.models import Notification, CustomReminder
+from django.utils import timezone
+
+from notifications.models import CustomReminder, Notification
 from users.models import UserNotificationPreferences
 
 

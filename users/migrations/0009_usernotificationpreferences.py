@@ -8,29 +8,95 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0008_remove_approval_link'),
+        ("users", "0008_remove_approval_link"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserNotificationPreferences',
+            name="UserNotificationPreferences",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('timezone', models.CharField(default='America/Bogota', help_text='Zona horaria del usuario para programar recordatorios', max_length=50, verbose_name='Zona horaria')),
-                ('language', models.CharField(choices=[('es', 'Español'), ('en', 'English')], default='es', help_text='Idioma preferido para las notificaciones', max_length=2, verbose_name='Idioma')),
-                ('enable_budget_alerts', models.BooleanField(default=True, help_text='Recibir alertas cuando se alcance el 80% o 100% del presupuesto', verbose_name='Alertas de presupuesto')),
-                ('enable_bill_reminders', models.BooleanField(default=True, help_text='Recibir recordatorios de vencimiento de facturas', verbose_name='Recordatorios de facturas')),
-                ('enable_soat_reminders', models.BooleanField(default=True, help_text='Recibir recordatorios de vencimiento de SOAT', verbose_name='Recordatorios de SOAT')),
-                ('enable_month_end_reminders', models.BooleanField(default=True, help_text='Recibir recordatorio de importar extractos antes del cierre del mes', verbose_name='Recordatorios de fin de mes')),
-                ('enable_custom_reminders', models.BooleanField(default=True, help_text='Recibir recordatorios personalizados creados por el usuario', verbose_name='Recordatorios personalizados')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.OneToOneField(help_text='Usuario propietario de las preferencias', on_delete=django.db.models.deletion.CASCADE, related_name='notification_preferences', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "timezone",
+                    models.CharField(
+                        default="America/Bogota",
+                        help_text="Zona horaria del usuario para programar recordatorios",
+                        max_length=50,
+                        verbose_name="Zona horaria",
+                    ),
+                ),
+                (
+                    "language",
+                    models.CharField(
+                        choices=[("es", "Español"), ("en", "English")],
+                        default="es",
+                        help_text="Idioma preferido para las notificaciones",
+                        max_length=2,
+                        verbose_name="Idioma",
+                    ),
+                ),
+                (
+                    "enable_budget_alerts",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Recibir alertas cuando se alcance el 80% o 100% del presupuesto",
+                        verbose_name="Alertas de presupuesto",
+                    ),
+                ),
+                (
+                    "enable_bill_reminders",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Recibir recordatorios de vencimiento de facturas",
+                        verbose_name="Recordatorios de facturas",
+                    ),
+                ),
+                (
+                    "enable_soat_reminders",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Recibir recordatorios de vencimiento de SOAT",
+                        verbose_name="Recordatorios de SOAT",
+                    ),
+                ),
+                (
+                    "enable_month_end_reminders",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Recibir recordatorio de importar extractos antes del cierre del mes",
+                        verbose_name="Recordatorios de fin de mes",
+                    ),
+                ),
+                (
+                    "enable_custom_reminders",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Recibir recordatorios personalizados creados por el usuario",
+                        verbose_name="Recordatorios personalizados",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        help_text="Usuario propietario de las preferencias",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notification_preferences",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Preferencia de notificaciones',
-                'verbose_name_plural': 'Preferencias de notificaciones',
-                'db_table': 'users_notification_preferences',
+                "verbose_name": "Preferencia de notificaciones",
+                "verbose_name_plural": "Preferencias de notificaciones",
+                "db_table": "users_notification_preferences",
             },
         ),
     ]

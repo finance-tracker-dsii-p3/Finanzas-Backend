@@ -3,8 +3,9 @@
 Script simple para probar solo el registro de entrada
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_simple_entry():

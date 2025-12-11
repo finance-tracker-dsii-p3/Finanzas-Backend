@@ -1,7 +1,8 @@
-from django.db import models
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from decimal import Decimal
+from django.db import models
 
 User = get_user_model()
 

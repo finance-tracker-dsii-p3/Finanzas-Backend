@@ -2,17 +2,18 @@
 Tests para gestión de facturas personales
 """
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from rest_framework.test import APIClient
-from rest_framework import status
 from datetime import timedelta
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from accounts.models import Account
 from bills.models import Bill, BillReminder
 from bills.services import BillService
-from accounts.models import Account
 from categories.models import Category
 
 User = get_user_model()
@@ -45,8 +46,8 @@ class BillModelTest(TestCase):
             due_date=today + timedelta(days=10),
             category=self.category,
         )
-        self.assertEqual(bill.status, Bill.PENDING)
-        self.assertFalse(bill.is_paid)
+        assert bill.status == Bill.PENDING
+        assert not bill.is_paid
 
     def test_days_until_due(self):
         """Calcular días hasta vencimiento"""
@@ -57,7 +58,7 @@ class BillModelTest(TestCase):
             amount=Decimal("95000.00"),
             due_date=today + timedelta(days=5),
         )
-        self.assertEqual(bill.days_until_due, 5)
+        assert bill.days_until_due == 5
 
     def test_is_overdue(self):
         """Verificar factura vencida"""
@@ -68,7 +69,7 @@ class BillModelTest(TestCase):
             amount=Decimal("120000.00"),
             due_date=today - timedelta(days=5),
         )
-        self.assertTrue(bill.is_overdue)
+        assert bill.is_overdue
 
     def test_is_near_due(self):
         """Verificar factura próxima a vencer"""
@@ -80,7 +81,7 @@ class BillModelTest(TestCase):
             due_date=today + timedelta(days=2),
             reminder_days_before=3,
         )
-        self.assertTrue(bill.is_near_due)
+        assert bill.is_near_due
 
     def test_update_status(self):
         """Actualizar estado automático"""
@@ -92,7 +93,7 @@ class BillModelTest(TestCase):
             due_date=today - timedelta(days=1),
         )
         bill.update_status()
-        self.assertEqual(bill.status, Bill.OVERDUE)
+        assert bill.status == Bill.OVERDUE
 
 
 class BillServiceTest(TestCase):
@@ -138,10 +139,10 @@ class BillServiceTest(TestCase):
             notes="Pago mensual",
         )
 
-        self.assertIsNotNone(transaction)
+        assert transaction is not None
         self.bill.refresh_from_db()
-        self.assertTrue(self.bill.is_paid)
-        self.assertEqual(self.bill.status, Bill.PAID)
+        assert self.bill.is_paid
+        assert self.bill.status == Bill.PAID
 
 
 class BillAPITest(TestCase):
@@ -183,8 +184,8 @@ class BillAPITest(TestCase):
             "suggested_account": self.account.id,
         }
         response = self.client.post("/api/bills/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["provider"], "Netflix")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["provider"] == "Netflix"
 
     def test_list_bills(self):
         """GET /api/bills/"""
@@ -203,11 +204,11 @@ class BillAPITest(TestCase):
         )
 
         response = self.client.get("/api/bills/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert response.status_code == status.HTTP_200_OK
         if "results" in response.data:
-            self.assertEqual(len(response.data["results"]), 2)
+            assert len(response.data["results"]) == 2
         else:
-            self.assertEqual(len(response.data), 2)
+            assert len(response.data) == 2
 
     def test_register_payment(self):
         """POST /api/bills/{id}/register_payment/"""
@@ -226,8 +227,8 @@ class BillAPITest(TestCase):
             "notes": "Test payment",
         }
         response = self.client.post(f"/api/bills/{bill.id}/register_payment/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("transaction_id", response.data)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert "transaction_id" in response.data
 
     def test_pending_bills(self):
         """GET /api/bills/pending/"""
@@ -241,8 +242,8 @@ class BillAPITest(TestCase):
         )
 
         response = self.client.get("/api/bills/pending/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 1)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) >= 1
 
     def test_overdue_bills(self):
         """GET /api/bills/overdue/"""
@@ -257,8 +258,8 @@ class BillAPITest(TestCase):
         bill.save()
 
         response = self.client.get("/api/bills/overdue/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 1)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) >= 1
 
 
 class BillReminderTest(TestCase):
@@ -290,8 +291,8 @@ class BillReminderTest(TestCase):
             reminder_type=BillReminder.UPCOMING,
             message="Test reminder",
         )
-        self.assertIsNotNone(reminder.id)
-        self.assertFalse(reminder.is_read)
+        assert reminder.id is not None
+        assert not reminder.is_read
 
     def test_can_create_reminder(self):
         """Validar prevención de duplicados"""
@@ -305,7 +306,7 @@ class BillReminderTest(TestCase):
 
         # Intentar crear duplicado
         can_create = BillReminder.can_create_reminder(self.bill, BillReminder.UPCOMING)
-        self.assertFalse(can_create)
+        assert not can_create
 
     def test_mark_reminder_read(self):
         """POST /api/bill-reminders/{id}/mark_read/"""
@@ -317,5 +318,5 @@ class BillReminderTest(TestCase):
         )
 
         response = self.client.post(f"/api/bill-reminders/{reminder.id}/mark_read/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data["is_read"])
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["is_read"]

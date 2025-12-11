@@ -1,7 +1,9 @@
-from django.db import models
-from django.contrib.auth import get_user_model
-from accounts.models import Account
 from decimal import Decimal
+
+from django.contrib.auth import get_user_model
+from django.db import models
+
+from accounts.models import Account
 
 
 class Transaction(models.Model):
@@ -290,7 +292,7 @@ class Transaction(models.Model):
             import logging
 
             logger = logging.getLogger(__name__)
-            logger.warning(f"Error aplicando reglas automáticas a transacción {self.id}: {str(e)}")
+            logger.warning(f"Error aplicando reglas automáticas a transacción {self.id}: {e!s}")
 
     def __str__(self):
         return f"Transacción {self.id} - {self.get_type_display()} - {self.total_amount}"

@@ -1,7 +1,10 @@
-from rest_framework import serializers
+import contextlib
+
 from django.contrib.auth import get_user_model
-from .models import Notification, CustomReminder
 from django.utils import timezone as dj_timezone
+from rest_framework import serializers
+
+from .models import CustomReminder, Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -13,6 +16,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     recipient_name = serializers.CharField(source="user.get_full_name", read_only=True)
     recipient_username = serializers.CharField(source="user.username", read_only=True)
     is_read = serializers.BooleanField(source="read", read_only=True)
+    is_dismissed = serializers.BooleanField(read_only=True)
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     user_name = serializers.CharField(source="user.get_full_name", read_only=True)
     notification_type_display = serializers.CharField(
@@ -38,18 +42,29 @@ class NotificationSerializer(serializers.ModelSerializer):
             "read",
             "is_read",
             "read_timestamp",
+            "is_dismissed",
+            "dismissed_at",
             "related_object_id",
             "related_object_type",
             "scheduled_for",
             "sent_at",
             "created_at",
+            "updated_at",
             "recipient_name",
             "recipient_username",
             "user_id",
             "user_name",
             "user",
         ]
-        read_only_fields = ["created_at", "updated_at", "sent_at", "read_timestamp"]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
+            "sent_at",
+            "read_timestamp",
+            "is_dismissed",
+            "dismissed_at",
+            "notification_type_display",
+        ]
 
     def create(self, validated_data):
         """Crear notificación asignando usuario apropiado"""
@@ -135,6 +150,7 @@ class CustomReminderSerializer(serializers.ModelSerializer):
         """Validar que la fecha/hora del recordatorio sea futura"""
         if "reminder_date" in data and "reminder_time" in data:
             from datetime import datetime
+
             import pytz
 
             reminder_datetime = datetime.combine(data["reminder_date"], data["reminder_time"])
@@ -144,18 +160,15 @@ class CustomReminderSerializer(serializers.ModelSerializer):
             user_tz = pytz.timezone("America/Bogota")  # Default timezone
 
             if request and hasattr(request.user, "notification_preferences"):
-                try:
+                with contextlib.suppress(Exception):
                     user_tz = request.user.notification_preferences.timezone_object
-                except Exception:
-                    pass
 
             # Siempre hacer el datetime timezone-aware
             reminder_datetime = dj_timezone.make_aware(reminder_datetime, user_tz)
 
             if reminder_datetime < dj_timezone.now():
-                raise serializers.ValidationError(
-                    "La fecha y hora del recordatorio debe ser futura"
-                )
+                msg = "La fecha y hora del recordatorio debe ser futura"
+                raise serializers.ValidationError(msg)
 
         return data
 

@@ -25,13 +25,13 @@
 # goals/models.py
 class Goal(models.Model):
     # ... campos existentes ...
-    
+
     CURRENCY_CHOICES = [
         ('COP', 'Pesos Colombianos'),
         ('USD', 'Dólares'),
         ('EUR', 'Euros'),
     ]
-    
+
     currency = models.CharField(
         max_length=3,
         choices=CURRENCY_CHOICES,
@@ -60,36 +60,36 @@ class CurrencyConverter:
     Servicio para conversión de monedas.
     Puede usar API externa (ej: exchangerate-api.com) o tasas fijas.
     """
-    
+
     # Tasas de ejemplo (deberían venir de API o BD)
     EXCHANGE_RATES = {
         'COP': {'USD': 0.00025, 'EUR': 0.00023},  # 1 COP = 0.00025 USD
         'USD': {'COP': 4000, 'EUR': 0.92},        # 1 USD = 4000 COP
         'EUR': {'COP': 4350, 'USD': 1.09},        # 1 EUR = 4350 COP
     }
-    
+
     @staticmethod
     def convert(amount, from_currency, to_currency):
         """
         Convertir monto de una moneda a otra
-        
+
         Args:
             amount: Monto en centavos (entero)
             from_currency: Moneda origen (COP, USD, EUR)
             to_currency: Moneda destino (COP, USD, EUR)
-        
+
         Returns:
             int: Monto convertido en centavos
         """
         if from_currency == to_currency:
             return amount
-        
+
         rate = CurrencyConverter.EXCHANGE_RATES[from_currency][to_currency]
         # Convertir centavos a decimal, aplicar tasa, volver a centavos
         amount_decimal = Decimal(str(amount)) / Decimal('100')
         converted = amount_decimal * Decimal(str(rate))
         return int(converted * 100)
-    
+
     @staticmethod
     def get_exchange_rate(from_currency, to_currency):
         """Obtener tasa de cambio actual"""
@@ -104,7 +104,7 @@ class CurrencyConverter:
 # transactions/models.py
 class Transaction(models.Model):
     # ... campos existentes ...
-    
+
     # Campos para conversión de moneda
     transaction_currency = models.CharField(
         max_length=3,
@@ -114,7 +114,7 @@ class Transaction(models.Model):
         verbose_name='Moneda de la transacción',
         help_text='Moneda en que se realizó la transacción (si difiere de la cuenta)'
     )
-    
+
     exchange_rate = models.DecimalField(
         max_digits=10,
         decimal_places=6,
@@ -123,7 +123,7 @@ class Transaction(models.Model):
         verbose_name='Tasa de cambio',
         help_text='Tasa de cambio aplicada si hubo conversión'
     )
-    
+
     original_amount = models.IntegerField(
         null=True,
         blank=True,
@@ -159,7 +159,7 @@ const TransactionForm = ({ account, goal }) => {
   const [showCurrencyWarning, setShowCurrencyWarning] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(account.currency);
   const [exchangeRate, setExchangeRate] = useState(null);
-  
+
   useEffect(() => {
     // Verificar si hay diferencia de monedas
     if (goal && goal.currency !== account.currency) {
@@ -168,17 +168,17 @@ const TransactionForm = ({ account, goal }) => {
       fetchExchangeRate(account.currency, goal.currency);
     }
   }, [account, goal]);
-  
+
   const fetchExchangeRate = async (from, to) => {
     const response = await fetch(`/api/currency/exchange-rate/?from=${from}&to=${to}`);
     const data = await response.json();
     setExchangeRate(data.rate);
   };
-  
+
   return (
     <form>
       {/* Campos del formulario */}
-      
+
       {showCurrencyWarning && (
         <div className="alert alert-warning">
           <strong>⚠️ Advertencia de Moneda</strong>
@@ -212,10 +212,10 @@ const CreateTransactionForm = ({ account }) => {
   const [transactionCurrency, setTransactionCurrency] = useState(account.currency);
   const [amount, setAmount] = useState('');
   const [convertedAmount, setConvertedAmount] = useState(null);
-  
+
   const handleCurrencyChange = async (newCurrency) => {
     setTransactionCurrency(newCurrency);
-    
+
     if (newCurrency !== account.currency && amount) {
       // Obtener conversión del backend
       const response = await fetch(
@@ -227,7 +227,7 @@ const CreateTransactionForm = ({ account }) => {
       setConvertedAmount(null);
     }
   };
-  
+
   return (
     <form>
       <div>
@@ -240,23 +240,23 @@ const CreateTransactionForm = ({ account }) => {
           <option value="USD">Dólares (USD)</option>
           <option value="EUR">Euros (EUR)</option>
         </select>
-        
+
         {transactionCurrency !== account.currency && (
           <div className="info">
             <p>
-              La cuenta está en {account.currency_display}. 
+              La cuenta está en {account.currency_display}.
               El monto se convertirá automáticamente.
             </p>
             {convertedAmount && (
               <p>
-                {formatMoney(amount, transactionCurrency)} = 
+                {formatMoney(amount, transactionCurrency)} =
                 {formatMoney(convertedAmount, account.currency)}
               </p>
             )}
           </div>
         )}
       </div>
-      
+
       <div>
         <label>Monto (en {transactionCurrency})</label>
         <input
@@ -275,7 +275,7 @@ const CreateTransactionForm = ({ account }) => {
 ```javascript
 const formatMoney = (centavos, currency) => {
   const amount = centavos / 100;
-  
+
   const formatters = {
     'COP': new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -293,7 +293,7 @@ const formatMoney = (centavos, currency) => {
       minimumFractionDigits: 2
     })
   };
-  
+
   return formatters[currency].format(amount);
 };
 ```
@@ -312,7 +312,7 @@ const formatMoney = (centavos, currency) => {
    ```
    GET /api/currency/exchange-rate/?from=USD&to=COP
    → { rate: 4000 }
-   
+
    Muestra: "100 USD = 400,000 COP"
    ```
 
@@ -428,4 +428,3 @@ Authorization: Bearer <token>
 3. **Permitir tasas manuales** para casos especiales
 4. **Mostrar advertencias claras** en el frontend
 5. **Validar en ambos lados** (frontend para UX, backend para seguridad)
-

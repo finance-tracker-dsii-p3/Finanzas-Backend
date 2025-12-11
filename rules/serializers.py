@@ -3,8 +3,10 @@ Serializers para reglas automáticas (HU-12)
 """
 
 from rest_framework import serializers
-from .models import AutomaticRule
+
 from categories.models import Category
+
+from .models import AutomaticRule
 
 
 class AutomaticRuleListSerializer(serializers.ModelSerializer):
@@ -174,13 +176,10 @@ class AutomaticRuleCreateSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        elif data["action_type"] == AutomaticRule.ASSIGN_TAG:
-            if not data.get("target_tag"):
-                raise serializers.ValidationError(
-                    {
-                        "target_tag": 'La etiqueta objetivo es requerida para acción "asignar etiqueta"'
-                    }
-                )
+        elif data["action_type"] == AutomaticRule.ASSIGN_TAG and not data.get("target_tag"):
+            raise serializers.ValidationError(
+                {"target_tag": 'La etiqueta objetivo es requerida para acción "asignar etiqueta"'}
+            )
 
         return data
 
@@ -193,11 +192,12 @@ class AutomaticRuleCreateSerializer(serializers.ModelSerializer):
                 user_categories = Category.objects.filter(user=request.user)
                 available_ids = list(user_categories.values_list("id", flat=True))
 
-                raise serializers.ValidationError(
+                msg = (
                     f"La categoría con ID {value.id} no te pertenece. "
                     f"IDs de categorías disponibles: {available_ids}. "
                     f"Usa GET /api/categories/ para ver tus categorías."
                 )
+                raise serializers.ValidationError(msg)
         return value
 
     def create(self, validated_data):
@@ -282,11 +282,12 @@ class AutomaticRuleUpdateSerializer(serializers.ModelSerializer):
                 user_categories = Category.objects.filter(user=request.user)
                 available_ids = list(user_categories.values_list("id", flat=True))
 
-                raise serializers.ValidationError(
+                msg = (
                     f"La categoría con ID {value.id} no te pertenece. "
                     f"IDs de categorías disponibles: {available_ids}. "
                     f"Usa GET /api/categories/ para ver tus categorías."
                 )
+                raise serializers.ValidationError(msg)
         return value
 
 

@@ -2,9 +2,10 @@
 URLs para gestión de planes de cuotas de tarjetas de crédito
 """
 
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from credit_cards.views import InstallmentPlanViewSet
-from django.urls import path, include
 
 router = DefaultRouter()
 

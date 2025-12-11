@@ -10,4 +10,3 @@ class AccountsConfig(AppConfig):
         """Configuración cuando la app esté lista"""
         # Importar señales si las hubiera
         # import accounts.signals
-        pass

@@ -2,9 +2,11 @@
 Tests para el modelo Category y sus validaciones
 """
 
-from django.test import TestCase
+import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.test import TestCase
+
 from categories.models import Category
 
 User = get_user_model()
@@ -33,10 +35,10 @@ class CategoryModelTest(TestCase):
             icon="fa-utensils",
         )
 
-        self.assertEqual(category.name, "Comida")
-        self.assertEqual(category.type, Category.EXPENSE)
-        self.assertTrue(category.is_active)
-        self.assertEqual(str(category), "Comida (Gasto)")
+        assert category.name == "Comida"
+        assert category.type == Category.EXPENSE
+        assert category.is_active
+        assert str(category) == "Comida (Gasto)"
 
     def test_category_name_title_case(self):
         """Probar que el nombre se convierte a title case"""
@@ -44,7 +46,7 @@ class CategoryModelTest(TestCase):
             user=self.user, name="comida rápida", type=Category.EXPENSE, color="#DC2626"
         )
 
-        self.assertEqual(category.name, "Comida Rápida")
+        assert category.name == "Comida Rápida"
 
     def test_duplicate_category_validation(self):
         """Probar validación de categorías duplicadas"""
@@ -53,7 +55,7 @@ class CategoryModelTest(TestCase):
         )
 
         # Intentar crear categoría duplicada
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             duplicate = Category(
                 user=self.user,
                 name="comida",  # Mismo nombre, diferente case
@@ -73,8 +75,8 @@ class CategoryModelTest(TestCase):
             user=self.user, name="Regalos", type=Category.EXPENSE, color="#DC2626"
         )
 
-        self.assertEqual(category2.name, "Regalos")
-        self.assertEqual(category2.type, Category.EXPENSE)
+        assert category2.name == "Regalos"
+        assert category2.type == Category.EXPENSE
 
     def test_same_name_different_user_allowed(self):
         """Probar que diferentes usuarios pueden tener categorías con mismo nombre"""
@@ -95,11 +97,11 @@ class CategoryModelTest(TestCase):
             user=user2, name="Comida", type=Category.EXPENSE, color="#059669"
         )
 
-        self.assertEqual(category2.user, user2)
+        assert category2.user == user2
 
     def test_invalid_color_format(self):
         """Probar validación de formato de color"""
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             category = Category(
                 user=self.user,
                 name="Test",
@@ -111,7 +113,7 @@ class CategoryModelTest(TestCase):
     def test_color_contrast_validation(self):
         """Probar validación de contraste de color"""
         # Color muy claro (poco contraste con blanco)
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             category = Category(
                 user=self.user,
                 name="Test",
@@ -127,7 +129,7 @@ class CategoryModelTest(TestCase):
         )
 
         # Sin transacciones ni presupuestos, debe poder eliminarse
-        self.assertTrue(category.can_be_deleted())
+        assert category.can_be_deleted()
 
     def test_get_usage_count(self):
         """Probar método get_usage_count"""
@@ -136,7 +138,7 @@ class CategoryModelTest(TestCase):
         )
 
         # Sin transacciones, debe retornar 0
-        self.assertEqual(category.get_usage_count(), 0)
+        assert category.get_usage_count() == 0
 
     def test_ordering(self):
         """Probar ordenamiento de categorías"""
@@ -155,6 +157,6 @@ class CategoryModelTest(TestCase):
         categories = Category.objects.filter(user=self.user)
 
         # Debe ordenar por order primero, luego por name
-        self.assertEqual(categories[0], cat2)
-        self.assertEqual(categories[1], cat3)
-        self.assertEqual(categories[2], cat1)
+        assert categories[0] == cat2
+        assert categories[1] == cat3
+        assert categories[2] == cat1

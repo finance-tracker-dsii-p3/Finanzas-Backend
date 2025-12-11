@@ -1,11 +1,11 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import User
 from notifications.models import Notification
-from .email_utils import send_email_unified
 
+from .email_utils import send_email_unified
+from .models import User
 
 # Signal deshabilitado - Los usuarios se auto-verifican automáticamente
 # Los nuevos usuarios no requieren aprobación de administrador

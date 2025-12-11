@@ -5,6 +5,7 @@ Script para ver las notificaciones directamente de la base de datos
 
 import os
 import sys
+
 import django
 
 # Configurar Django

@@ -1,14 +1,16 @@
-from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from datetime import datetime, date, timedelta
 import random
-from users.models import User
+from datetime import date, datetime, timedelta
+
+from attendance.models import Attendance, Incapacity
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from equipment.models import Equipment, EquipmentReport
 from rooms.models import Room, RoomEntry
 from schedule.models import Schedule
-from equipment.models import Equipment, EquipmentReport
-from attendance.models import Attendance, Incapacity
+
 from notifications.models import Notification
+from users.models import User
 
 
 class Command(BaseCommand):
@@ -451,7 +453,7 @@ class Command(BaseCommand):
         # Crear 25-35 reportes
         num_reports = random.randint(25, 35)
 
-        for i in range(num_reports):
+        for _i in range(num_reports):
             equipment_item = random.choice(equipment)
             monitor = random.choice(monitors)
             problem = random.choice(problem_types)
@@ -475,12 +477,16 @@ class Command(BaseCommand):
                     "issue_description": f"{problem} en {equipment_item.name}",
                     "issue_type": problem,
                     "resolved": random.choice([True, False]),
-                    "resolved_date": report_time + timedelta(hours=random.randint(1, 48))
-                    if random.choice([True, False])
-                    else None,
-                    "resolution_notes": "Problema reportado y en proceso de resolucion"
-                    if not random.choice([True, False])
-                    else "Problema menor, resuelto rapidamente",
+                    "resolved_date": (
+                        report_time + timedelta(hours=random.randint(1, 48))
+                        if random.choice([True, False])
+                        else None
+                    ),
+                    "resolution_notes": (
+                        "Problema reportado y en proceso de resolucion"
+                        if not random.choice([True, False])
+                        else "Problema menor, resuelto rapidamente"
+                    ),
                 },
             )
             if created:
@@ -514,9 +520,11 @@ class Command(BaseCommand):
                 defaults={
                     "description": f"Listado de asistencia del mes de {attendance_date.strftime('%B %Y')}",
                     "reviewed": random.choice([True, False]),
-                    "reviewed_by": User.objects.filter(role=User.ADMIN).first()
-                    if random.choice([True, False])
-                    else None,
+                    "reviewed_by": (
+                        User.objects.filter(role=User.ADMIN).first()
+                        if random.choice([True, False])
+                        else None
+                    ),
                 },
             )
             if created:
@@ -534,7 +542,7 @@ class Command(BaseCommand):
         # Crear 4-6 incapacidades
         num_incapacities = random.randint(4, 6)
 
-        for i in range(num_incapacities):
+        for _i in range(num_incapacities):
             monitor = random.choice(monitors)
 
             # Fecha de inicio aleatoria en agosto-septiembre
@@ -549,9 +557,11 @@ class Command(BaseCommand):
                     "end_date": end_date,
                     "description": f"Incapacidad medica por {random.choice(['gripe', 'dolor de cabeza', 'fiebre', 'resfriado', 'dolor de espalda'])}",
                     "approved": random.choice([True, False]),
-                    "approved_by": User.objects.filter(role=User.ADMIN).first()
-                    if random.choice([True, False])
-                    else None,
+                    "approved_by": (
+                        User.objects.filter(role=User.ADMIN).first()
+                        if random.choice([True, False])
+                        else None
+                    ),
                 },
             )
             if created:

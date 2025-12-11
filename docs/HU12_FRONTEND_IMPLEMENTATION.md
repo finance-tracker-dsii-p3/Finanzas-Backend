@@ -239,22 +239,22 @@ export const ruleService = {
     search?: string;
   }): Promise<{ count: number; results: Rule[] }> {
     const params = new URLSearchParams();
-    
+
     if (filters?.active_only) params.append('active_only', 'true');
     if (filters?.criteria_type) params.append('criteria_type', filters.criteria_type);
     if (filters?.action_type) params.append('action_type', filters.action_type);
     if (filters?.search) params.append('search', filters.search);
-    
+
     const response = await fetch(`/api/rules/?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${getToken()}`,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al obtener reglas');
     }
-    
+
     return response.json();
   },
 
@@ -267,12 +267,12 @@ export const ruleService = {
       },
       body: JSON.stringify(rule),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Error al crear regla');
     }
-    
+
     return response.json();
   },
 
@@ -285,12 +285,12 @@ export const ruleService = {
       },
       body: JSON.stringify(rule),
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Error al actualizar regla');
     }
-    
+
     return response.json();
   },
 
@@ -301,7 +301,7 @@ export const ruleService = {
         'Authorization': `Bearer ${getToken()}`,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al eliminar regla');
     }
@@ -314,11 +314,11 @@ export const ruleService = {
         'Authorization': `Bearer ${getToken()}`,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al cambiar estado de la regla');
     }
-    
+
     const data = await response.json();
     return data.rule;
   },
@@ -332,11 +332,11 @@ export const ruleService = {
       },
       body: JSON.stringify({ rule_orders: ruleOrders }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al reordenar reglas');
     }
-    
+
     const data = await response.json();
     return data.rules;
   },
@@ -350,11 +350,11 @@ export const ruleService = {
       },
       body: JSON.stringify(preview),
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al previsualizar regla');
     }
-    
+
     return response.json();
   },
 
@@ -364,11 +364,11 @@ export const ruleService = {
         'Authorization': `Bearer ${getToken()}`,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error('Error al obtener estadísticas');
     }
-    
+
     return response.json();
   },
 };
@@ -418,7 +418,7 @@ export const RuleList: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar esta regla?')) return;
-    
+
     try {
       await ruleService.deleteRule(id);
       setRules(rules.filter(r => r.id !== id));
@@ -627,9 +627,9 @@ export const RuleForm: React.FC<RuleFormProps> = ({ ruleId, onSave, onCancel }) 
         <label>Tipo de criterio *</label>
         <select
           value={formData.criteria_type}
-          onChange={(e) => setFormData({ 
-            ...formData, 
-            criteria_type: e.target.value as any 
+          onChange={(e) => setFormData({
+            ...formData,
+            criteria_type: e.target.value as any
           })}
         >
           <option value="description_contains">Descripción contiene texto</option>
@@ -656,9 +656,9 @@ export const RuleForm: React.FC<RuleFormProps> = ({ ruleId, onSave, onCancel }) 
           <label>Tipo de transacción *</label>
           <select
             value={formData.target_transaction_type || ''}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              target_transaction_type: parseInt(e.target.value) 
+            onChange={(e) => setFormData({
+              ...formData,
+              target_transaction_type: parseInt(e.target.value)
             })}
             required
           >
@@ -675,9 +675,9 @@ export const RuleForm: React.FC<RuleFormProps> = ({ ruleId, onSave, onCancel }) 
         <label>Tipo de acción *</label>
         <select
           value={formData.action_type}
-          onChange={(e) => setFormData({ 
-            ...formData, 
-            action_type: e.target.value as any 
+          onChange={(e) => setFormData({
+            ...formData,
+            action_type: e.target.value as any
           })}
         >
           <option value="assign_category">Asignar categoría</option>
@@ -690,9 +690,9 @@ export const RuleForm: React.FC<RuleFormProps> = ({ ruleId, onSave, onCancel }) 
           <label>Categoría objetivo *</label>
           <select
             value={formData.target_category || ''}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              target_category: parseInt(e.target.value) 
+            onChange={(e) => setFormData({
+              ...formData,
+              target_category: parseInt(e.target.value)
             })}
             required
           >
@@ -783,10 +783,10 @@ export const TransactionDetail: React.FC<{ transaction: Transaction }> = ({ tran
   return (
     <div className="transaction-detail">
       <h3>Detalle de Transacción</h3>
-      
+
       <div className="transaction-info">
         <p><strong>Descripción:</strong> {transaction.description}</p>
-        
+
         {transaction.applied_rule_name && (
           <div className="applied-rule">
             <p><strong>Regla aplicada:</strong> {transaction.applied_rule_name}</p>
@@ -802,7 +802,7 @@ export const TransactionDetail: React.FC<{ transaction: Transaction }> = ({ tran
             )}
           </div>
         )}
-        
+
         {!transaction.applied_rule_name && transaction.category_name && (
           <p><strong>Categoría:</strong> {transaction.category_name} (asignada manualmente)</p>
         )}
@@ -821,9 +821,9 @@ import React, { useState } from 'react';
 import { ruleService } from '../services/ruleService';
 import { Rule } from '../types';
 
-export const RuleReorder: React.FC<{ rules: Rule[]; onReorder: () => void }> = ({ 
-  rules, 
-  onReorder 
+export const RuleReorder: React.FC<{ rules: Rule[]; onReorder: () => void }> = ({
+  rules,
+  onReorder
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -837,7 +837,7 @@ export const RuleReorder: React.FC<{ rules: Rule[]; onReorder: () => void }> = (
 
   const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
+
     if (draggedIndex === null) return;
 
     const newRules = [...rules];
@@ -967,9 +967,9 @@ const RulesPage = () => {
   return (
     <div>
       <h1>Reglas Automáticas</h1>
-      
+
       <button onClick={() => setShowForm(true)}>Crear Nueva Regla</button>
-      
+
       {showForm && (
         <RuleForm
           ruleId={editingRule || undefined}
@@ -985,7 +985,7 @@ const RulesPage = () => {
         />
       )}
 
-      <RuleList 
+      <RuleList
         rules={rules}
         onEdit={(id) => {
           setEditingRule(id);
@@ -1013,4 +1013,3 @@ const RulesPage = () => {
 - [ ] Indicadores visuales de asignación automática
 - [ ] Estadísticas de reglas
 - [ ] Manejo de errores y validaciones
-

@@ -41,7 +41,7 @@ La funcionalidad HU-17 permite gestionar transacciones en múltiples monedas (CO
 
 ### 🔹 Montos en Centavos
 - **Todos los montos se manejan en centavos** para evitar problemas de redondeo
-- **Ejemplo:** 
+- **Ejemplo:**
   - `10000` centavos = `100.00` unidades monetarias
   - `500050` centavos = `5,000.50` unidades monetarias
 
@@ -487,7 +487,7 @@ Authorization: Token abc123
   "date": "2025-01-15",
   "description": "Comida en restaurante",
   "transaction_currency": "USD",
-  
+
   // ⭐ Campos de conversión a moneda base
   "base_currency": "COP",
   "base_equivalent_amount": 20000000,
@@ -654,7 +654,7 @@ El endpoint consolidará TODAS las transacciones de las 3 cuentas y las mostrar�
 }
 ```
 
-**Qué hacer:** 
+**Qué hacer:**
 1. Si es aceptable, continúa con ese tipo de cambio
 2. Si necesitas precisión, registra el tipo de cambio correcto para marzo:
 ```http
@@ -744,18 +744,17 @@ POST /api/utils/exchange-rates/
 
 ## Preguntas Frecuentes
 
-**P: ¿Puedo tener transacciones en una moneda y mi moneda base en otra?**  
+**P: ¿Puedo tener transacciones en una moneda y mi moneda base en otra?**
 R: Sí, es justamente el propósito de esta funcionalidad. Puedes tener cuentas en USD y EUR, y ver todo consolidado en COP.
 
-**P: ¿Qué pasa si cambio mi moneda base después de tener transacciones?**  
+**P: ¿Qué pasa si cambio mi moneda base después de tener transacciones?**
 R: Todos los totales se recalculan automáticamente usando los tipos de cambio históricos. Las transacciones originales no se modifican.
 
-**P: ¿Debo registrar tipos de cambio inversos (COP->USD y USD->COP)?**  
+**P: ¿Debo registrar tipos de cambio inversos (COP->USD y USD->COP)?**
 R: No, el sistema calcula automáticamente el inverso. Si registras USD->COP con rate=4000, el sistema puede calcular COP->USD como 1/4000=0.00025.
 
-**P: ¿Los tipos de cambio se actualizan automáticamente?**  
+**P: ¿Los tipos de cambio se actualizan automáticamente?**
 R: No, debes registrarlos manualmente o integrar con una API externa.
 
-**P: ¿Puedo ver los tipos de cambio usados en cada transacción?**  
+**P: ¿Puedo ver los tipos de cambio usados en cada transacción?**
 R: Sí, en el detalle de transacciones aparecen los campos `base_exchange_rate` y `base_equivalent_amount`.
-

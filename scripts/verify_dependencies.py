@@ -3,8 +3,8 @@
 Script para verificar que todas las dependencias estén instaladas correctamente
 """
 
-import sys
 import importlib
+import sys
 
 
 def check_dependency(module_name, package_name=None):

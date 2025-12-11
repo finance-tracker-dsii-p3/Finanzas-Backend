@@ -5,6 +5,7 @@ Script para ver las notificaciones de forma segura
 
 import os
 import sys
+
 import django
 
 # Configurar Django

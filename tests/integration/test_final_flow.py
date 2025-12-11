@@ -3,9 +3,10 @@
 Script para probar el flujo final de entrada y salida
 """
 
-import requests
 import json
 import time
+
+import requests
 
 
 def test_final_flow():

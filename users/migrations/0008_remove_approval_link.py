@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0007_alter_user_role'),
+        ("users", "0007_alter_user_role"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='ApprovalLink',
+            name="ApprovalLink",
         ),
     ]

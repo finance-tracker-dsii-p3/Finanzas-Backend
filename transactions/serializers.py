@@ -1,10 +1,11 @@
-from rest_framework import serializers
-from transactions.models import Transaction
-from categories.models import Category
-from accounts.models import Account
-from decimal import Decimal
 import logging
+from decimal import Decimal
 
+from rest_framework import serializers
+
+from accounts.models import Account
+from categories.models import Category
+from transactions.models import Transaction
 from utils.currency_converter import FxService
 
 logger = logging.getLogger(__name__)
@@ -100,7 +101,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             logger.info(f"Conversion result: {converted} (rate: {rate}, warning: {warning})")
             return converted
         except Exception as e:
-            logger.error(f"Conversion failed: {e}")
+            logger.exception(f"Conversion failed: {e}")
             return None
 
     def get_base_exchange_rate(self, obj):
@@ -116,7 +117,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             )
             return float(rate)
         except Exception as e:
-            logger.error(f"Rate lookup failed: {e}")
+            logger.exception(f"Rate lookup failed: {e}")
             return None
 
     def get_base_exchange_rate_warning(self, obj):
@@ -132,8 +133,8 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             )
             return warning
         except Exception as e:
-            logger.error(f"Warning lookup failed: {e}")
-            return f"Error al obtener tipo de cambio: {str(e)}"
+            logger.exception(f"Warning lookup failed: {e}")
+            return f"Error al obtener tipo de cambio: {e!s}"
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -185,31 +186,28 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     def validate_base_amount(self, value):
         if value is not None and value <= 0:
-            raise serializers.ValidationError(
-                "El monto base debe ser un valor positivo mayor que cero."
-            )
+            msg = "El monto base debe ser un valor positivo mayor que cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_tax_percentage(self, value):
-        if value is not None:
-            if value < 0 or value > 30:
-                raise serializers.ValidationError("La tasa de IVA debe estar entre 0 y 30%.")
+        if value is not None and (value < 0 or value > 30):
+            msg = "La tasa de IVA debe estar entre 0 y 30%."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_total_amount(self, value):
         if value is not None and value <= 0:
-            raise serializers.ValidationError(
-                "El monto total debe ser un valor positivo mayor que cero."
-            )
+            msg = "El monto total debe ser un valor positivo mayor que cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_category(self, value):
         if value:
             user = self.context["request"].user
             if value.user != user:
-                raise serializers.ValidationError(
-                    "La categoría no pertenece al usuario autenticado."
-                )
+                msg = "La categoría no pertenece al usuario autenticado."
+                raise serializers.ValidationError(msg)
         return value
 
     def validate(self, data):
@@ -220,9 +218,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
 
         if not user or not user.is_authenticated:
-            raise serializers.ValidationError(
-                "El usuario debe estar autenticado para crear una transacción."
-            )
+            msg = "El usuario debe estar autenticado para crear una transacción."
+            raise serializers.ValidationError(msg)
 
         base_amount = data.get("base_amount")
         total_amount = data.get("total_amount")
@@ -235,11 +232,11 @@ class TransactionSerializer(serializers.ModelSerializer):
                 base_decimal = Decimal(str(base_amount))
                 # Verificar si es un entero (sin parte fraccionaria)
                 is_integer = base_decimal == base_decimal.quantize(
-                    Decimal("1"), rounding="ROUND_DOWN"
+                    Decimal(1), rounding="ROUND_DOWN"
                 )
                 # Si el valor es >= 100 y es un entero, probablemente ya está en centavos
                 # (el frontend siempre envía enteros en centavos)
-                if base_decimal >= Decimal("100") and is_integer:
+                if base_decimal >= Decimal(100) and is_integer:
                     # Valor grande sin decimales, ya está en centavos
                     logger.info(
                         f"[DEBUG] base_amount recibido como float pero es entero: {base_decimal}, tratando como centavos"
@@ -250,13 +247,13 @@ class TransactionSerializer(serializers.ModelSerializer):
                     logger.info(
                         f"[DEBUG] base_amount recibido como float con decimales: {base_decimal}, convirtiendo de pesos a centavos"
                     )
-                    data["base_amount"] = int(base_decimal * Decimal("100"))
+                    data["base_amount"] = int(base_decimal * Decimal(100))
             elif isinstance(base_amount, str):
                 try:
                     decimal_val = Decimal(base_amount)
                     if "." in base_amount:
                         # Tiene punto decimal, probablemente está en pesos
-                        data["base_amount"] = int(decimal_val * Decimal("100"))
+                        data["base_amount"] = int(decimal_val * Decimal(100))
                     else:
                         # Sin punto decimal, probablemente ya está en centavos
                         data["base_amount"] = int(decimal_val)
@@ -279,11 +276,11 @@ class TransactionSerializer(serializers.ModelSerializer):
                 total_decimal = Decimal(str(total_amount))
                 # Verificar si es un entero (sin parte fraccionaria)
                 is_integer = total_decimal == total_decimal.quantize(
-                    Decimal("1"), rounding="ROUND_DOWN"
+                    Decimal(1), rounding="ROUND_DOWN"
                 )
                 # Si el valor es >= 100 y es un entero, probablemente ya está en centavos
                 # (el frontend siempre envía enteros en centavos)
-                if total_decimal >= Decimal("100") and is_integer:
+                if total_decimal >= Decimal(100) and is_integer:
                     # Valor grande sin decimales, ya está en centavos
                     logger.info(
                         f"[DEBUG] total_amount recibido como float pero es entero: {total_decimal}, tratando como centavos"
@@ -294,7 +291,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                     logger.info(
                         f"[DEBUG] total_amount recibido como float con decimales: {total_decimal}, convirtiendo de pesos a centavos"
                     )
-                    data["total_amount"] = int(total_decimal * Decimal("100"))
+                    data["total_amount"] = int(total_decimal * Decimal(100))
             elif isinstance(total_amount, str):
                 try:
                     decimal_val = Decimal(total_amount)
@@ -303,7 +300,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         logger.info(
                             f"[DEBUG] total_amount recibido como string con decimales: {decimal_val}, convirtiendo de pesos a centavos"
                         )
-                        data["total_amount"] = int(decimal_val * Decimal("100"))
+                        data["total_amount"] = int(decimal_val * Decimal(100))
                     else:
                         # Sin punto decimal, probablemente ya está en centavos
                         logger.info(
@@ -344,8 +341,8 @@ class TransactionSerializer(serializers.ModelSerializer):
             )
 
         if has_total and has_tax:
-            tax_rate = Decimal(str(tax_percentage)) / Decimal("100")
-            calculated_base = Decimal(str(total_amount)) / (Decimal("1") + tax_rate)
+            tax_rate = Decimal(str(tax_percentage)) / Decimal(100)
+            calculated_base = Decimal(str(total_amount)) / (Decimal(1) + tax_rate)
             calculated_taxed = Decimal(str(total_amount)) - calculated_base
 
             data["base_amount"] = int(calculated_base)
@@ -411,7 +408,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                             "category": 'La categoría debe ser de tipo "Ingreso" para transacciones de ingreso.'
                         }
                     )
-                elif transaction_type == 2 and category.type != Category.EXPENSE:
+                if transaction_type == 2 and category.type != Category.EXPENSE:
                     raise serializers.ValidationError(
                         {
                             "category": 'La categoría debe ser de tipo "Gasto" para transacciones de gasto.'
@@ -475,7 +472,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 
         if origin_account:
             final_total_pesos = (
-                Decimal(str(final_total)) / Decimal("100") if final_total else Decimal("0")
+                Decimal(str(final_total)) / Decimal(100) if final_total else Decimal(0)
             )
             # Determinar si el saldo aumenta o disminuye según el tipo de transacción
             # Income (1) y Saving (4) aumentan el saldo (is_decrease=False)
@@ -493,16 +490,16 @@ class TransactionSerializer(serializers.ModelSerializer):
                 and data.get("capital_amount") is not None
             ):
                 capital_amount_pesos = (
-                    Decimal(str(data.get("capital_amount"))) / Decimal("100")
+                    Decimal(str(data.get("capital_amount"))) / Decimal(100)
                     if data.get("capital_amount")
-                    else Decimal("0")
+                    else Decimal(0)
                 )
                 TransactionSerializer._validate_account_limits(
                     destination_account, capital_amount_pesos, transaction_type, is_decrease=False
                 )
             else:
                 final_total_pesos = (
-                    Decimal(str(final_total)) / Decimal("100") if final_total else Decimal("0")
+                    Decimal(str(final_total)) / Decimal(100) if final_total else Decimal(0)
                 )
                 TransactionSerializer._validate_account_limits(
                     destination_account, final_total_pesos, transaction_type, is_decrease=False
@@ -552,7 +549,7 @@ class TransactionSerializer(serializers.ModelSerializer):
                         data["base_amount"] = converted_amount
                 except ValueError as e:
                     raise serializers.ValidationError(
-                        {"transaction_currency": f"Error en conversión de moneda: {str(e)}"}
+                        {"transaction_currency": f"Error en conversión de moneda: {e!s}"}
                     )
 
             if goal and transaction_type == 4:
@@ -626,16 +623,15 @@ class TransactionSerializer(serializers.ModelSerializer):
                             ): "Las tarjetas de crédito no pueden tener saldo positivo."
                         }
                     )
-            else:
-                # Otras cuentas de pasivo no pueden tener saldo positivo
-                if new_balance > 0:
-                    raise serializers.ValidationError(
-                        {
-                            (
-                                "origin_account" if is_decrease else "destination_account"
-                            ): "Las cuentas de pasivo no pueden tener saldo positivo."
-                        }
-                    )
+            # Otras cuentas de pasivo no pueden tener saldo positivo
+            elif new_balance > 0:
+                raise serializers.ValidationError(
+                    {
+                        (
+                            "origin_account" if is_decrease else "destination_account"
+                        ): "Las cuentas de pasivo no pueden tener saldo positivo."
+                    }
+                )
 
     def create(self, validated_data):
         user = self.context["request"].user
@@ -681,22 +677,20 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
 
     def validate_base_amount(self, value):
         if value is not None and value <= 0:
-            raise serializers.ValidationError(
-                "El monto base debe ser un valor positivo mayor que cero."
-            )
+            msg = "El monto base debe ser un valor positivo mayor que cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_tax_percentage(self, value):
-        if value is not None:
-            if value < 0 or value > 30:
-                raise serializers.ValidationError("La tasa de IVA debe estar entre 0 y 30%.")
+        if value is not None and (value < 0 or value > 30):
+            msg = "La tasa de IVA debe estar entre 0 y 30%."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_total_amount(self, value):
         if value is not None and value <= 0:
-            raise serializers.ValidationError(
-                "El monto total debe ser un valor positivo mayor que cero."
-            )
+            msg = "El monto total debe ser un valor positivo mayor que cero."
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_category(self, value):
@@ -707,9 +701,8 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 user = self.context["request"].user
 
             if value.user != user:
-                raise serializers.ValidationError(
-                    "La categoría no pertenece al usuario autenticado."
-                )
+                msg = "La categoría no pertenece al usuario autenticado."
+                raise serializers.ValidationError(msg)
         return value
 
     def validate(self, data):
@@ -739,12 +732,12 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
 
         if base_amount is not None:
             if isinstance(base_amount, (float, Decimal)):
-                data["base_amount"] = int(Decimal(str(base_amount)) * Decimal("100"))
+                data["base_amount"] = int(Decimal(str(base_amount)) * Decimal(100))
             elif isinstance(base_amount, str):
                 try:
                     decimal_val = Decimal(base_amount)
                     if "." in base_amount:
-                        data["base_amount"] = int(decimal_val * Decimal("100"))
+                        data["base_amount"] = int(decimal_val * Decimal(100))
                     else:
                         data["base_amount"] = int(decimal_val)
                 except (ValueError, TypeError):
@@ -754,12 +747,12 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
 
         if total_amount is not None:
             if isinstance(total_amount, (float, Decimal)):
-                data["total_amount"] = int(Decimal(str(total_amount)) * Decimal("100"))
+                data["total_amount"] = int(Decimal(str(total_amount)) * Decimal(100))
             elif isinstance(total_amount, str):
                 try:
                     decimal_val = Decimal(total_amount)
                     if "." in total_amount:
-                        data["total_amount"] = int(decimal_val * Decimal("100"))
+                        data["total_amount"] = int(decimal_val * Decimal(100))
                     else:
                         data["total_amount"] = int(decimal_val)
                 except (ValueError, TypeError):
@@ -797,8 +790,8 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
         if has_total and has_tax and ("total_amount" in data or "tax_percentage" in data):
             # Calcular base_amount desde total_amount
             # base = total / (1 + tax_percentage/100)
-            tax_rate = Decimal(str(tax_percentage)) / Decimal("100")
-            calculated_base = Decimal(str(total_amount)) / (Decimal("1") + tax_rate)
+            tax_rate = Decimal(str(tax_percentage)) / Decimal(100)
+            calculated_base = Decimal(str(total_amount)) / (Decimal(1) + tax_rate)
             calculated_taxed = Decimal(str(total_amount)) - calculated_base
 
             # Convertir a enteros (centavos)
@@ -866,7 +859,7 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                             "category": 'La categoría debe ser de tipo "Ingreso" para transacciones de ingreso.'
                         }
                     )
-                elif transaction_type == 2 and category.type != Category.EXPENSE:
+                if transaction_type == 2 and category.type != Category.EXPENSE:
                     raise serializers.ValidationError(
                         {
                             "category": 'La categoría debe ser de tipo "Gasto" para transacciones de gasto.'
@@ -994,16 +987,15 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                             ): "Las tarjetas de crédito no pueden tener saldo positivo."
                         }
                     )
-            else:
-                # Otras cuentas de pasivo no pueden tener saldo positivo
-                if new_balance > 0:
-                    raise serializers.ValidationError(
-                        {
-                            (
-                                "origin_account" if is_decrease else "destination_account"
-                            ): "Las cuentas de pasivo no pueden tener saldo positivo."
-                        }
-                    )
+            # Otras cuentas de pasivo no pueden tener saldo positivo
+            elif new_balance > 0:
+                raise serializers.ValidationError(
+                    {
+                        (
+                            "origin_account" if is_decrease else "destination_account"
+                        ): "Las cuentas de pasivo no pueden tener saldo positivo."
+                    }
+                )
 
 
 class TransactionDuplicateSerializer(serializers.ModelSerializer):

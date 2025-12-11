@@ -3,8 +3,9 @@
 Script para ver las notificaciones del admin (sin emojis)
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_notifications_simple():

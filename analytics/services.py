@@ -3,14 +3,14 @@ Servicios para cálculos de analytics financieros (HU-13)
 Maneja indicadores, gráficos y agregaciones por período y categoría
 """
 
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from django.db.models import Sum, Count, Q
-from transactions.models import Transaction
-from categories.models import Category
-from typing import Dict, Tuple
 import calendar
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
+from django.db.models import Count, Q, Sum
+
+from categories.models import Category
+from transactions.models import Transaction
 from utils.currency_converter import FxService
 
 
@@ -21,7 +21,7 @@ class FinancialAnalyticsService:
     """
 
     @staticmethod
-    def get_period_indicators(user, start_date: date, end_date: date, mode: str = "total") -> Dict:
+    def get_period_indicators(user, start_date: date, end_date: date, mode: str = "total") -> dict:
         """
         Calcula indicadores de ingresos, gastos y balance para un período
 
@@ -43,15 +43,15 @@ class FinancialAnalyticsService:
             rows = qs.values("transaction_currency", "origin_account__currency").annotate(
                 total=Sum(amount_field), count=Count("id")
             )
-            total_base = Decimal("0")
+            total_base = Decimal(0)
             total_count = 0
             for r in rows:
                 curr = r["transaction_currency"] or r["origin_account__currency"] or base_currency
-                amount = r["total"] or Decimal("0")
+                amount = r["total"] or Decimal(0)
                 converted, _, _ = (
                     FxService.convert_to_base(int(amount), curr, base_currency, end_date)
                     if amount is not None
-                    else (0, Decimal("1"), None)
+                    else (0, Decimal(1), None)
                 )
                 total_base += Decimal(str(converted))
                 total_count += r["count"]
@@ -93,7 +93,7 @@ class FinancialAnalyticsService:
     @staticmethod
     def get_expenses_by_category(
         user, start_date: date, end_date: date, mode: str = "total", others_threshold: float = 0.05
-    ) -> Dict:
+    ) -> dict:
         """
         Obtiene distribución de gastos por categoría para gráfico de dona
 
@@ -135,13 +135,13 @@ class FinancialAnalyticsService:
             currency = (
                 item["transaction_currency"] or item["origin_account__currency"] or base_currency
             )
-            amount = item["amount"] or Decimal("0")
+            amount = item["amount"] or Decimal(0)
             converted, _, _ = FxService.convert_to_base(
                 int(amount), currency, base_currency, end_date
             )
             if cat_id not in category_totals:
                 category_totals[cat_id] = {
-                    "amount": Decimal("0"),
+                    "amount": Decimal(0),
                     "count": 0,
                     "name": item["category__name"],
                     "color": item["category__color"],
@@ -157,13 +157,13 @@ class FinancialAnalyticsService:
             .values("transaction_currency", "origin_account__currency")
             .annotate(amount=Sum(amount_field), count=Count("id"))
         )
-        uncategorized_amount = Decimal("0")
+        uncategorized_amount = Decimal(0)
         uncategorized_count = 0
         for item in uncategorized_rows:
             currency = (
                 item["transaction_currency"] or item["origin_account__currency"] or base_currency
             )
-            amount = item["amount"] or Decimal("0")
+            amount = item["amount"] or Decimal(0)
             converted, _, _ = FxService.convert_to_base(
                 int(amount), currency, base_currency, end_date
             )
@@ -186,7 +186,7 @@ class FinancialAnalyticsService:
         # Procesar categorías principales vs "Otros"
         main_categories = []
         others_categories = []
-        others_total = Decimal("0")
+        others_total = Decimal(0)
 
         for cat_id, item in category_totals.items():
             percentage = float(item["amount"] / total_expenses)
@@ -254,7 +254,7 @@ class FinancialAnalyticsService:
         }
 
     @staticmethod
-    def get_daily_flow_chart(user, start_date: date, end_date: date, mode: str = "total") -> Dict:
+    def get_daily_flow_chart(user, start_date: date, end_date: date, mode: str = "total") -> dict:
         """
         Obtiene datos para gráfico de líneas con flujo diario acumulado
 
@@ -361,7 +361,7 @@ class FinancialAnalyticsService:
         end_date: date,
         mode: str = "total",
         limit: int = 50,
-    ) -> Dict:
+    ) -> dict:
         """
         Obtiene transacciones filtradas por categoría para drill-down
 
@@ -433,9 +433,7 @@ class FinancialAnalyticsService:
             )
 
         # Calcular total de la categoría en el período
-        total_amount = transactions_query.aggregate(total=Sum(amount_field))["total"] or Decimal(
-            "0"
-        )
+        total_amount = transactions_query.aggregate(total=Sum(amount_field))["total"] or Decimal(0)
 
         return {
             "transactions": transactions_data,
@@ -450,7 +448,7 @@ class FinancialAnalyticsService:
         }
 
     @staticmethod
-    def parse_period_param(period_str: str) -> Tuple[date, date]:
+    def parse_period_param(period_str: str) -> tuple[date, date]:
         """
         Parsea parámetro de período y devuelve fechas de inicio y fin
 
@@ -522,9 +520,8 @@ class FinancialAnalyticsService:
 
         else:
             # Formato no reconocido, lanzar error específico
-            raise ValueError(
-                f"Formato de período no reconocido: '{period_str}'. Formatos válidos: current_month, last_month, current_year, last_7_days, last_30_days, YYYY-MM, YYYY, YYYY-MM-DD,YYYY-MM-DD"
-            )
+            msg = f"Formato de período no reconocido: '{period_str}'. Formatos válidos: current_month, last_month, current_year, last_7_days, last_30_days, YYYY-MM, YYYY, YYYY-MM-DD,YYYY-MM-DD"
+            raise ValueError(msg)
 
         return start_date, end_date
 
@@ -536,7 +533,7 @@ class FinancialAnalyticsService:
         period2_start: date,
         period2_end: date,
         mode: str = "total",
-    ) -> Dict:
+    ) -> dict:
         """
         Compara indicadores financieros entre dos períodos (HU-14)
 
@@ -565,10 +562,7 @@ class FinancialAnalyticsService:
             absolute_diff = period2_val - period1_val
 
             if period1_val == 0:
-                if period2_val == 0:
-                    percentage_diff = 0
-                else:
-                    percentage_diff = 100 if period2_val > 0 else -100
+                percentage_diff = 0 if period2_val == 0 else 100 if period2_val > 0 else -100
             else:
                 percentage_diff = (absolute_diff / abs(period1_val)) * 100
 
@@ -667,7 +661,7 @@ class FinancialAnalyticsService:
         }
 
     @staticmethod
-    def _format_comparison_summary(metric_name: str, diff_data: Dict, mode: str) -> str:
+    def _format_comparison_summary(metric_name: str, diff_data: dict, mode: str) -> str:
         """
         Formatea resumen textual de comparación
 
@@ -691,12 +685,12 @@ class FinancialAnalyticsService:
 
     @staticmethod
     def _generate_comparison_insights(
-        income_diff: Dict,
-        expenses_diff: Dict,
-        balance_diff: Dict,
+        income_diff: dict,
+        expenses_diff: dict,
+        balance_diff: dict,
         period1_has_data: bool,
         period2_has_data: bool,
-    ) -> Dict:
+    ) -> dict:
         """
         Genera insights automáticos de la comparación
 
@@ -751,14 +745,13 @@ class FinancialAnalyticsService:
                     insights.append("Situación financiera mejorada.")
                     if alert_level == "info":
                         alert_level = "success"
-            else:
-                if abs(balance_diff["percentage"]) >= 20:
-                    insights.append("La situación financiera ha empeorado significativamente.")
-                    alert_level = "error"
-                elif abs(balance_diff["percentage"]) >= 5:
-                    insights.append("La situación financiera ha empeorado.")
-                    if alert_level in ["info", "success"]:
-                        alert_level = "warning"
+            elif abs(balance_diff["percentage"]) >= 20:
+                insights.append("La situación financiera ha empeorado significativamente.")
+                alert_level = "error"
+            elif abs(balance_diff["percentage"]) >= 5:
+                insights.append("La situación financiera ha empeorado.")
+                if alert_level in ["info", "success"]:
+                    alert_level = "warning"
 
             if not insights:
                 insights.append("Los cambios entre períodos son mínimos (< 5%).")
@@ -795,7 +788,6 @@ class FinancialAnalyticsService:
             # Convertir centavos a pesos y formatear
             pesos = amount / 100
             return f"${pesos:,.0f}".replace(",", ".")
-        else:
-            # Para otras monedas, usar formato estándar
-            decimal_amount = amount / 100
-            return f"${decimal_amount:,.2f}"
+        # Para otras monedas, usar formato estándar
+        decimal_amount = amount / 100
+        return f"${decimal_amount:,.2f}"

@@ -3,12 +3,13 @@ Tests para la API de Cuentas (accounts/views.py)
 Fase 1: Aumentar cobertura de tests
 """
 
-from django.test import TestCase
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+from django.test import TestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from decimal import Decimal
+from rest_framework.test import APIClient
 
 from accounts.models import Account, AccountOption, AccountOptionType
 
@@ -55,9 +56,9 @@ class AccountsViewsTests(TestCase):
     def test_list_accounts_success(self):
         """Test: Listar cuentas exitosamente"""
         response = self.client.get("/api/accounts/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
-        self.assertEqual(len(response.data), 2)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list)
+        assert len(response.data) == 2
 
     def test_list_accounts_with_active_only_filter(self):
         """Test: Listar solo cuentas activas"""
@@ -65,23 +66,23 @@ class AccountsViewsTests(TestCase):
         self.bank_account.save()
 
         response = self.client.get("/api/accounts/?active_only=true")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["name"], "Tarjeta de Crédito")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Tarjeta de Crédito"
 
     def test_list_accounts_with_category_filter(self):
         """Test: Filtrar cuentas por categoría"""
         response = self.client.get("/api/accounts/?category=bank_account")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["name"], "Banco Principal")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Banco Principal"
 
     def test_list_accounts_with_account_type_filter(self):
         """Test: Filtrar cuentas por tipo"""
         response = self.client.get("/api/accounts/?account_type=asset")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["name"], "Banco Principal")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+        assert response.data[0]["name"] == "Banco Principal"
 
     def test_create_account_success(self):
         """Test: Crear cuenta exitosamente"""
@@ -97,40 +98,40 @@ class AccountsViewsTests(TestCase):
         if response.status_code != status.HTTP_201_CREATED:
             # Imprimir el error para debugging
             print(f"Error response: {response.data}")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["name"], "Nueva Cuenta")
-        self.assertTrue(Account.objects.filter(name="Nueva Cuenta").exists())
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["name"] == "Nueva Cuenta"
+        assert Account.objects.filter(name="Nueva Cuenta").exists()
 
     def test_retrieve_account_success(self):
         """Test: Obtener detalle de cuenta"""
         response = self.client.get(f"/api/accounts/{self.bank_account.id}/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["name"], "Banco Principal")
-        self.assertEqual(response.data["id"], self.bank_account.id)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["name"] == "Banco Principal"
+        assert response.data["id"] == self.bank_account.id
 
     def test_update_account_success(self):
         """Test: Actualizar cuenta exitosamente"""
         data = {"name": "Banco Actualizado"}
         response = self.client.patch(f"/api/accounts/{self.bank_account.id}/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["name"], "Banco Actualizado")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["name"] == "Banco Actualizado"
         self.bank_account.refresh_from_db()
-        self.assertEqual(self.bank_account.name, "Banco Actualizado")
+        assert self.bank_account.name == "Banco Actualizado"
 
     def test_delete_account_success(self):
         """Test: Eliminar cuenta exitosamente"""
         account_id = self.bank_account.id
         response = self.client.delete(f"/api/accounts/{account_id}/")
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Account.objects.filter(id=account_id).exists())
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Account.objects.filter(id=account_id).exists()
 
     def test_summary_endpoint_success(self):
         """Test: Obtener resumen financiero"""
         response = self.client.get("/api/accounts/summary/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("total_assets", response.data)
-        self.assertIn("total_liabilities", response.data)
-        self.assertIn("net_worth", response.data)
+        assert response.status_code == status.HTTP_200_OK
+        assert "total_assets" in response.data
+        assert "total_liabilities" in response.data
+        assert "net_worth" in response.data
 
     def test_by_currency_endpoint_success(self):
         """Test: Filtrar cuentas por moneda"""
@@ -145,21 +146,21 @@ class AccountsViewsTests(TestCase):
         )
 
         response = self.client.get("/api/accounts/by_currency/?currency=COP")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
-        self.assertEqual(len(response.data), 2)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list)
+        assert len(response.data) == 2
 
     def test_by_currency_endpoint_missing_parameter(self):
         """Test: Error cuando falta parámetro currency"""
         response = self.client.get("/api/accounts/by_currency/")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in response.data
 
     def test_by_currency_endpoint_invalid_currency(self):
         """Test: Error con moneda inválida"""
         response = self.client.get("/api/accounts/by_currency/?currency=XXX")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in response.data
 
     def test_update_balance_success(self):
         """Test: Actualizar saldo de cuenta"""
@@ -167,9 +168,9 @@ class AccountsViewsTests(TestCase):
         response = self.client.post(
             f"/api/accounts/{self.bank_account.id}/update_balance/", data, format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert response.status_code == status.HTTP_200_OK
         self.bank_account.refresh_from_db()
-        self.assertEqual(self.bank_account.current_balance, Decimal("1500.00"))
+        assert self.bank_account.current_balance == Decimal("1500.00")
 
     def test_update_balance_invalid_data(self):
         """Test: Error al actualizar saldo con datos inválidos"""
@@ -177,34 +178,34 @@ class AccountsViewsTests(TestCase):
         response = self.client.post(
             f"/api/accounts/{self.bank_account.id}/update_balance/", data, format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_toggle_active_success(self):
         """Test: Activar/desactivar cuenta"""
         initial_status = self.bank_account.is_active
         response = self.client.post(f"/api/accounts/{self.bank_account.id}/toggle_active/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assert response.status_code == status.HTTP_200_OK
         self.bank_account.refresh_from_db()
-        self.assertNotEqual(self.bank_account.is_active, initial_status)
+        assert self.bank_account.is_active != initial_status
 
     def test_validate_deletion_success(self):
         """Test: Validar eliminación de cuenta"""
         response = self.client.post(f"/api/accounts/{self.bank_account.id}/validate_deletion/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("can_delete", response.data)
-        self.assertIn("warnings", response.data)
+        assert response.status_code == status.HTTP_200_OK
+        assert "can_delete" in response.data
+        assert "warnings" in response.data
 
     def test_credit_cards_summary_success(self):
         """Test: Obtener resumen de tarjetas de crédito"""
         response = self.client.get("/api/accounts/credit_cards_summary/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("cards_count", response.data)
+        assert response.status_code == status.HTTP_200_OK
+        assert "cards_count" in response.data
 
     def test_categories_stats_success(self):
         """Test: Obtener estadísticas por categorías"""
         response = self.client.get("/api/accounts/categories_stats/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, dict)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, dict)
 
     def test_get_account_options_success(self):
         """Test: Obtener opciones de cuentas"""
@@ -214,16 +215,16 @@ class AccountsViewsTests(TestCase):
         )
 
         response = self.client.get("/api/accounts/options/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("banks", response.data)
-        self.assertIn("wallets", response.data)
-        self.assertIn("credit_card_banks", response.data)
+        assert response.status_code == status.HTTP_200_OK
+        assert "banks" in response.data
+        assert "wallets" in response.data
+        assert "credit_card_banks" in response.data
 
     def test_list_requires_authentication(self):
         """Test: Listar cuentas requiere autenticación"""
         self.client.credentials()
         response = self.client.get("/api/accounts/")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_create_requires_authentication(self):
         """Test: Crear cuenta requiere autenticación"""
@@ -237,4 +238,4 @@ class AccountsViewsTests(TestCase):
             "currency": "COP",
         }
         response = self.client.post("/api/accounts/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED

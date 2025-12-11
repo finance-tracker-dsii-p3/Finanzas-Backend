@@ -1,9 +1,12 @@
+import logging
+
 from django.db import transaction as db_transaction
 from django.db.models import F
-from .models import Goal
-from notifications.services import NotificationService
+
 from notifications.models import Notification
-import logging
+from notifications.services import NotificationService
+
+from .models import Goal
 
 logger = logging.getLogger(__name__)
 
@@ -13,17 +16,20 @@ class GoalService:
     @db_transaction.atomic
     def assign_transaction_to_goal(transaction, goal):
         if transaction.type != 4:
-            raise ValueError("Solo se pueden asignar transacciones tipo Saving a metas")
+            msg = "Solo se pueden asignar transacciones tipo Saving a metas"
+            raise ValueError(msg)
 
         if transaction.user != goal.user:
-            raise ValueError("La transacción y la meta deben pertenecer al mismo usuario")
+            msg = "La transacción y la meta deben pertenecer al mismo usuario"
+            raise ValueError(msg)
 
         account_currency = transaction.origin_account.currency
         if account_currency != goal.currency:
-            raise ValueError(
+            msg = (
                 f"La moneda de la cuenta ({account_currency}) no coincide con la moneda de la meta ({goal.currency}). "
                 f"Las transacciones deben estar en la misma moneda que la meta."
             )
+            raise ValueError(msg)
 
         old_saved_amount = goal.saved_amount
         transaction_amount = transaction.total_amount

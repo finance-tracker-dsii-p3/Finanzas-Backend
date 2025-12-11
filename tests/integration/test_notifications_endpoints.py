@@ -3,8 +3,9 @@
 Script para probar los endpoints de notificaciones
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_notification_endpoints():
@@ -50,7 +51,7 @@ def test_notification_endpoints():
         except requests.exceptions.ConnectionError:
             print(f"  -> ERROR: No se puede conectar")
         except Exception as e:
-            print(f"  -> ERROR: {str(e)}")
+            print(f"  -> ERROR: {e!s}")
 
     print("\n" + "=" * 50)
     print("URLs CORRECTAS para el frontend:")

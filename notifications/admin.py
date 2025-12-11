@@ -3,7 +3,8 @@ Admin configuration for notifications app
 """
 
 from django.contrib import admin
-from notifications.models import Notification, CustomReminder
+
+from notifications.models import CustomReminder, Notification
 
 
 @admin.register(Notification)

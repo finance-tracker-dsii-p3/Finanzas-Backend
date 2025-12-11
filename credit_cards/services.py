@@ -1,14 +1,16 @@
-from decimal import Decimal
+import logging
 from datetime import date, timedelta
-from django.db import transaction as db_transaction
+from decimal import Decimal
+
+from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
+from django.db import transaction as db_transaction
+
 from accounts.models import Account
 from categories.models import Category
+from credit_cards.models import InstallmentPayment, InstallmentPlan
 from transactions.models import Transaction
 from transactions.services import TransactionService
-from credit_cards.models import InstallmentPlan, InstallmentPayment
-from dateutil.relativedelta import relativedelta
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +30,14 @@ class InstallmentPlanService:
         credit_card = purchase_transaction.origin_account
 
         if credit_card.category != Account.CREDIT_CARD:
-            raise ValidationError("La transacción no proviene de una tarjeta de crédito.")
+            msg = "La transacción no proviene de una tarjeta de crédito."
+            raise ValidationError(msg)
         if financing_category.type != Category.EXPENSE:
-            raise ValidationError("La categoría de financiamiento debe ser de gasto.")
+            msg = "La categoría de financiamiento debe ser de gasto."
+            raise ValidationError(msg)
         if financing_category.user_id != user.id:
-            raise ValidationError("La categoría de financiamiento no pertenece al usuario.")
+            msg = "La categoría de financiamiento no pertenece al usuario."
+            raise ValidationError(msg)
 
         plan = InstallmentPlan.objects.create(
             user=user,
@@ -108,13 +113,16 @@ class InstallmentPlanService:
         try:
             payment = plan.payments.select_for_update().get(installment_number=installment_number)
         except InstallmentPayment.DoesNotExist:
-            raise ValidationError("Cuota no encontrada en el plan.")
+            msg = "Cuota no encontrada en el plan."
+            raise ValidationError(msg)
 
         if payment.status == InstallmentPayment.STATUS_COMPLETED:
-            raise ValidationError("La cuota ya está pagada.")
+            msg = "La cuota ya está pagada."
+            raise ValidationError(msg)
 
         if source_account.currency != plan.credit_card_account.currency:
-            raise ValidationError("Las cuentas deben tener la misma moneda.")
+            msg = "Las cuentas deben tener la misma moneda."
+            raise ValidationError(msg)
 
         # Crear transferencia para capital (no gasto)
         # IMPORTANTE: Las transferencias banco->tarjeta NO se cuentan como gastos
@@ -187,13 +195,13 @@ class InstallmentPlanService:
             requested_installments = plan.number_of_installments
 
         if requested_installments < 1:
-            raise ValidationError("El número de cuotas debe ser al menos 1.")
+            msg = "El número de cuotas debe ser al menos 1."
+            raise ValidationError(msg)
 
         # No permitir reducir el número de cuotas por debajo de las ya pagadas
         if requested_installments < completed_count:
-            raise ValidationError(
-                f"No puedes reducir las cuotas a menos de las ya pagadas ({completed_count})."
-            )
+            msg = f"No puedes reducir las cuotas a menos de las ya pagadas ({completed_count})."
+            raise ValidationError(msg)
 
         allowed_fields = {"number_of_installments", "interest_rate", "start_date", "description"}
         updated = False

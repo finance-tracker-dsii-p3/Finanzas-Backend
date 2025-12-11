@@ -2,15 +2,16 @@
 Views para preferencias de notificaciones de usuarios
 """
 
-from rest_framework import viewsets, permissions, status
+import pytz
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 from users.models import UserNotificationPreferences
 from users.serializers_preferences import (
-    UserNotificationPreferencesSerializer,
     TimezoneListSerializer,
+    UserNotificationPreferencesSerializer,
 )
-import pytz
 
 
 class UserNotificationPreferencesViewSet(viewsets.ModelViewSet):
@@ -38,7 +39,7 @@ class UserNotificationPreferencesViewSet(viewsets.ModelViewSet):
         Obtiene las preferencias del usuario autenticado
         Crea preferencias por defecto si no existen
         """
-        prefs, created = UserNotificationPreferences.objects.get_or_create(user=self.request.user)
+        prefs, _created = UserNotificationPreferences.objects.get_or_create(user=self.request.user)
         return prefs
 
     def list(self, request, *args, **kwargs):

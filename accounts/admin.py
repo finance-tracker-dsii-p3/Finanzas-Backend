@@ -4,6 +4,7 @@ Admin interface para cuentas financieras
 
 from django.contrib import admin
 from django.utils.html import format_html
+
 from .models import Account, AccountOption
 
 
@@ -99,11 +100,10 @@ class AccountAdmin(admin.ModelAdmin):
                 '<span style="background: #28a745; color: white; padding: 3px 8px; '
                 'border-radius: 12px; font-size: 11px;">ACTIVO</span>'
             )
-        else:
-            return format_html(
-                '<span style="background: #dc3545; color: white; padding: 3px 8px; '
-                'border-radius: 12px; font-size: 11px;">PASIVO</span>'
-            )
+        return format_html(
+            '<span style="background: #dc3545; color: white; padding: 3px 8px; '
+            'border-radius: 12px; font-size: 11px;">PASIVO</span>'
+        )
 
     account_type_display.short_description = "Tipo"
 

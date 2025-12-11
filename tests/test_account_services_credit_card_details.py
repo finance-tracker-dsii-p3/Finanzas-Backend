@@ -5,8 +5,10 @@ Específicamente para detectar el error de total_paid y capital_paid
 
 from datetime import date
 from decimal import Decimal
-from django.test import TestCase
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+
 from accounts.models import Account
 from accounts.services import AccountService
 from transactions.models import Transaction
@@ -86,17 +88,14 @@ class CreditCardDetailsCalculationTests(TestCase):
         print(f"[TEST] total_paid esperado: {expected_total_paid} (1,000 sin GMF)")
         print(f"[TEST] Diferencia: {details['total_paid'] - expected_total_paid}")
         print(
-            f"[TEST] GMF calculado: {transfer.gmf_amount} centavos = {Decimal(str(transfer.gmf_amount)) / Decimal('100')} pesos"
+            f"[TEST] GMF calculado: {transfer.gmf_amount} centavos = {Decimal(str(transfer.gmf_amount)) / Decimal(100)} pesos"
         )
 
         # El test fallará si el error existe (total_paid será 100,400)
         # Si está correcto, total_paid será 1,000 (sin GMF porque es pago a tarjeta)
-        self.assertEqual(
-            details["total_paid"],
-            expected_total_paid,
-            f"total_paid debería ser {expected_total_paid} pesos (1,000 sin GMF), pero es {details['total_paid']} pesos. "
-            f"Si es 100,400, el error está confirmado (100x mayor).",
-        )
+        assert (
+            details["total_paid"] == expected_total_paid
+        ), f"total_paid debería ser {expected_total_paid} pesos (1,000 sin GMF), pero es {details['total_paid']} pesos. Si es 100,400, el error está confirmado (100x mayor)."
 
     def test_capital_paid_calculation_with_capital_amount(self):
         """
@@ -140,11 +139,9 @@ class CreditCardDetailsCalculationTests(TestCase):
         print(f"[TEST] total_paid esperado: {expected_total_paid} (1,000 sin GMF)")
         print(f"[TEST] GMF calculado: {transfer.gmf_amount} centavos")
 
-        self.assertEqual(
-            details["total_paid"],
-            expected_total_paid,
-            f"total_paid debería ser {expected_total_paid} pesos (1,000 sin GMF), pero es {details['total_paid']} pesos.",
-        )
+        assert (
+            details["total_paid"] == expected_total_paid
+        ), f"total_paid debería ser {expected_total_paid} pesos (1,000 sin GMF), pero es {details['total_paid']} pesos."
 
     def test_total_paid_with_multiple_payments(self):
         """
@@ -191,14 +188,12 @@ class CreditCardDetailsCalculationTests(TestCase):
         print(f"\n[TEST] total_paid con múltiples pagos: {details['total_paid']}")
         print(f"[TEST] total_paid esperado: {expected_total_paid} (500 + 300 sin GMF)")
         print(
-            f"[TEST] GMF pago 1: {payment1.gmf_amount} centavos = {Decimal(str(payment1.gmf_amount)) / Decimal('100')} pesos"
+            f"[TEST] GMF pago 1: {payment1.gmf_amount} centavos = {Decimal(str(payment1.gmf_amount)) / Decimal(100)} pesos"
         )
         print(
-            f"[TEST] GMF pago 2: {payment2.gmf_amount} centavos = {Decimal(str(payment2.gmf_amount)) / Decimal('100')} pesos"
+            f"[TEST] GMF pago 2: {payment2.gmf_amount} centavos = {Decimal(str(payment2.gmf_amount)) / Decimal(100)} pesos"
         )
 
-        self.assertEqual(
-            details["total_paid"],
-            expected_total_paid,
-            f"total_paid debería ser {expected_total_paid} pesos (500 + 300 sin GMF), pero es {details['total_paid']} pesos.",
-        )
+        assert (
+            details["total_paid"] == expected_total_paid
+        ), f"total_paid debería ser {expected_total_paid} pesos (500 + 300 sin GMF), pero es {details['total_paid']} pesos."

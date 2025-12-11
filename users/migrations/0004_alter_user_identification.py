@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0003_delete_approvallink'),
+        ("users", "0003_delete_approvallink"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='identification',
-            field=models.CharField(help_text='Número de identificación del usuario', max_length=20, unique=True, verbose_name='Número de Identificación'),
+            model_name="user",
+            name="identification",
+            field=models.CharField(
+                help_text="Número de identificación del usuario",
+                max_length=20,
+                unique=True,
+                verbose_name="Número de Identificación",
+            ),
         ),
     ]

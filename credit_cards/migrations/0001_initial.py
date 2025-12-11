@@ -20,10 +20,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="InstallmentPlan",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("description", models.CharField(blank=True, max_length=255)),
-                ("purchase_amount", models.IntegerField(help_text="Monto de la compra en centavos")),
-                ("number_of_installments", models.PositiveIntegerField(help_text="Número de cuotas")),
+                (
+                    "purchase_amount",
+                    models.IntegerField(help_text="Monto de la compra en centavos"),
+                ),
+                (
+                    "number_of_installments",
+                    models.PositiveIntegerField(help_text="Número de cuotas"),
+                ),
                 (
                     "interest_rate",
                     models.DecimalField(
@@ -35,7 +46,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "installment_amount",
-                    models.IntegerField(blank=True, help_text="Valor de la cuota calculada en centavos", null=True),
+                    models.IntegerField(
+                        blank=True, help_text="Valor de la cuota calculada en centavos", null=True
+                    ),
                 ),
                 ("start_date", models.DateField(help_text="Fecha de inicio del plan")),
                 (
@@ -93,12 +106,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="InstallmentPayment",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
                 ("installment_number", models.PositiveIntegerField()),
                 ("due_date", models.DateField()),
-                ("installment_amount", models.IntegerField(help_text="Valor total de la cuota en centavos")),
-                ("principal_amount", models.IntegerField(help_text="Porción de capital en centavos")),
-                ("interest_amount", models.IntegerField(help_text="Porción de interés en centavos")),
+                (
+                    "installment_amount",
+                    models.IntegerField(help_text="Valor total de la cuota en centavos"),
+                ),
+                (
+                    "principal_amount",
+                    models.IntegerField(help_text="Porción de capital en centavos"),
+                ),
+                (
+                    "interest_amount",
+                    models.IntegerField(help_text="Porción de interés en centavos"),
+                ),
                 (
                     "status",
                     models.CharField(

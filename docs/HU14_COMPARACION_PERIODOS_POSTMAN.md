@@ -87,7 +87,7 @@ GET /api/analytics/compare-periods/?period1=2024&period2=2025&mode=total
         "transactions_count": 15
       },
       "period2": {
-        "name": "October 2025", 
+        "name": "October 2025",
         "date_range": "01/10/2025 - 31/10/2025",
         "has_data": true,
         "transactions_count": 18
@@ -103,7 +103,7 @@ GET /api/analytics/compare-periods/?period1=2024&period2=2025&mode=total
       },
       "period2": {
         "income": {"amount": 300000, "count": 4, "formatted": "$3.000.000"},
-        "expenses": {"amount": 160000, "count": 14, "formatted": "$1.600.000"}, 
+        "expenses": {"amount": 160000, "count": 14, "formatted": "$1.600.000"},
         "balance": {"amount": 140000, "formatted": "$1.400.000", "is_positive": true}
       }
     },
@@ -255,7 +255,7 @@ GET /api/analytics/compare-periods/?period1=2025-01&period2=2025-12&mode=total
     "message": "Necesitas crear transacciones antes de poder hacer comparaciones",
     "suggestions": [
       "Crea transacciones con POST /api/transactions/",
-      "Asigna categorías a tus transacciones", 
+      "Asigna categorías a tus transacciones",
       "Intenta la comparación nuevamente"
     ]
   }
@@ -279,12 +279,12 @@ GET /api/analytics/compare-periods/?period1=2025-01&period2=2025-12&mode=total
 ```json
 "summary": "Gastos -12% ($-85.000)"
 ```
-- Los gastos disminuyeron 12% 
+- Los gastos disminuyeron 12%
 - Ahorro de $85.000 en el período 2 vs período 1
 
 ```json
 "summary": "Ingresos +21% ($+310.000)"
-```  
+```
 - Los ingresos aumentaron 21%
 - Incremento de $310.000 en el período 2 vs período 1
 
@@ -310,7 +310,7 @@ GET /api/analytics/compare-periods/?period1=2025-01&period2=2025-12&mode=total
 3. **Comparación Específica**
    - `GET {{base_url}}/analytics/compare-periods/?period1=2025-09&period2=2025-10&mode=base`
 
-4. **Test Error - Parámetros Faltantes** 
+4. **Test Error - Parámetros Faltantes**
    - `GET {{base_url}}/analytics/compare-periods/?period1=2025-09`
 
 5. **Test Error - Formato Inválido**
@@ -347,7 +347,7 @@ GET /api/analytics/compare-periods/?period1=2025-01&period2=2025-12&mode=total
 
 ### Caso 2: Análisis Estacional
 - **Objetivo**: Comparar mismo mes del año anterior
-- **URL**: `?period1=2024-11&period2=2025-11&mode=total`  
+- **URL**: `?period1=2024-11&period2=2025-11&mode=total`
 - **Uso**: Identificar patrones estacionales
 
 ### Caso 3: Evaluación de Cambios de Hábito
@@ -389,7 +389,7 @@ POST /api/transactions/
 ```json
 POST /api/transactions/
 {
-  "origin_account": 1, 
+  "origin_account": 1,
   "category": 2,
   "description": "Supermercado Octubre",
   "base_amount": 15000,

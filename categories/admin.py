@@ -4,6 +4,7 @@ Admin configuration for categories app
 
 from django.contrib import admin
 from django.utils.html import format_html
+
 from .models import Category
 
 
@@ -116,11 +117,10 @@ class CategoryAdmin(admin.ModelAdmin):
                 '<span style="background-color: #10B981; color: white; '
                 'padding: 3px 8px; border-radius: 3px; font-size: 11px;">Activa</span>'
             )
-        else:
-            return format_html(
-                '<span style="background-color: #6B7280; color: white; '
-                'padding: 3px 8px; border-radius: 3px; font-size: 11px;">Inactiva</span>'
-            )
+        return format_html(
+            '<span style="background-color: #6B7280; color: white; '
+            'padding: 3px 8px; border-radius: 3px; font-size: 11px;">Inactiva</span>'
+        )
 
     is_active_badge.short_description = "Estado"
 

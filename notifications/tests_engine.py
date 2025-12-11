@@ -3,18 +3,20 @@ Tests para el NotificationEngine
 Verifica creación de notificaciones, respeto de preferencias, prevención de duplicados, multi-idioma
 """
 
-from django.test import TestCase
-from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
-from users.models import User, UserNotificationPreferences
-from notifications.models import Notification, CustomReminder
-from notifications.engine import NotificationEngine
-from budgets.models import Budget
-from bills.models import Bill
-from vehicles.models import Vehicle, SOAT
-from categories.models import Category
+
+from django.test import TestCase
+from django.utils import timezone
+
 from accounts.models import Account
+from bills.models import Bill
+from budgets.models import Budget
+from categories.models import Category
+from notifications.engine import NotificationEngine
+from notifications.models import CustomReminder, Notification
+from users.models import User, UserNotificationPreferences
+from vehicles.models import SOAT, Vehicle
 
 
 class NotificationEngineTestCase(TestCase):
@@ -94,16 +96,16 @@ class NotificationEngineTestCase(TestCase):
             limit=Decimal("1000000.00"),
         )
 
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.user, self.user)
-        self.assertEqual(notification.notification_type, "budget_warning")
-        self.assertIn("⚠️", notification.title)
-        self.assertIn("Comida", notification.message)
-        self.assertIn("850,000", notification.message)
-        self.assertIn("1,000,000", notification.message)
-        self.assertEqual(notification.related_object_id, self.budget.id)
-        self.assertEqual(notification.related_object_type, "budget")
-        self.assertFalse(notification.read)
+        assert notification is not None
+        assert notification.user == self.user
+        assert notification.notification_type == "budget_warning"
+        assert "⚠️" in notification.title
+        assert "Comida" in notification.message
+        assert "850,000" in notification.message
+        assert "1,000,000" in notification.message
+        assert notification.related_object_id == self.budget.id
+        assert notification.related_object_type == "budget"
+        assert not notification.read
 
     def test_create_budget_warning_english(self):
         """Test: Crear notificación de alerta de presupuesto en inglés"""
@@ -119,10 +121,10 @@ class NotificationEngineTestCase(TestCase):
             limit=Decimal("1000000.00"),
         )
 
-        self.assertIsNotNone(notification)
-        self.assertIn("Budget Alert", notification.title)
-        self.assertIn("Comida", notification.message)  # Nombre de categoría se mantiene
-        self.assertIn("850,000", notification.message)
+        assert notification is not None
+        assert "Budget Alert" in notification.title
+        assert "Comida" in notification.message  # Nombre de categoría se mantiene
+        assert "850,000" in notification.message
 
     def test_budget_alert_disabled(self):
         """Test: No crear notificación si las alertas de presupuesto están desactivadas"""
@@ -138,7 +140,7 @@ class NotificationEngineTestCase(TestCase):
             limit=Decimal("1000000.00"),
         )
 
-        self.assertIsNone(notification)
+        assert notification is None
 
     def test_create_budget_exceeded(self):
         """Test: Crear notificación de presupuesto excedido"""
@@ -149,11 +151,11 @@ class NotificationEngineTestCase(TestCase):
             limit=Decimal("1000000.00"),
         )
 
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.notification_type, "budget_exceeded")
-        self.assertIn("🚨", notification.title)
-        self.assertIn("excedido", notification.message.lower())
-        self.assertIn("1,050,000", notification.message)
+        assert notification is not None
+        assert notification.notification_type == "budget_exceeded"
+        assert "🚨" in notification.title
+        assert "excedido" in notification.message.lower()
+        assert "1,050,000" in notification.message
 
     def test_duplicate_prevention(self):
         """Test: Prevención de notificaciones duplicadas en 24 horas"""
@@ -165,7 +167,7 @@ class NotificationEngineTestCase(TestCase):
             spent=Decimal("850000.00"),
             limit=Decimal("1000000.00"),
         )
-        self.assertIsNotNone(notification1)
+        assert notification1 is not None
 
         # Intentar crear segunda notificación inmediatamente
         notification2 = NotificationEngine.create_budget_warning(
@@ -175,13 +177,13 @@ class NotificationEngineTestCase(TestCase):
             spent=Decimal("860000.00"),
             limit=Decimal("1000000.00"),
         )
-        self.assertIsNone(notification2, "No debe crear duplicado en 24 horas")
+        assert notification2 is None, "No debe crear duplicado en 24 horas"
 
         # Verificar que solo hay una notificación
         count = Notification.objects.filter(
             user=self.user, notification_type="budget_warning", related_object_id=self.budget.id
         ).count()
-        self.assertEqual(count, 1)
+        assert count == 1
 
     def test_create_bill_reminder(self):
         """Test: Crear recordatorio de factura"""
@@ -189,12 +191,12 @@ class NotificationEngineTestCase(TestCase):
             user=self.user, bill=self.bill, reminder_type="upcoming"
         )
 
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.notification_type, "bill_reminder")
-        self.assertIn("📄", notification.title)
-        self.assertIn("Netflix", notification.message)
-        self.assertIn("45,000", notification.message)
-        self.assertEqual(notification.related_object_type, "bill")
+        assert notification is not None
+        assert notification.notification_type == "bill_reminder"
+        assert "📄" in notification.title
+        assert "Netflix" in notification.message
+        assert "45,000" in notification.message
+        assert notification.related_object_type == "bill"
 
     def test_bill_reminder_disabled(self):
         """Test: No crear recordatorio si están desactivados"""
@@ -205,7 +207,7 @@ class NotificationEngineTestCase(TestCase):
             user=self.user, bill=self.bill, reminder_type="upcoming"
         )
 
-        self.assertIsNone(notification)
+        assert notification is None
 
     def test_create_soat_reminder(self):
         """Test: Crear recordatorio de SOAT"""
@@ -216,12 +218,12 @@ class NotificationEngineTestCase(TestCase):
             days=15,  # Pasar días explícitamente
         )
 
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.notification_type, "soat_reminder")
-        self.assertIn("🚗", notification.title)
-        self.assertIn("ABC123", notification.message)
-        self.assertIn("15", notification.message)
-        self.assertEqual(notification.related_object_type, "soat")
+        assert notification is not None
+        assert notification.notification_type == "soat_reminder"
+        assert "🚗" in notification.title
+        assert "ABC123" in notification.message
+        assert "15" in notification.message
+        assert notification.related_object_type == "soat"
 
     def test_soat_reminder_disabled(self):
         """Test: No crear recordatorio de SOAT si están desactivados"""
@@ -232,18 +234,18 @@ class NotificationEngineTestCase(TestCase):
             user=self.user, soat=self.soat, alert_type="upcoming"
         )
 
-        self.assertIsNone(notification)
+        assert notification is None
 
     def test_create_month_end_reminder(self):
         """Test: Crear recordatorio de fin de mes"""
         notification = NotificationEngine.create_month_end_reminder(self.user)
 
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.notification_type, "month_end_reminder")
-        self.assertIn("📅", notification.title)
-        self.assertIn("extracto", notification.message.lower())
-        self.assertEqual(notification.related_object_type, "system")
-        self.assertIsNone(notification.related_object_id)
+        assert notification is not None
+        assert notification.notification_type == "month_end_reminder"
+        assert "📅" in notification.title
+        assert "extracto" in notification.message.lower()
+        assert notification.related_object_type == "system"
+        assert notification.related_object_id is None
 
     def test_month_end_reminder_disabled(self):
         """Test: No crear recordatorio de fin de mes si está desactivado"""
@@ -252,7 +254,7 @@ class NotificationEngineTestCase(TestCase):
 
         notification = NotificationEngine.create_month_end_reminder(self.user)
 
-        self.assertIsNone(notification)
+        assert notification is None
 
     def test_create_custom_reminder_notification(self):
         """Test: Crear notificación de recordatorio personalizado"""
@@ -269,19 +271,19 @@ class NotificationEngineTestCase(TestCase):
             custom_reminder=reminder  # Parámetro correcto
         )
 
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.notification_type, "custom_reminder")
-        self.assertEqual(notification.title, "Reunión con contador")
-        self.assertEqual(notification.message, "Llevar documentos del mes")
-        self.assertEqual(notification.related_object_type, "custom_reminder")
-        self.assertEqual(notification.related_object_id, reminder.id)
+        assert notification is not None
+        assert notification.notification_type == "custom_reminder"
+        assert notification.title == "Reunión con contador"
+        assert notification.message == "Llevar documentos del mes"
+        assert notification.related_object_type == "custom_reminder"
+        assert notification.related_object_id == reminder.id
 
         # Verificar que el reminder fue actualizado
         reminder.refresh_from_db()
-        self.assertTrue(reminder.is_sent)
-        self.assertIsNotNone(reminder.sent_at)
-        self.assertIsNotNone(reminder.notification)
-        self.assertEqual(reminder.notification.id, notification.id)
+        assert reminder.is_sent
+        assert reminder.sent_at is not None
+        assert reminder.notification is not None
+        assert reminder.notification.id == notification.id
 
     def test_custom_reminder_disabled(self):
         """Test: No crear notificación de recordatorio si están desactivados"""
@@ -300,11 +302,11 @@ class NotificationEngineTestCase(TestCase):
             custom_reminder=reminder  # Parámetro correcto
         )
 
-        self.assertIsNone(notification)
+        assert notification is None
 
         # El reminder no debe ser marcado como enviado
         reminder.refresh_from_db()
-        self.assertFalse(reminder.is_sent)
+        assert not reminder.is_sent
 
     def test_get_pending_custom_reminders(self):
         """Test: Obtener recordatorios personalizados pendientes"""
@@ -333,10 +335,10 @@ class NotificationEngineTestCase(TestCase):
 
         # Verificar que obtiene el pasado y no el futuro
         pending_ids = [r.id for r in pending]
-        self.assertIn(reminder_past.id, pending_ids, "Recordatorio pasado debe estar en pendientes")
-        self.assertNotIn(
-            reminder_future.id, pending_ids, "Recordatorio futuro no debe estar en pendientes"
-        )
+        assert reminder_past.id in pending_ids, "Recordatorio pasado debe estar en pendientes"
+        assert (
+            reminder_future.id not in pending_ids
+        ), "Recordatorio futuro no debe estar en pendientes"
 
     def test_check_month_end_reminders(self):
         """Test: Verificar recordatorios de fin de mes"""
@@ -347,17 +349,17 @@ class NotificationEngineTestCase(TestCase):
 
         if current_day == 28:
             # check_month_end_reminders retorna una lista de notificaciones creadas
-            self.assertIsInstance(created, list, "Debe retornar una lista")
-            self.assertEqual(len(created), 1, "Debe crear 1 notificación el día 28")
+            assert isinstance(created, list), "Debe retornar una lista"
+            assert len(created) == 1, "Debe crear 1 notificación el día 28"
             # Verificar que se creó la notificación
             notification = Notification.objects.filter(
                 user=self.user, notification_type="month_end_reminder"
             ).first()
-            self.assertIsNotNone(notification)
+            assert notification is not None
         else:
             # Otros días no crea notificaciones
-            self.assertIsInstance(created, list, "Debe retornar una lista")
-            self.assertEqual(len(created), 0, "No debe crear notificaciones en otros días")
+            assert isinstance(created, list), "Debe retornar una lista"
+            assert len(created) == 0, "No debe crear notificaciones en otros días"
 
     def test_user_without_preferences(self):
         """Test: Manejo de usuario sin preferencias configuradas"""
@@ -381,7 +383,7 @@ class NotificationEngineTestCase(TestCase):
         # No debe crear notificación sin preferencias (o las crea por defecto desactivadas)
         # Verificar que se crearon preferencias automáticamente
         prefs = UserNotificationPreferences.objects.filter(user=user_no_prefs).first()
-        self.assertIsNotNone(prefs, "Las preferencias deberían crearse automáticamente")
+        assert prefs is not None, "Las preferencias deberían crearse automáticamente"
 
         # Si las preferencias se crean por defecto con alertas activadas, la notificación existirá
         # Este test verifica que el sistema maneja bien usuarios sin preferencias previas

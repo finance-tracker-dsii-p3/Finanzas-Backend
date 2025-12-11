@@ -4,6 +4,7 @@ Probar analytics con usuario que solo tiene ingresos (sin gastos)
 
 import os
 import sys
+
 import django
 
 # Configurar Django
@@ -11,10 +12,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings")
 django.setup()
 
-from django.test import Client
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 import json
+
+from django.contrib.auth import get_user_model
+from django.test import Client
+from rest_framework.authtoken.models import Token
 
 User = get_user_model()
 

@@ -3,8 +3,9 @@
 Script para probar solo el endpoint de salida
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_exit_only():

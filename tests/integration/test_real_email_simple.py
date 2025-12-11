@@ -3,8 +3,9 @@
 Script para probar el envio de emails reales (sin emojis)
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_real_email():

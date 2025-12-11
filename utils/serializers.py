@@ -2,10 +2,12 @@
 Serializers para configuración de monedas y tipos de cambio
 """
 
-from rest_framework import serializers
-from utils.models import BaseCurrencySetting, ExchangeRate
-from utils.currency_converter import FxService
 from datetime import date
+
+from rest_framework import serializers
+
+from utils.currency_converter import FxService
+from utils.models import BaseCurrencySetting, ExchangeRate
 
 
 class BaseCurrencySerializer(serializers.ModelSerializer):
@@ -61,26 +63,28 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
     def validate_month(self, value):
         """Valida que el mes sea válido (1-12)"""
         if not 1 <= value <= 12:
-            raise serializers.ValidationError("El mes debe estar entre 1 y 12")
+            msg = "El mes debe estar entre 1 y 12"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_year(self, value):
         """Valida que el año sea razonable"""
         current_year = date.today().year
         if not 2000 <= value <= current_year + 10:
-            raise serializers.ValidationError(f"El año debe estar entre 2000 y {current_year + 10}")
+            msg = f"El año debe estar entre 2000 y {current_year + 10}"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate_rate(self, value):
         """Valida que la tasa sea positiva"""
         if value <= 0:
-            raise serializers.ValidationError("La tasa de cambio debe ser mayor a cero")
+            msg = "La tasa de cambio debe ser mayor a cero"
+            raise serializers.ValidationError(msg)
         return value
 
     def validate(self, data):
         """Validación cruzada de campos"""
         if data.get("base_currency") == data.get("currency"):
-            raise serializers.ValidationError(
-                "La moneda base y la moneda de destino no pueden ser iguales"
-            )
+            msg = "La moneda base y la moneda de destino no pueden ser iguales"
+            raise serializers.ValidationError(msg)
         return data

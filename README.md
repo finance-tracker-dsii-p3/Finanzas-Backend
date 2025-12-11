@@ -99,7 +99,7 @@ Content-Type: application/json
     "user": {
         "id": 1,
         "username": "usuario123",
-        "email": "usuario@email.com", 
+        "email": "usuario@email.com",
         "role": "monitor",
         "is_verified": false
     }
@@ -173,7 +173,7 @@ Authorization: Token <tu_token>
 ```json
 {
     "first_name": "Juan",
-    "last_name": "Pérez", 
+    "last_name": "Pérez",
     "username": "usuario123",
     "email": "usuario@email.com",
     "phone": "3001234567",
@@ -268,7 +268,7 @@ Authorization: Token <tu_token>
         "id": 2,
         "username": "monitor123"
     },
-    "dashboard_type": "monitor", 
+    "dashboard_type": "monitor",
     "stats": {
         "account_status": "verified",
         "verification_date": "2025-09-28T09:02:30.020236-05:00"
@@ -500,7 +500,7 @@ Content-Type: application/json
 {
     "message": "Salida registrada exitosamente",
     "duration": {
-        "is_active": false,  
+        "is_active": false,
         "total_duration_minutes": 540,
         "total_duration_hours": 9.0,
         "formatted_duration": "9h",
@@ -921,7 +921,7 @@ class RoomEntryBusinessLogic:
     - get_user_daily_summary()             # Resumen diario de actividad
 ```
 
-### **Pruebas Implementadas** 
+### **Pruebas Implementadas**
 - **14 tests específicos** para validaciones de la Tarea 2
 - **Cobertura completa** de todas las historias de usuario
 - **Pruebas de API** y **pruebas de servicios**
@@ -933,7 +933,7 @@ class RoomEntryBusinessLogic:
 
 ### **Funcionalidades Completadas** ✅
 1. **Sprint 1**: Sistema de autenticación y gestión básica de salas
-2. **Tarea 1**: Modelo y endpoints para registro de entrada/salida  
+2. **Tarea 1**: Modelo y endpoints para registro de entrada/salida
 3. **Tarea 2**: Validaciones de negocio y lógica avanzada
 
 ### **Pruebas** 🧪

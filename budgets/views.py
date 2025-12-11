@@ -2,25 +2,27 @@
 Vistas para la API de presupuestos
 """
 
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
-from django.shortcuts import get_object_or_404
 from datetime import date
+
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from categories.models import Category
 
 from .models import Budget
 from .serializers import (
-    BudgetListSerializer,
-    BudgetDetailSerializer,
     BudgetCreateSerializer,
-    BudgetUpdateSerializer,
+    BudgetDetailSerializer,
+    BudgetListSerializer,
     BudgetStatsSerializer,
     BudgetSummarySerializer,
+    BudgetUpdateSerializer,
 )
 from .services import BudgetService
-from categories.models import Category
 
 
 class BudgetViewSet(viewsets.ModelViewSet):
@@ -52,11 +54,11 @@ class BudgetViewSet(viewsets.ModelViewSet):
         """Retornar serializer según la acción"""
         if self.action == "list":
             return BudgetListSerializer
-        elif self.action == "retrieve":
+        if self.action == "retrieve":
             return BudgetDetailSerializer
-        elif self.action == "create":
+        if self.action == "create":
             return BudgetCreateSerializer
-        elif self.action in ["update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
             return BudgetUpdateSerializer
         return BudgetListSerializer
 
@@ -211,9 +213,11 @@ class BudgetViewSet(viewsets.ModelViewSet):
                 "period": period,
                 "count": len(categories_data),
                 "categories": categories_data,
-                "message": "Estas categorías aún no tienen presupuesto asignado."
-                if categories_data
-                else "Todas tus categorías de gasto tienen presupuesto.",
+                "message": (
+                    "Estas categorías aún no tienen presupuesto asignado."
+                    if categories_data
+                    else "Todas tus categorías de gasto tienen presupuesto."
+                ),
             }
         )
 
@@ -243,8 +247,10 @@ class BudgetViewSet(viewsets.ModelViewSet):
             {
                 "count": len(alerts_data),
                 "alerts": alerts_data,
-                "message": "Tienes presupuestos que requieren atención."
-                if alerts_data
-                else "Todos tus presupuestos están bajo control.",
+                "message": (
+                    "Tienes presupuestos que requieren atención."
+                    if alerts_data
+                    else "Todos tus presupuestos están bajo control."
+                ),
             }
         )

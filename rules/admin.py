@@ -4,6 +4,7 @@ Administración de reglas automáticas (HU-12)
 
 from django.contrib import admin
 from django.utils.html import format_html
+
 from .models import AutomaticRule
 
 

@@ -10,7 +10,8 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
     """
     brevo_api_key = getattr(settings, "BREVO_API_KEY", None)
     if not brevo_api_key:
-        raise ValueError("BREVO_API_KEY no está configurado en las settings.")
+        msg = "BREVO_API_KEY no está configurado en las settings."
+        raise ValueError(msg)
 
     # En entorno de testing, simular envío exitoso
     if brevo_api_key == "test-key":
@@ -59,10 +60,12 @@ def send_email_via_brevo(to, subject, html_content, text_content=None):
         if response.status_code != 201:
             print(f"[BREVO_ERROR] Error en Brevo API - Status: {response.status_code}")
             print(f"[BREVO_ERROR] Response: {response.text}")
-            raise Exception(f"Brevo API error: {response.status_code} - {response.text}")
+            msg = f"Brevo API error: {response.status_code} - {response.text}"
+            raise Exception(msg)
 
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"[BREVO_ERROR] Request exception: {e}")
-        raise Exception(f"Error enviando email via Brevo: {e}")
+        msg = f"Error enviando email via Brevo: {e}"
+        raise Exception(msg)

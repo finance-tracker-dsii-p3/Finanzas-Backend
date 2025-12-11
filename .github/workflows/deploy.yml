@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Get branch name
         id: branch
         run: |
@@ -32,7 +32,7 @@ jobs:
           else
             echo "name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Check if deployment needed
         id: check
         run: |
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ needs.check-tests.outputs.deploy-needed == 'true' }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,19 +67,19 @@ jobs:
         continue-on-error: true
         run: |
           echo "� Testing service connectivity..."
-          
+
           SERVICE_URL="${{ secrets.RENDER_SERVICE_URL }}"
-          
+
           if [[ -n "$SERVICE_URL" && "$SERVICE_URL" != "null" ]]; then
             echo "🌐 Testing: $SERVICE_URL"
-            
+
             # Test basic connectivity
             if curl -f -s "$SERVICE_URL/" > /dev/null 2>&1; then
               echo "✅ Basic connectivity: OK"
             else
               echo "⚠️ Basic connectivity failed, service may still be starting"
             fi
-            
+
             # Test health endpoint
             if curl -f -s "$SERVICE_URL/health/" > /dev/null 2>&1; then
               echo "✅ Health endpoint: OK"
@@ -89,7 +89,7 @@ jobs:
           else
             echo "⚠️ RENDER_SERVICE_URL not configured, skipping health check"
           fi
-          
+
           echo "🎉 Deployment process completed!"
 
   # Job de notificación (opcional)

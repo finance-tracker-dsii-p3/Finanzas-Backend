@@ -2,9 +2,10 @@
 Serializers para preferencias de notificaciones
 """
 
-from rest_framework import serializers
-from users.models import UserNotificationPreferences
 import pytz
+from rest_framework import serializers
+
+from users.models import UserNotificationPreferences
 
 
 class UserNotificationPreferencesSerializer(serializers.ModelSerializer):
@@ -45,7 +46,8 @@ class UserNotificationPreferencesSerializer(serializers.ModelSerializer):
             pytz.timezone(value)
             return value
         except Exception:
-            raise serializers.ValidationError("Zona horaria inválida")
+            msg = "Zona horaria inválida"
+            raise serializers.ValidationError(msg)
 
 
 class TimezoneListSerializer(serializers.Serializer):

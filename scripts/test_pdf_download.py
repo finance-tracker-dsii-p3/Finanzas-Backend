@@ -5,18 +5,20 @@ Script para probar la descarga de PDF generado
 
 import os
 import sys
+import tempfile
+
 import django
 import requests
-import tempfile
 
 # Configurar Django
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
+from django.contrib.auth import authenticate
+
 from export.models import ExportJob
 from users.models import User
-from django.contrib.auth import authenticate
 
 
 def get_auth_token():
@@ -37,7 +39,7 @@ def get_auth_token():
         # Obtener o crear token
         from rest_framework.authtoken.models import Token
 
-        token, created = Token.objects.get_or_create(user=user)
+        token, _created = Token.objects.get_or_create(user=user)
 
         print(f"✅ Token obtenido: {token.key[:10]}...")
         return token.key
@@ -103,10 +105,9 @@ def test_pdf_download():
             os.unlink(tmp_file_path)
 
             return True
-        else:
-            print(f"❌ Error en descarga: {response.status_code}")
-            print(f"   - Respuesta: {response.text}")
-            return False
+        print(f"❌ Error en descarga: {response.status_code}")
+        print(f"   - Respuesta: {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en descarga: {e}")
@@ -164,12 +165,10 @@ def test_pdf_generation_and_download():
             if response.content.startswith(b"%PDF"):
                 print("✅ PDF válido descargado")
                 return True
-            else:
-                print("❌ PDF inválido descargado")
-                return False
-        else:
-            print(f"❌ Error en descarga: {response.status_code}")
+            print("❌ PDF inválido descargado")
             return False
+        print(f"❌ Error en descarga: {response.status_code}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en proceso completo: {e}")

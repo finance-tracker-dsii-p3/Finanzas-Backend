@@ -9,18 +9,36 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('notifications', '0001_initial'),
+        ("notifications", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='notification',
-            name='notification_type',
-            field=models.CharField(choices=[('room_entry', 'Entrada a sala'), ('room_exit', 'Salida de sala'), ('incapacity', 'Incapacidad registrada'), ('equipment_report', 'Reporte de equipo'), ('attendance', 'Listado de asistencia'), ('admin_verification', 'Verificación de usuario'), ('excessive_hours', 'Exceso de horas continuas')], help_text='Tipo de notificación', max_length=30, verbose_name='Tipo'),
+            model_name="notification",
+            name="notification_type",
+            field=models.CharField(
+                choices=[
+                    ("room_entry", "Entrada a sala"),
+                    ("room_exit", "Salida de sala"),
+                    ("incapacity", "Incapacidad registrada"),
+                    ("equipment_report", "Reporte de equipo"),
+                    ("attendance", "Listado de asistencia"),
+                    ("admin_verification", "Verificación de usuario"),
+                    ("excessive_hours", "Exceso de horas continuas"),
+                ],
+                help_text="Tipo de notificación",
+                max_length=30,
+                verbose_name="Tipo",
+            ),
         ),
         migrations.AlterField(
-            model_name='notification',
-            name='user',
-            field=models.ForeignKey(help_text='Usuario que recibe la notificación', on_delete=django.db.models.deletion.CASCADE, related_name='notifications_received', to=settings.AUTH_USER_MODEL),
+            model_name="notification",
+            name="user",
+            field=models.ForeignKey(
+                help_text="Usuario que recibe la notificación",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="notifications_received",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

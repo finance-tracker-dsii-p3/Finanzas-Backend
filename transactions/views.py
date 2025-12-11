@@ -2,21 +2,22 @@
 Views para gestión de categorías de ingresos y gastos
 """
 
-from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
 import logging
 
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.response import Response
+
+from .filters import TransactionFilter
 from .models import Transaction
 from .serializers import (
-    TransactionSerializer,
     TransactionDetailSerializer,
+    TransactionSerializer,
     TransactionUpdateSerializer,
 )
 from .services import TransactionService
-from .filters import TransactionFilter
-from django_filters.rest_framework import DjangoFilterBackend
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +54,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """Seleccionar serializer según la acción"""
         if self.action == "create":
             return TransactionSerializer
-        elif self.action in ["retrieve", "list"]:
+        if self.action in ["retrieve", "list"]:
             return TransactionDetailSerializer
-        elif self.action in ["update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
             return TransactionUpdateSerializer
-        else:
-            return TransactionDetailSerializer
+        return TransactionDetailSerializer
 
     def list(self, request, *args, **kwargs):
         """
@@ -102,10 +102,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            logger.error(
-                f"Error al crear transacción para usuario {self.request.user.id}: {str(e)}"
+            logger.exception(
+                f"Error al crear transacción para usuario {self.request.user.id}: {e!s}"
             )
-            raise e
+            raise
 
     def perform_update(self, serializer):
         """Actualizar transacción y actualizar saldos"""
@@ -149,8 +149,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            logger.error(f"Error al actualizar transacción {self.get_object().id}: {str(e)}")
-            raise e
+            logger.exception(f"Error al actualizar transacción {self.get_object().id}: {e!s}")
+            raise
 
     @action(detail=True, methods=["post"])
     def duplicate(self, request, pk=None):
@@ -196,8 +196,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_201_CREATED,
             )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["post"])
     def bulk_delete(self, request):
@@ -243,8 +242,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 )
             except Exception as e:
                 errors.append({"transaction_id": transaction.id, "error": str(e)})
-                logger.error(
-                    f"Error al eliminar transacción {transaction.id} en bulk delete: {str(e)}"
+                logger.exception(
+                    f"Error al eliminar transacción {transaction.id} en bulk delete: {e!s}"
                 )
 
         if errors:
@@ -276,5 +275,5 @@ class TransactionViewSet(viewsets.ModelViewSet):
             logger.info(f"Usuario {self.request.user.id} eliminó transacción {instance.id}")
 
         except Exception as e:
-            logger.error(f"Error al eliminar transacción {instance.id}: {str(e)}")
-            raise e
+            logger.exception(f"Error al eliminar transacción {instance.id}: {e!s}")
+            raise

@@ -5,6 +5,7 @@ Script para probar descarga con ID específico
 
 import os
 import sys
+
 import django
 import requests
 
@@ -13,8 +14,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
-from users.models import User
 from django.contrib.auth import authenticate
+
+from users.models import User
 
 
 def get_auth_token():
@@ -30,7 +32,7 @@ def get_auth_token():
 
         from rest_framework.authtoken.models import Token
 
-        token, created = Token.objects.get_or_create(user=user)
+        token, _created = Token.objects.get_or_create(user=user)
         return token.key
 
     except Exception as e:
@@ -135,13 +137,11 @@ def test_download_with_stream():
             if len(content) == 0:
                 print("   - ❌ PROBLEMA: Contenido está vacío")
                 return False
-            else:
-                print("   - ✅ Contenido descargado correctamente")
-                print(f"   - Inicio: {content[:50]}")
-                return True
-        else:
-            print(f"   - ❌ Error: {response.status_code}")
-            return False
+            print("   - ✅ Contenido descargado correctamente")
+            print(f"   - Inicio: {content[:50]}")
+            return True
+        print(f"   - ❌ Error: {response.status_code}")
+        return False
 
     except Exception as e:
         print(f"   - ❌ Error: {e}")

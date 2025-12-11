@@ -10,28 +10,116 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
-        ('accounts', '0005_account_account_number_account_bank_name'),
+        ("users", "0001_initial"),
+        ("accounts", "0005_account_account_number_account_bank_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Transaction',
+            name="Transaction",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.IntegerField(choices=[(1, 'Income'), (2, 'Expense'), (3, 'Transfer')], help_text='Tipo de la transacción', verbose_name='Tipo de transacción')),
-                ('base_amount', models.IntegerField(help_text='Monto base de la transacción', verbose_name='Monto base')),
-                ('tax_percentage', models.IntegerField(blank=True, help_text='Porcentaje de impuesto asociado a la transacción (opcional)', null=True, verbose_name='Impuesto')),
-                ('taxed_amount', models.IntegerField(blank=True, help_text='Monto adicional por impuesto (si aplica)', null=True, verbose_name='Monto de impuesto')),
-                ('total_amount', models.IntegerField(help_text='Monto total de la transacción (incluyendo impuestos)', verbose_name='Monto total')),
-                ('date', models.DateField(help_text='Fecha de la transacción', verbose_name='Fecha')),
-                ('tag', models.CharField(blank=True, help_text='Etiqueta asociada a la transacción', max_length=100, null=True, verbose_name='Etiqueta')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Fecha de creación de la transacción')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Fecha de última actualización')),
-                ('destination_account', models.ForeignKey(blank=True, help_text='Cuenta destino para transferencias (opcional)', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='destination_transactions', to='accounts.account', verbose_name='Cuenta destino')),
-                ('origin_account', models.ForeignKey(help_text='Cuenta asociada a la transacción', on_delete=django.db.models.deletion.CASCADE, related_name='origin_transactions', to='accounts.account', verbose_name='Cuenta')),
-                ('user', models.ForeignKey(help_text='Usuario propietario de la transacción', on_delete=django.db.models.deletion.CASCADE, related_name='transactions', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "type",
+                    models.IntegerField(
+                        choices=[(1, "Income"), (2, "Expense"), (3, "Transfer")],
+                        help_text="Tipo de la transacción",
+                        verbose_name="Tipo de transacción",
+                    ),
+                ),
+                (
+                    "base_amount",
+                    models.IntegerField(
+                        help_text="Monto base de la transacción", verbose_name="Monto base"
+                    ),
+                ),
+                (
+                    "tax_percentage",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="Porcentaje de impuesto asociado a la transacción (opcional)",
+                        null=True,
+                        verbose_name="Impuesto",
+                    ),
+                ),
+                (
+                    "taxed_amount",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="Monto adicional por impuesto (si aplica)",
+                        null=True,
+                        verbose_name="Monto de impuesto",
+                    ),
+                ),
+                (
+                    "total_amount",
+                    models.IntegerField(
+                        help_text="Monto total de la transacción (incluyendo impuestos)",
+                        verbose_name="Monto total",
+                    ),
+                ),
+                (
+                    "date",
+                    models.DateField(help_text="Fecha de la transacción", verbose_name="Fecha"),
+                ),
+                (
+                    "tag",
+                    models.CharField(
+                        blank=True,
+                        help_text="Etiqueta asociada a la transacción",
+                        max_length=100,
+                        null=True,
+                        verbose_name="Etiqueta",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="Fecha de creación de la transacción"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, help_text="Fecha de última actualización"),
+                ),
+                (
+                    "destination_account",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Cuenta destino para transferencias (opcional)",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="destination_transactions",
+                        to="accounts.account",
+                        verbose_name="Cuenta destino",
+                    ),
+                ),
+                (
+                    "origin_account",
+                    models.ForeignKey(
+                        help_text="Cuenta asociada a la transacción",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="origin_transactions",
+                        to="accounts.account",
+                        verbose_name="Cuenta",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Usuario propietario de la transacción",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="transactions",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
         ),
     ]

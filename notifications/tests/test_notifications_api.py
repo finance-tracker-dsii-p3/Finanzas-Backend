@@ -1,8 +1,7 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+from django.test import TestCase
 from rest_framework.authtoken.models import Token
-
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -24,7 +23,7 @@ class NotificationsApiTests(TestCase):
 
     def test_list(self):
         response = self.client.get("/api/notifications/notifications/")
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200
 
     def test_create_retrieve_update_delete_notification(self):
         # Create
@@ -35,14 +34,14 @@ class NotificationsApiTests(TestCase):
             "message": "Usuario realizó una acción",
         }
         create_resp = self.client.post("/api/notifications/notifications/", payload, format="json")
-        self.assertEqual(create_resp.status_code, 201)
+        assert create_resp.status_code == 201
         notif_id = create_resp.data.get("id")
-        self.assertIsNotNone(notif_id)
+        assert notif_id is not None
 
         # Retrieve
         retrieve_resp = self.client.get(f"/api/notifications/notifications/{notif_id}/")
-        self.assertEqual(retrieve_resp.status_code, 200)
-        self.assertEqual(retrieve_resp.data["title"], "Entrada")
+        assert retrieve_resp.status_code == 200
+        assert retrieve_resp.data["title"] == "Entrada"
 
         # Update (partial)
         patch_resp = self.client.patch(
@@ -50,16 +49,16 @@ class NotificationsApiTests(TestCase):
             {"read": True},
             format="json",
         )
-        self.assertIn(patch_resp.status_code, (200, 202))
-        self.assertTrue(patch_resp.data["read"])  # read actualizado
+        assert patch_resp.status_code in (200, 202)
+        assert patch_resp.data["read"]  # read actualizado
 
         # Delete
         delete_resp = self.client.delete(f"/api/notifications/notifications/{notif_id}/")
-        self.assertIn(delete_resp.status_code, (204,))
+        assert delete_resp.status_code in (204,)
 
         # Not found after delete
         not_found_resp = self.client.get(f"/api/notifications/notifications/{notif_id}/")
-        self.assertEqual(not_found_resp.status_code, 404)
+        assert not_found_resp.status_code == 404
 
     def test_create_invalid_payload_returns_400(self):
         bad_payload = {
@@ -68,4 +67,4 @@ class NotificationsApiTests(TestCase):
             "message": "Mensaje",
         }
         resp = self.client.post("/api/notifications/notifications/", bad_payload, format="json")
-        self.assertEqual(resp.status_code, 400)
+        assert resp.status_code == 400

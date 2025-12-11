@@ -5,6 +5,7 @@ Script para probar la descarga de archivos y verificar si están vacíos
 
 import os
 import sys
+
 import django
 import requests
 
@@ -13,9 +14,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finanzas_back.settings.development")
 django.setup()
 
+from django.contrib.auth import authenticate
+
 from export.models import ExportJob
 from users.models import User
-from django.contrib.auth import authenticate
 
 
 def get_auth_token():
@@ -31,7 +33,7 @@ def get_auth_token():
 
         from rest_framework.authtoken.models import Token
 
-        token, created = Token.objects.get_or_create(user=user)
+        token, _created = Token.objects.get_or_create(user=user)
         return token.key
 
     except Exception as e:
@@ -73,8 +75,7 @@ def test_file_download():
                     if len(file_content) == 0:
                         print("❌ PROBLEMA: Archivo en disco está vacío!")
                         return False
-                    else:
-                        print("✅ Archivo en disco tiene contenido")
+                    print("✅ Archivo en disco tiene contenido")
             except Exception as e:
                 print(f"❌ Error leyendo archivo: {e}")
                 return False
@@ -96,22 +97,20 @@ def test_file_download():
             if len(response.content) == 0:
                 print("❌ PROBLEMA: Respuesta HTTP está vacía!")
                 return False
+            print("✅ Respuesta HTTP tiene contenido")
+
+            # Verificar que es PDF válido
+            if response.content.startswith(b"%PDF"):
+                print("✅ Contenido es PDF válido")
             else:
-                print("✅ Respuesta HTTP tiene contenido")
+                print("❌ Contenido no es PDF válido")
+                print(f"   - Inicio: {response.content[:50]}")
+                return False
 
-                # Verificar que es PDF válido
-                if response.content.startswith(b"%PDF"):
-                    print("✅ Contenido es PDF válido")
-                else:
-                    print("❌ Contenido no es PDF válido")
-                    print(f"   - Inicio: {response.content[:50]}")
-                    return False
-
-                return True
-        else:
-            print(f"❌ Error HTTP: {response.status_code}")
-            print(f"   - Respuesta: {response.text}")
-            return False
+            return True
+        print(f"❌ Error HTTP: {response.status_code}")
+        print(f"   - Respuesta: {response.text}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en descarga: {e}")
@@ -178,12 +177,10 @@ def test_new_export_and_download():
             if len(response.content) == 0:
                 print("❌ PROBLEMA: Descarga está vacía!")
                 return False
-            else:
-                print("✅ Descarga tiene contenido")
-                return True
-        else:
-            print(f"❌ Error en descarga: {response.status_code}")
-            return False
+            print("✅ Descarga tiene contenido")
+            return True
+        print(f"❌ Error en descarga: {response.status_code}")
+        return False
 
     except Exception as e:
         print(f"❌ Error en proceso: {e}")

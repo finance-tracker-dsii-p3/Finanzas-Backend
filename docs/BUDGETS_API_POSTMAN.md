@@ -52,7 +52,7 @@ Authorization: {{token}}
 
 ### 1. Listar Presupuestos
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/`
 
 **Headers:**
@@ -141,7 +141,7 @@ GET {{base_url}}/api/budgets/?active_only=true&period=monthly
 
 ### 2. Crear Presupuesto Nuevo
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/budgets/`
 
 **Headers:**
@@ -258,7 +258,7 @@ Content-Type: application/json
 
 ### 3. Ver Detalle de un Presupuesto
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/{id}/`
 
 **Ejemplo:**
@@ -318,7 +318,7 @@ Authorization: {{token}}
 
 ### 4. Actualizar Presupuesto (PATCH)
 
-**Método:** `PATCH`  
+**Método:** `PATCH`
 **URL:** `{{base_url}}/api/budgets/{id}/`
 
 **Ejemplo:**
@@ -407,7 +407,7 @@ Content-Type: application/json
 
 ### 5. Eliminar Presupuesto
 
-**Método:** `DELETE`  
+**Método:** `DELETE`
 **URL:** `{{base_url}}/api/budgets/{id}/`
 
 **Ejemplo:**
@@ -438,7 +438,7 @@ Authorization: {{token}}
 
 ### 6. Activar/Desactivar Presupuesto
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/budgets/{id}/toggle_active/`
 
 **Ejemplo:**
@@ -473,7 +473,7 @@ Authorization: {{token}}
 
 ### 7. Obtener Estadísticas Generales
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/stats/`
 
 **Headers:**
@@ -502,7 +502,7 @@ Authorization: {{token}}
 
 ### 8. Obtener Resumen Mensual con Proyecciones
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/monthly_summary/`
 
 **Headers:**
@@ -587,7 +587,7 @@ Authorization: {{token}}
 
 ### 9. Obtener Presupuestos por Categoría
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/by_category/{category_id}/`
 
 **Ejemplo:**
@@ -650,7 +650,7 @@ Authorization: {{token}}
 
 ### 10. Obtener Categorías sin Presupuesto
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/categories_without_budget/`
 
 **Headers:**
@@ -708,7 +708,7 @@ Authorization: {{token}}
 
 ### 11. Obtener Alertas de Presupuestos
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/budgets/alerts/`
 
 **Headers:**
@@ -919,23 +919,23 @@ Proyección de gasto a fin de período basada en el promedio diario:
 ## ❌ Errores Comunes y Soluciones
 
 ### Error 401 Unauthorized
-**Causa:** Token no válido o no enviado  
+**Causa:** Token no válido o no enviado
 **Solución:** Verifica el header `Authorization: Token xxxxx`
 
 ### Error 400 - Presupuesto duplicado
-**Causa:** Ya existe un presupuesto para esa categoría y período  
+**Causa:** Ya existe un presupuesto para esa categoría y período
 **Solución:** Usa PATCH para actualizar el existente o DELETE para eliminarlo
 
 ### Error 400 - Categoría de ingreso
-**Causa:** Intentaste crear presupuesto para categoría de ingreso  
+**Causa:** Intentaste crear presupuesto para categoría de ingreso
 **Solución:** Solo se pueden crear presupuestos para categorías de tipo "expense"
 
 ### Error 400 - Categoría no pertenece al usuario
-**Causa:** La categoría es de otro usuario  
+**Causa:** La categoría es de otro usuario
 **Solución:** Verifica el ID de la categoría con GET /api/categories/
 
 ### Error 404 - Presupuesto no encontrado
-**Causa:** El ID no existe o pertenece a otro usuario  
+**Causa:** El ID no existe o pertenece a otro usuario
 **Solución:** Verifica el ID con GET /api/budgets/
 
 ---
@@ -991,9 +991,9 @@ fetch('/api/budgets/monthly_summary/', {
   data.budgets.forEach(budget => {
     // Mostrar barra de progreso
     const percentage = budget.spent_percentage;
-    const color = budget.status === 'exceeded' ? 'red' : 
+    const color = budget.status === 'exceeded' ? 'red' :
                   budget.status === 'warning' ? 'yellow' : 'green';
-    
+
     // Mostrar proyección
     if (budget.projection.will_exceed) {
       showAlert(`${budget.category_name}: Se proyecta exceder el presupuesto`);

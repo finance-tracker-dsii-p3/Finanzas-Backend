@@ -10,74 +10,268 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
-        ('transactions', '0009_add_currency_conversion_fields'),
+        ("users", "0001_initial"),
+        ("transactions", "0009_add_currency_conversion_fields"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SOAT',
+            name="SOAT",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('issue_date', models.DateField(help_text='Fecha en que se emitió el SOAT', verbose_name='Fecha de emisión')),
-                ('expiry_date', models.DateField(help_text='Fecha en que vence el SOAT', verbose_name='Fecha de vencimiento')),
-                ('alert_days_before', models.PositiveIntegerField(default=7, help_text='Días antes del vencimiento para generar alerta', verbose_name='Días de alerta')),
-                ('cost', models.IntegerField(default=0, help_text='Costo del SOAT en centavos', verbose_name='Costo (centavos)')),
-                ('status', models.CharField(choices=[('vigente', 'Vigente'), ('por_vencer', 'Por vencer'), ('vencido', 'Vencido'), ('pendiente_pago', 'Pendiente de pago'), ('atrasado', 'Atrasado')], default='vigente', help_text='Estado actual del SOAT', max_length=20, verbose_name='Estado')),
-                ('insurance_company', models.CharField(blank=True, help_text='Compañía aseguradora que emitió el SOAT', max_length=100, verbose_name='Aseguradora')),
-                ('policy_number', models.CharField(blank=True, help_text='Número de póliza del SOAT', max_length=50, verbose_name='Número de póliza')),
-                ('notes', models.TextField(blank=True, help_text='Notas adicionales sobre el SOAT', verbose_name='Notas')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
-                ('payment_transaction', models.OneToOneField(blank=True, help_text='Transacción asociada al pago del SOAT', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='soat_payment', to='transactions.transaction', verbose_name='Transacción de pago')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "issue_date",
+                    models.DateField(
+                        help_text="Fecha en que se emitió el SOAT", verbose_name="Fecha de emisión"
+                    ),
+                ),
+                (
+                    "expiry_date",
+                    models.DateField(
+                        help_text="Fecha en que vence el SOAT", verbose_name="Fecha de vencimiento"
+                    ),
+                ),
+                (
+                    "alert_days_before",
+                    models.PositiveIntegerField(
+                        default=7,
+                        help_text="Días antes del vencimiento para generar alerta",
+                        verbose_name="Días de alerta",
+                    ),
+                ),
+                (
+                    "cost",
+                    models.IntegerField(
+                        default=0,
+                        help_text="Costo del SOAT en centavos",
+                        verbose_name="Costo (centavos)",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("vigente", "Vigente"),
+                            ("por_vencer", "Por vencer"),
+                            ("vencido", "Vencido"),
+                            ("pendiente_pago", "Pendiente de pago"),
+                            ("atrasado", "Atrasado"),
+                        ],
+                        default="vigente",
+                        help_text="Estado actual del SOAT",
+                        max_length=20,
+                        verbose_name="Estado",
+                    ),
+                ),
+                (
+                    "insurance_company",
+                    models.CharField(
+                        blank=True,
+                        help_text="Compañía aseguradora que emitió el SOAT",
+                        max_length=100,
+                        verbose_name="Aseguradora",
+                    ),
+                ),
+                (
+                    "policy_number",
+                    models.CharField(
+                        blank=True,
+                        help_text="Número de póliza del SOAT",
+                        max_length=50,
+                        verbose_name="Número de póliza",
+                    ),
+                ),
+                (
+                    "notes",
+                    models.TextField(
+                        blank=True,
+                        help_text="Notas adicionales sobre el SOAT",
+                        verbose_name="Notas",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
+                (
+                    "payment_transaction",
+                    models.OneToOneField(
+                        blank=True,
+                        help_text="Transacción asociada al pago del SOAT",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="soat_payment",
+                        to="transactions.transaction",
+                        verbose_name="Transacción de pago",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'SOAT',
-                'verbose_name_plural': 'SOATs',
-                'ordering': ['-expiry_date'],
+                "verbose_name": "SOAT",
+                "verbose_name_plural": "SOATs",
+                "ordering": ["-expiry_date"],
             },
         ),
         migrations.CreateModel(
-            name='Vehicle',
+            name="Vehicle",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('plate', models.CharField(help_text='Placa del vehículo (ej: ABC123)', max_length=10, verbose_name='Placa')),
-                ('brand', models.CharField(blank=True, help_text='Marca del vehículo (ej: Toyota, Honda)', max_length=50, verbose_name='Marca')),
-                ('model', models.CharField(blank=True, help_text='Modelo del vehículo', max_length=50, verbose_name='Modelo')),
-                ('year', models.PositiveIntegerField(blank=True, help_text='Año del vehículo', null=True, verbose_name='Año')),
-                ('is_active', models.BooleanField(default=True, help_text='Indica si el vehículo está activo', verbose_name='Activo')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
-                ('user', models.ForeignKey(help_text='Usuario propietario del vehículo', on_delete=django.db.models.deletion.CASCADE, related_name='vehicles', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "plate",
+                    models.CharField(
+                        help_text="Placa del vehículo (ej: ABC123)",
+                        max_length=10,
+                        verbose_name="Placa",
+                    ),
+                ),
+                (
+                    "brand",
+                    models.CharField(
+                        blank=True,
+                        help_text="Marca del vehículo (ej: Toyota, Honda)",
+                        max_length=50,
+                        verbose_name="Marca",
+                    ),
+                ),
+                (
+                    "model",
+                    models.CharField(
+                        blank=True,
+                        help_text="Modelo del vehículo",
+                        max_length=50,
+                        verbose_name="Modelo",
+                    ),
+                ),
+                (
+                    "year",
+                    models.PositiveIntegerField(
+                        blank=True, help_text="Año del vehículo", null=True, verbose_name="Año"
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Indica si el vehículo está activo",
+                        verbose_name="Activo",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Usuario propietario del vehículo",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="vehicles",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Vehículo',
-                'verbose_name_plural': 'Vehículos',
-                'ordering': ['-created_at'],
-                'unique_together': {('user', 'plate')},
+                "verbose_name": "Vehículo",
+                "verbose_name_plural": "Vehículos",
+                "ordering": ["-created_at"],
+                "unique_together": {("user", "plate")},
             },
         ),
         migrations.CreateModel(
-            name='SOATAlert',
+            name="SOATAlert",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('alert_type', models.CharField(choices=[('proxima_vencer', 'Próxima a vencer'), ('vencida', 'Vencida'), ('pendiente_pago', 'Pendiente de pago'), ('atrasada', 'Atrasada')], help_text='Tipo de alerta de SOAT', max_length=20, verbose_name='Tipo de alerta')),
-                ('message', models.TextField(help_text='Mensaje de la alerta', verbose_name='Mensaje')),
-                ('is_read', models.BooleanField(default=False, help_text='Indica si la alerta ha sido leída', verbose_name='Leída')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('soat', models.ForeignKey(help_text='SOAT asociado a la alerta', on_delete=django.db.models.deletion.CASCADE, related_name='alerts', to='vehicles.soat', verbose_name='SOAT')),
-                ('user', models.ForeignKey(help_text='Usuario que recibe la alerta', on_delete=django.db.models.deletion.CASCADE, related_name='soat_alerts', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "alert_type",
+                    models.CharField(
+                        choices=[
+                            ("proxima_vencer", "Próxima a vencer"),
+                            ("vencida", "Vencida"),
+                            ("pendiente_pago", "Pendiente de pago"),
+                            ("atrasada", "Atrasada"),
+                        ],
+                        help_text="Tipo de alerta de SOAT",
+                        max_length=20,
+                        verbose_name="Tipo de alerta",
+                    ),
+                ),
+                (
+                    "message",
+                    models.TextField(help_text="Mensaje de la alerta", verbose_name="Mensaje"),
+                ),
+                (
+                    "is_read",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Indica si la alerta ha sido leída",
+                        verbose_name="Leída",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "soat",
+                    models.ForeignKey(
+                        help_text="SOAT asociado a la alerta",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="alerts",
+                        to="vehicles.soat",
+                        verbose_name="SOAT",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Usuario que recibe la alerta",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="soat_alerts",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Alerta de SOAT',
-                'verbose_name_plural': 'Alertas de SOAT',
-                'ordering': ['-created_at'],
+                "verbose_name": "Alerta de SOAT",
+                "verbose_name_plural": "Alertas de SOAT",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.AddField(
-            model_name='soat',
-            name='vehicle',
-            field=models.ForeignKey(help_text='Vehículo asociado al SOAT', on_delete=django.db.models.deletion.CASCADE, related_name='soats', to='vehicles.vehicle', verbose_name='Vehículo'),
+            model_name="soat",
+            name="vehicle",
+            field=models.ForeignKey(
+                help_text="Vehículo asociado al SOAT",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="soats",
+                to="vehicles.vehicle",
+                verbose_name="Vehículo",
+            ),
         ),
     ]

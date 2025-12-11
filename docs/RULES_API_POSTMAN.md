@@ -41,7 +41,7 @@ Authorization: {{token}}
 
 ### 1. Listar Reglas Automáticas
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/rules/`
 
 **Headers:**
@@ -126,7 +126,7 @@ GET {{base_url}}/api/rules/?active_only=true&criteria_type=description_contains
 
 ### 2. Crear Regla Automática Nueva
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/rules/`
 
 **Headers:**
@@ -222,7 +222,7 @@ Content-Type: application/json
 
 ```json
 {
-  "error": "Datos de entrada inválidos", 
+  "error": "Datos de entrada inválidos",
   "details": {
     "keyword": "La palabra clave es requerida para criterio \"descripción contiene texto\""
   },
@@ -244,7 +244,7 @@ Content-Type: application/json
 
 ### 3. Ver Detalle de una Regla
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/rules/{id}/`
 
 **Ejemplo:**
@@ -295,7 +295,7 @@ Authorization: {{token}}
 
 ### 4. Actualizar Regla (PATCH)
 
-**Método:** `PATCH`  
+**Método:** `PATCH`
 **URL:** `{{base_url}}/api/rules/{id}/`
 
 **Ejemplo:**
@@ -375,7 +375,7 @@ Content-Type: application/json
 
 ### 5. Eliminar Regla
 
-**Método:** `DELETE`  
+**Método:** `DELETE`
 **URL:** `{{base_url}}/api/rules/{id}/`
 
 **Ejemplo:**
@@ -403,7 +403,7 @@ Authorization: {{token}}
 
 ### 6. Activar/Desactivar Regla
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/rules/{id}/toggle_active/`
 
 **Ejemplo:**
@@ -435,7 +435,7 @@ Authorization: {{token}}
 
 ### 7. Obtener Estadísticas Generales
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/rules/stats/`
 
 **Headers:**
@@ -478,7 +478,7 @@ Authorization: {{token}}
 
 ### 8. Reordenar Reglas (Prioridad)
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/rules/reorder/`
 
 **Headers:**
@@ -511,7 +511,7 @@ Content-Type: application/json
     },
     {
       "id": 1,
-      "name": "Uber y taxis", 
+      "name": "Uber y taxis",
       "order": 2,
       "is_active": true
     },
@@ -529,7 +529,7 @@ Content-Type: application/json
 
 ### 9. Previsualizar Aplicación de Reglas
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/rules/preview/`
 
 **Headers:**
@@ -588,7 +588,7 @@ Content-Type: application/json
 
 ### 10. Obtener Solo Reglas Activas
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/rules/active/`
 
 **Headers:**
@@ -626,7 +626,7 @@ Authorization: {{token}}
 
 ### 11. Ver Transacciones Aplicadas por Regla
 
-**Método:** `GET`  
+**Método:** `GET`
 **URL:** `{{base_url}}/api/rules/{id}/applied_transactions/`
 
 **Ejemplo:**
@@ -656,7 +656,7 @@ Authorization: {{token}}
     {
       "id": 13,
       "total_amount": 8500,
-      "date": "2025-11-22", 
+      "date": "2025-11-22",
       "description": "Taxi aeropuerto",
       "type": "Expense",
       "created_at": "2025-11-22T20:15:00Z"
@@ -671,7 +671,7 @@ Authorization: {{token}}
 
 ### Crear Transacción con Aplicación Automática de Reglas
 
-**Método:** `POST`  
+**Método:** `POST`
 **URL:** `{{base_url}}/api/transactions/`
 
 **Headers:**
@@ -761,7 +761,7 @@ POST {{base_url}}/api/transactions/
   "origin_account": 1,
   "type": 2,
   "base_amount": 12000,
-  "date": "2025-11-23", 
+  "date": "2025-11-23",
   "description": "Uber viaje oficina"
 }
 ```
@@ -887,7 +887,7 @@ Todos los errores ahora devuelven un formato JSON consistente y útil:
 }
 ```
 
-**Causa:** Token no válido o no enviado  
+**Causa:** Token no válido o no enviado
 **Solución:** Verifica el header `Authorization: Token xxxxx`
 
 ### Error 400 - Nombre duplicado
@@ -903,7 +903,7 @@ Todos los errores ahora devuelven un formato JSON consistente y útil:
 }
 ```
 
-**Causa:** Ya existe una regla con ese nombre para el usuario  
+**Causa:** Ya existe una regla con ese nombre para el usuario
 **Solución:** Usa un nombre diferente o actualiza la regla existente
 
 ### Error 400 - Campos requeridos
@@ -920,7 +920,7 @@ Todos los errores ahora devuelven un formato JSON consistente y útil:
 }
 ```
 
-**Causa:** Falta keyword para criterio de descripción o target_category para acción de categoría  
+**Causa:** Falta keyword para criterio de descripción o target_category para acción de categoría
 **Solución:** Proporciona todos los campos requeridos según el tipo
 
 ### Error 400 - Categoría no válida
@@ -936,7 +936,7 @@ Todos los errores ahora devuelven un formato JSON consistente y útil:
 }
 ```
 
-**Causa:** La categoría no pertenece al usuario autenticado  
+**Causa:** La categoría no pertenece al usuario autenticado
 **Solución:** Usa uno de los IDs mostrados en el mensaje o consulta GET /api/categories/
 
 ### Error 404 - Regla no encontrada
@@ -954,7 +954,7 @@ Todos los errores ahora devuelven un formato JSON consistente y útil:
 }
 ```
 
-**Causa:** El ID no existe o pertenece a otro usuario  
+**Causa:** El ID no existe o pertenece a otro usuario
 **Solución:** Verifica el ID con GET /api/rules/
 
 ### Error 500 - Error interno
@@ -971,7 +971,7 @@ Todos los errores ahora devuelven un formato JSON consistente y útil:
 }
 ```
 
-**Causa:** Error inesperado en el servidor  
+**Causa:** Error inesperado en el servidor
 **Solución:** Revisa los datos enviados y reintenta. Si persiste, contacta al administrador.
 
 ---
@@ -1030,7 +1030,7 @@ fetch('/api/rules/stats/', {
   document.getElementById('total-rules').textContent = data.total_rules;
   document.getElementById('active-rules').textContent = data.active_rules;
   document.getElementById('applications').textContent = data.total_applications;
-  
+
   // Mostrar regla más usada
   if (data.most_used_rule.name) {
     showMostUsedRule(data.most_used_rule);
@@ -1046,7 +1046,7 @@ descriptionInput.addEventListener('input', debounce(async (e) => {
   if (e.target.value.length > 3) {
     const preview = await fetch('/api/rules/preview/', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Authorization': `Token ${token}`,
         'Content-Type': 'application/json'
       },
@@ -1055,7 +1055,7 @@ descriptionInput.addEventListener('input', debounce(async (e) => {
         transaction_type: getSelectedTransactionType()
       })
     }).then(res => res.json());
-    
+
     if (preview.will_apply) {
       showRulePreview(preview.rule);
     } else {

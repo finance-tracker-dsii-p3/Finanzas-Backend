@@ -20,4 +20,3 @@ class AnalyticsConfig(AppConfig):
     def ready(self):
         """Configuración cuando la app está lista"""
         # No hay señales que configurar por ahora
-        pass

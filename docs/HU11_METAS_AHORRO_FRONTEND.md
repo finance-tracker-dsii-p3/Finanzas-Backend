@@ -159,7 +159,7 @@ Content-Type: application/json
 - `3`: Transfer (Transferencia)
 - `4`: Saving (Ahorro) ← **Usar este tipo para asignar a metas**
 
-**Nota importante:** 
+**Nota importante:**
 - Solo las transacciones tipo `Saving` (type=4) pueden tener un `goal` asignado.
 - Cuando se crea una transacción tipo Saving con un `goal`, el backend automáticamente:
   1. Actualiza el `saved_amount` de la meta
@@ -214,7 +214,7 @@ Authorization: Bearer <token>
 
 El backend envía notificaciones automáticamente cuando:
 
-1. **Se alcanza una meta:** 
+1. **Se alcanza una meta:**
    - Título: "¡Meta alcanzada! 🎉"
    - Mensaje: "Has alcanzado tu meta '{nombre}'. ¡Felicidades!"
 
@@ -251,11 +251,11 @@ interface Goal {
 
 const GoalsList = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
-  
+
   useEffect(() => {
     fetchGoals();
   }, []);
-  
+
   const fetchGoals = async () => {
     const response = await fetch('/api/goals/', {
       headers: {
@@ -265,7 +265,7 @@ const GoalsList = () => {
     const data = await response.json();
     setGoals(data);
   };
-  
+
   return (
     <div>
       {goals.map(goal => (
@@ -283,20 +283,20 @@ const GoalCard = ({ goal }: { goal: Goal }) => {
   const targetInPesos = goal.target_amount / 100;
   const savedInPesos = goal.saved_amount / 100;
   const remainingInPesos = goal.remaining_amount / 100;
-  
+
   return (
     <div className="goal-card">
       <h3>{goal.name}</h3>
       {goal.description && <p>{goal.description}</p>}
-      
+
       {/* Barra de progreso */}
       <div className="progress-bar-container">
-        <div 
+        <div
           className="progress-bar-fill"
           style={{ width: `${goal.progress_percentage}%` }}
         />
       </div>
-      
+
       {/* Información de progreso */}
       <div className="progress-info">
         <span>
@@ -306,18 +306,18 @@ const GoalCard = ({ goal }: { goal: Goal }) => {
           → {goal.progress_percentage.toFixed(1)}%
         </span>
       </div>
-      
+
       {/* Monto restante */}
       {!goal.is_completed && (
         <p className="remaining">
           Faltan ${remainingInPesos.toLocaleString()}
         </p>
       )}
-      
+
       {goal.is_completed && (
         <p className="completed">¡Meta alcanzada! 🎉</p>
       )}
-      
+
       <p>Fecha objetivo: {new Date(goal.date).toLocaleDateString()}</p>
     </div>
   );
@@ -334,17 +334,17 @@ const CreateGoalForm = () => {
     date: '',
     description: ''
   });
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const payload = {
       name: formData.name,
       target_amount: Math.round(parseFloat(formData.target_amount) * 100), // Convertir a centavos
       date: formData.date,
       description: formData.description || undefined
     };
-    
+
     const response = await fetch('/api/goals/', {
       method: 'POST',
       headers: {
@@ -353,13 +353,13 @@ const CreateGoalForm = () => {
       },
       body: JSON.stringify(payload)
     });
-    
+
     if (response.ok) {
       // Meta creada exitosamente
       // Redirigir o actualizar lista
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       <input
@@ -369,7 +369,7 @@ const CreateGoalForm = () => {
         onChange={(e) => setFormData({...formData, name: e.target.value})}
         required
       />
-      
+
       <input
         type="number"
         placeholder="Monto objetivo (en pesos)"
@@ -379,20 +379,20 @@ const CreateGoalForm = () => {
         min="1"
         step="0.01"
       />
-      
+
       <input
         type="date"
         value={formData.date}
         onChange={(e) => setFormData({...formData, date: e.target.value})}
         required
       />
-      
+
       <textarea
         placeholder="Descripción (opcional)"
         value={formData.description}
         onChange={(e) => setFormData({...formData, description: e.target.value})}
       />
-      
+
       <button type="submit">Crear Meta</button>
     </form>
   );
@@ -409,10 +409,10 @@ const CreateSavingTransaction = ({ goalId }: { goalId: number }) => {
     date: new Date().toISOString().split('T')[0],
     description: ''
   });
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const payload = {
       type: 4, // Saving
       origin_account: parseInt(formData.origin_account),
@@ -421,7 +421,7 @@ const CreateSavingTransaction = ({ goalId }: { goalId: number }) => {
       goal: goalId, // Asignar a la meta
       description: formData.description || undefined
     };
-    
+
     const response = await fetch('/api/transactions/', {
       method: 'POST',
       headers: {
@@ -430,14 +430,14 @@ const CreateSavingTransaction = ({ goalId }: { goalId: number }) => {
       },
       body: JSON.stringify(payload)
     });
-    
+
     if (response.ok) {
       // Transacción creada y asignada a la meta
       // El backend actualizará automáticamente el saved_amount de la meta
       // Y enviará notificaciones si corresponde
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       <select
@@ -448,7 +448,7 @@ const CreateSavingTransaction = ({ goalId }: { goalId: number }) => {
         <option value="">Seleccionar cuenta</option>
         {/* Opciones de cuentas */}
       </select>
-      
+
       <input
         type="number"
         placeholder="Monto a ahorrar (en pesos)"
@@ -458,20 +458,20 @@ const CreateSavingTransaction = ({ goalId }: { goalId: number }) => {
         min="0.01"
         step="0.01"
       />
-      
+
       <input
         type="date"
         value={formData.date}
         onChange={(e) => setFormData({...formData, date: e.target.value})}
         required
       />
-      
+
       <textarea
         placeholder="Descripción (opcional)"
         value={formData.description}
         onChange={(e) => setFormData({...formData, description: e.target.value})}
       />
-      
+
       <button type="submit">Registrar Ahorro</button>
     </form>
   );
@@ -484,17 +484,17 @@ const CreateSavingTransaction = ({ goalId }: { goalId: number }) => {
 const CreateIncomeWithGoal = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<number | null>(null);
-  
+
   useEffect(() => {
     // Cargar metas del usuario
     fetch('/api/goals/')
       .then(res => res.json())
       .then(data => setGoals(data));
   }, []);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Primero crear el ingreso
     const incomePayload = {
       type: 1, // Income
@@ -503,7 +503,7 @@ const CreateIncomeWithGoal = () => {
       date: formData.date,
       category: formData.category
     };
-    
+
     const incomeResponse = await fetch('/api/transactions/', {
       method: 'POST',
       headers: {
@@ -512,7 +512,7 @@ const CreateIncomeWithGoal = () => {
       },
       body: JSON.stringify(incomePayload)
     });
-    
+
     if (incomeResponse.ok && selectedGoal) {
       // Luego crear una transacción de ahorro asignada a la meta
       const savingPayload = {
@@ -523,7 +523,7 @@ const CreateIncomeWithGoal = () => {
         goal: selectedGoal,
         description: `Ahorro asignado desde ingreso`
       };
-      
+
       await fetch('/api/transactions/', {
         method: 'POST',
         headers: {
@@ -534,11 +534,11 @@ const CreateIncomeWithGoal = () => {
       });
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       {/* Campos del ingreso */}
-      
+
       <div>
         <label>¿Asignar parte a una meta?</label>
         <select
@@ -553,7 +553,7 @@ const CreateIncomeWithGoal = () => {
           ))}
         </select>
       </div>
-      
+
       {selectedGoal && (
         <input
           type="number"
@@ -563,7 +563,7 @@ const CreateIncomeWithGoal = () => {
           step="0.01"
         />
       )}
-      
+
       <button type="submit">Registrar</button>
     </form>
   );
@@ -652,4 +652,3 @@ const CreateIncomeWithGoal = () => {
 10. ✅ Verificar notificaciones cuando se alcanza la meta
 11. ✅ Intentar asignar goal a transacción no-Saving (debe fallar)
 12. ✅ Verificar conversión de montos (pesos ↔ centavos)
-

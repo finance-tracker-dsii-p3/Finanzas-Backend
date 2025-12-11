@@ -6,18 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transactions', '0003_transaction_applied_rule_transaction_category_and_more'),
+        ("transactions", "0003_transaction_applied_rule_transaction_category_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='transaction',
-            name='note',
-            field=models.TextField(blank=True, help_text='Nota descriptiva adicional sobre la transacción', max_length=500, null=True, verbose_name='Nota'),
+            model_name="transaction",
+            name="note",
+            field=models.TextField(
+                blank=True,
+                help_text="Nota descriptiva adicional sobre la transacción",
+                max_length=500,
+                null=True,
+                verbose_name="Nota",
+            ),
         ),
         migrations.AlterField(
-            model_name='transaction',
-            name='tag',
-            field=models.CharField(blank=True, help_text='Etiqueta asociada a la transacción (ej: #hogar, #viaje)', max_length=100, null=True, verbose_name='Etiqueta'),
+            model_name="transaction",
+            name="tag",
+            field=models.CharField(
+                blank=True,
+                help_text="Etiqueta asociada a la transacción (ej: #hogar, #viaje)",
+                max_length=100,
+                null=True,
+                verbose_name="Etiqueta",
+            ),
         ),
     ]

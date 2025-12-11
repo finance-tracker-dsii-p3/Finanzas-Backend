@@ -3,9 +3,10 @@
 Script para probar notificaciones con limpieza previa
 """
 
-import requests
 import json
 import time
+
+import requests
 
 
 def test_notifications_clean():

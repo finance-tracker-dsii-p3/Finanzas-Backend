@@ -6,22 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('export', '0001_initial'),
+        ("export", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='exportjob',
-            name='monitor_ids',
+            model_name="exportjob",
+            name="monitor_ids",
         ),
         migrations.AddField(
-            model_name='exportjob',
-            name='user_ids',
-            field=models.JSONField(blank=True, help_text='Lista de IDs de usuarios específicos a exportar', null=True, verbose_name='IDs de Usuarios'),
+            model_name="exportjob",
+            name="user_ids",
+            field=models.JSONField(
+                blank=True,
+                help_text="Lista de IDs de usuarios específicos a exportar",
+                null=True,
+                verbose_name="IDs de Usuarios",
+            ),
         ),
         migrations.AlterField(
-            model_name='exportjob',
-            name='export_type',
-            field=models.CharField(choices=[('users_data', 'Datos de Usuarios'), ('notifications_data', 'Datos de Notificaciones'), ('reports_data', 'Datos de Reportes'), ('general_data', 'Datos Generales')], help_text='Tipo de datos a exportar', max_length=30, verbose_name='Tipo de exportación'),
+            model_name="exportjob",
+            name="export_type",
+            field=models.CharField(
+                choices=[
+                    ("users_data", "Datos de Usuarios"),
+                    ("notifications_data", "Datos de Notificaciones"),
+                    ("reports_data", "Datos de Reportes"),
+                    ("general_data", "Datos Generales"),
+                ],
+                help_text="Tipo de datos a exportar",
+                max_length=30,
+                verbose_name="Tipo de exportación",
+            ),
         ),
     ]

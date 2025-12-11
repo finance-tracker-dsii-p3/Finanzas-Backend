@@ -1,7 +1,8 @@
-from decimal import Decimal
-from datetime import date
-from django.db.models import Q
 import logging
+from datetime import date
+from decimal import Decimal
+
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -37,17 +38,19 @@ class CurrencyConverter:
             return amount
 
         if from_currency not in CurrencyConverter.EXCHANGE_RATES:
-            raise ValueError(f"Moneda origen no soportada: {from_currency}")
+            msg = f"Moneda origen no soportada: {from_currency}"
+            raise ValueError(msg)
 
         if to_currency not in CurrencyConverter.EXCHANGE_RATES[from_currency]:
-            raise ValueError(f"Conversión no soportada: {from_currency} -> {to_currency}")
+            msg = f"Conversión no soportada: {from_currency} -> {to_currency}"
+            raise ValueError(msg)
 
         rate = CurrencyConverter.EXCHANGE_RATES[from_currency][to_currency]
 
-        amount_decimal = Decimal(str(amount)) / Decimal("100")
+        amount_decimal = Decimal(str(amount)) / Decimal(100)
         converted = amount_decimal * rate
 
-        return int(round(converted * 100))
+        return round(converted * 100)
 
     @staticmethod
     def get_exchange_rate(from_currency, to_currency):
@@ -55,10 +58,12 @@ class CurrencyConverter:
             return Decimal("1.00")
 
         if from_currency not in CurrencyConverter.EXCHANGE_RATES:
-            raise ValueError(f"Moneda origen no soportada: {from_currency}")
+            msg = f"Moneda origen no soportada: {from_currency}"
+            raise ValueError(msg)
 
         if to_currency not in CurrencyConverter.EXCHANGE_RATES[from_currency]:
-            raise ValueError(f"Conversión no soportada: {from_currency} -> {to_currency}")
+            msg = f"Conversión no soportada: {from_currency} -> {to_currency}"
+            raise ValueError(msg)
 
         return CurrencyConverter.EXCHANGE_RATES[from_currency][to_currency]
 
@@ -149,7 +154,7 @@ class FxService:
             ValueError: Si no hay ningún tipo de cambio disponible
         """
         if currency == base_currency:
-            return Decimal("1"), None
+            return Decimal(1), None
 
         from utils.models import ExchangeRate
 
@@ -196,7 +201,7 @@ class FxService:
                     f"en {year}-{month:02d}. Usando tasa inversa de "
                     f"{inv.year}-{inv.month:02d}"
                 )
-            return Decimal("1") / inv.rate, warning
+            return Decimal(1) / inv.rate, warning
 
         # Si no hay ninguna tasa, usar tasa estática como fallback y advertir
         try:
@@ -207,10 +212,11 @@ class FxService:
             )
             return static_rate, warning
         except ValueError:
-            raise ValueError(
+            msg = (
                 f"No hay tipo de cambio para {currency}->{base_currency} "
                 f"en {year}-{month:02d} ni en períodos anteriores"
             )
+            raise ValueError(msg)
 
     @staticmethod
     def convert_amount(amount_cents: int, from_currency: str, to_currency: str, ref_date: date):
@@ -227,15 +233,15 @@ class FxService:
             tuple: (converted_cents, rate, warning) - monto convertido, tasa usada, advertencia si aplica
         """
         if from_currency == to_currency:
-            return amount_cents, Decimal("1"), None
+            return amount_cents, Decimal(1), None
 
         rate, warning = FxService._get_rate_record(from_currency, to_currency, ref_date)
         # Convertir de centavos a unidades decimales
-        amount_decimal = Decimal(str(amount_cents)) / Decimal("100")
+        amount_decimal = Decimal(str(amount_cents)) / Decimal(100)
         # Multiplicar por la tasa
         converted_decimal = amount_decimal * rate
         # Convertir de vuelta a centavos, redondeando apropiadamente
-        converted_cents = int((converted_decimal * Decimal("100")).quantize(Decimal("1")))
+        converted_cents = int((converted_decimal * Decimal(100)).quantize(Decimal(1)))
 
         return converted_cents, rate, warning
 
@@ -271,8 +277,9 @@ class FxService:
             ValueError: Si la moneda no está soportada
         """
         if currency not in FxService.SUPPORTED_CURRENCIES:
-            raise ValueError(
+            msg = (
                 f"Moneda no soportada: {currency}. "
                 f"Monedas válidas: {', '.join(FxService.SUPPORTED_CURRENCIES)}"
             )
+            raise ValueError(msg)
         return True

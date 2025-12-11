@@ -1,11 +1,12 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Notification, CustomReminder
+
+from .models import CustomReminder, Notification
 from .serializers import (
-    NotificationSerializer,
-    CustomReminderSerializer,
     CustomReminderListSerializer,
+    CustomReminderSerializer,
+    NotificationSerializer,
 )
 from .services import NotificationService
 
@@ -36,6 +37,12 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if read is not None:
             is_read = read.lower() == "true"
             queryset = queryset.filter(read=is_read)
+
+        # Filtro por descartadas
+        dismissed = self.request.query_params.get("dismissed")
+        if dismissed is not None:
+            is_dismissed = dismissed.lower() == "true"
+            queryset = queryset.filter(is_dismissed=is_dismissed)
 
         # Filtro por tipo de objeto relacionado
         related_type = self.request.query_params.get("related_type")
@@ -79,10 +86,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
             if success:
                 return Response({"message": "Notificación marcada como leída"})
-            else:
-                return Response(
-                    {"error": "Error al marcar la notificación"}, status=status.HTTP_400_BAD_REQUEST
-                )
+            return Response(
+                {"error": "Error al marcar la notificación"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -98,6 +104,60 @@ class NotificationViewSet(viewsets.ModelViewSet):
             notifications.update(read=True)
 
             return Response({"message": f"{count} notificaciones marcadas como leídas"})
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    def dismiss(self, request, pk=None):
+        """
+        Descartar una notificación específica
+        POST /api/notifications/notifications/{id}/dismiss/
+        """
+        try:
+            notification = self.get_object()
+
+            # Verificar que la notificación pertenece al usuario actual
+            if notification.user != request.user:
+                return Response(
+                    {"error": "No tienes permiso para modificar esta notificación"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            notification.mark_as_dismissed()
+            serializer = self.get_serializer(notification)
+
+            return Response(
+                {
+                    "message": "Notificación descartada",
+                    "notification": serializer.data,
+                }
+            )
+
+        except Exception as e:
+            # Si es DoesNotExist o cualquier otro error, retornar 404
+            if "DoesNotExist" in str(type(e).__name__) or "not found" in str(e).lower():
+                return Response(
+                    {"error": "Notificación no encontrada"}, status=status.HTTP_404_NOT_FOUND
+                )
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    def dismiss_all(self, request):
+        """
+        Descartar todas las notificaciones no descartadas del usuario
+        POST /api/notifications/notifications/dismiss_all/
+        """
+        try:
+            notifications = Notification.objects.filter(user=request.user, is_dismissed=False)
+            count = notifications.count()
+
+            for notification in notifications:
+                notification.mark_as_dismissed()
+
+            return Response(
+                {"message": f"{count} notificaciones descartadas", "updated_count": count}
+            )
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

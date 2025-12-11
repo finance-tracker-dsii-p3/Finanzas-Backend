@@ -3,10 +3,11 @@
 Script simple para probar el sistema de exportación
 """
 
-import requests
 import json
 import time
 from datetime import datetime
+
+import requests
 
 # Configuración
 BASE_URL = "http://127.0.0.1:8000"
@@ -49,9 +50,8 @@ def test_monitors_data(token):
             data = response.json()
             print(f"Datos obtenidos: {data['total_count']} monitores")
             return True
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
-            return False
+        print(f"Error: {response.status_code} - {response.text}")
+        return False
     except Exception as e:
         print(f"Error: {e}")
         return False

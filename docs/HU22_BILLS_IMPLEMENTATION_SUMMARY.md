@@ -2,8 +2,8 @@
 
 ## ✅ Implementación Completada
 
-**Fecha:** 2024-12-08  
-**Estado:** Funcional y testeado  
+**Fecha:** 2024-12-08
+**Estado:** Funcional y testeado
 **Tests:** 14/14 pasando ✓
 
 ---
@@ -306,22 +306,22 @@ schtasks /create /tn "Bill Reminders" /tr "python C:\ruta\manage.py check_bill_r
 
 ## 🎯 Criterios de Aceptación Cumplidos
 
-✅ **CA-01:** Crear factura con proveedor, monto, fecha vencimiento, cuenta y categoría sugeridas  
-✅ **CA-02:** Cambios de estado automáticos: pending → paid → overdue  
-✅ **CA-03:** Registrar pago genera movimiento con cuenta y categoría  
-✅ **CA-04:** Facturas vencidas se marcan automáticamente como "atrasadas"  
-✅ **CA-05:** Vista con filtros por estado, proveedor, fecha  
-✅ **CA-06:** Recordatorios automáticos configurables  
+✅ **CA-01:** Crear factura con proveedor, monto, fecha vencimiento, cuenta y categoría sugeridas
+✅ **CA-02:** Cambios de estado automáticos: pending → paid → overdue
+✅ **CA-03:** Registrar pago genera movimiento con cuenta y categoría
+✅ **CA-04:** Facturas vencidas se marcan automáticamente como "atrasadas"
+✅ **CA-05:** Vista con filtros por estado, proveedor, fecha
+✅ **CA-06:** Recordatorios automáticos configurables
 
 ---
 
 ## ✅ Definition of Done Cumplido
 
-✅ **Modelo validado** con estados y fechas correctas  
-✅ **Recordatorios automáticos** con horario del usuario (timezone aware)  
-✅ **Registro único al pagar** (sin duplicar movimientos)  
-✅ **Interfaz clara** con endpoints RESTful bien documentados  
-✅ **Pruebas completas** de estados, recordatorios y pagos (14/14)  
+✅ **Modelo validado** con estados y fechas correctas
+✅ **Recordatorios automáticos** con horario del usuario (timezone aware)
+✅ **Registro único al pagar** (sin duplicar movimientos)
+✅ **Interfaz clara** con endpoints RESTful bien documentados
+✅ **Pruebas completas** de estados, recordatorios y pagos (14/14)
 
 ---
 

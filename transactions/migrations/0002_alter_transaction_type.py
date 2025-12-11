@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transactions', '0001_initial'),
+        ("transactions", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='transaction',
-            name='type',
-            field=models.IntegerField(choices=[(1, 'Income'), (2, 'Expense'), (3, 'Transfer'), (4, 'Saving')], help_text='Tipo de la transacción', verbose_name='Tipo de transacción'),
+            model_name="transaction",
+            name="type",
+            field=models.IntegerField(
+                choices=[(1, "Income"), (2, "Expense"), (3, "Transfer"), (4, "Saving")],
+                help_text="Tipo de la transacción",
+                verbose_name="Tipo de transacción",
+            ),
         ),
     ]

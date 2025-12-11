@@ -1,5 +1,5 @@
 from django.core.management import call_command
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 
 
 class BaseProjectTests(TestCase):
@@ -13,8 +13,8 @@ class BaseProjectTests(TestCase):
     def test_admin_redirects_when_not_authenticated(self):
         response = self.client.get("/admin/", follow=False)
         # Django admin redirects to login when unauthenticated
-        self.assertIn(response.status_code, (301, 302))
+        assert response.status_code in (301, 302)
 
     def test_404_for_unknown_route(self):
         response = self.client.get("/definitely-not-found/")
-        self.assertEqual(response.status_code, 404)
+        assert response.status_code == 404

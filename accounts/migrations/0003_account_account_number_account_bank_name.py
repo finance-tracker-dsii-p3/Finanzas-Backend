@@ -6,18 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0002_account_credit_limit_account_expiration_date_and_more'),
+        ("accounts", "0002_account_credit_limit_account_expiration_date_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='account',
-            name='account_number',
-            field=models.CharField(blank=True, help_text='Número de cuenta bancaria o tarjeta', max_length=50, null=True, verbose_name='Número de cuenta'),
+            model_name="account",
+            name="account_number",
+            field=models.CharField(
+                blank=True,
+                help_text="Número de cuenta bancaria o tarjeta",
+                max_length=50,
+                null=True,
+                verbose_name="Número de cuenta",
+            ),
         ),
         migrations.AddField(
-            model_name='account',
-            name='bank_name',
-            field=models.CharField(blank=True, help_text='Nombre del banco o entidad financiera', max_length=100, null=True, verbose_name='Nombre del banco'),
+            model_name="account",
+            name="bank_name",
+            field=models.CharField(
+                blank=True,
+                help_text="Nombre del banco o entidad financiera",
+                max_length=100,
+                null=True,
+                verbose_name="Nombre del banco",
+            ),
         ),
     ]

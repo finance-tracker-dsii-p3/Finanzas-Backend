@@ -52,7 +52,7 @@ class DeleteOwnAccountSerializer(serializers.Serializer):
     No contiene lógica de negocio.
     """
     password = serializers.CharField(required=True)
-    
+
     def validate_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
@@ -74,21 +74,21 @@ class UserService:
         with transaction.atomic():
             # 1. Guardar info para auditoría
             user_info = UserService._prepare_deletion_info(user)
-            
+
             # 2. Revocar tokens activos
             UserService._revoke_user_tokens(user)
-            
+
             # 3. Notificar eliminación
             NotificationService.send_account_deleted_notification(user)
-            
+
             # 4. Eliminar usuario (dispara señales)
             user.delete()
-            
+
             return {
                 'message': 'Cuenta eliminada exitosamente',
                 'user_info': user_info
             }
-    
+
     @staticmethod
     def _prepare_deletion_info(user):
         """Helper privado para preparar info de eliminación"""
@@ -108,21 +108,21 @@ class User(AbstractUser):
     Entidad principal del dominio de usuarios.
     Contiene reglas de negocio fundamentales.
     """
-    
+
     def can_delete_own_account(self):
         """Regla de negocio: quién puede eliminar su cuenta"""
         return not (self.is_staff or self.is_superuser)
-    
+
     def has_pending_transactions(self):
         """Regla de negocio: verificar transacciones pendientes"""
         # Lógica específica del dominio financiero
         return False
-    
+
     class Meta:
         # Constraints de dominio
         constraints = [
             models.UniqueConstraint(
-                fields=['email'], 
+                fields=['email'],
                 name='unique_email'
             )
         ]
@@ -145,7 +145,7 @@ class EmailService:
     Abstrae el envío de emails de la implementación específica.
     Permite cambiar providers sin afectar lógica de negocio.
     """
-    
+
     @staticmethod
     def send_account_deleted_email(user):
         EmailAdapter.send_template_email(
@@ -154,10 +154,10 @@ class EmailService:
             context={'username': user.username}
         )
 
-# adapters/email_adapter.py  
+# adapters/email_adapter.py
 class EmailAdapter:
     """Adapter pattern para diferentes proveedores de email"""
-    
+
     @staticmethod
     def send_template_email(template, to, context):
         if settings.EMAIL_PROVIDER == 'resend':
@@ -179,21 +179,21 @@ class CustomUserManager(BaseUserManager):
     Factory para crear diferentes tipos de usuarios.
     Centraliza la lógica de creación.
     """
-    
+
     def create_user(self, email, identification, password=None, **extra_fields):
         """Factory method para usuarios normales"""
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         extra_fields.setdefault('role', User.USER)
-        
+
         return self._create_user(email, identification, password, **extra_fields)
-    
+
     def create_superuser(self, email, identification, password=None, **extra_fields):
         """Factory method para superusuarios"""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('role', User.ADMIN)
-        
+
         return self._create_user(email, identification, password, **extra_fields)
 ```
 
@@ -230,15 +230,15 @@ def send_deletion_notification(sender, instance, **kwargs):
 # validators.py
 class PasswordValidator:
     """Strategy pattern para diferentes tipos de validación"""
-    
+
     @staticmethod
     def validate_strength(password):
         strategies = [
             LengthValidator(),
-            ComplexityValidator(), 
+            ComplexityValidator(),
             CommonPasswordValidator()
         ]
-        
+
         for strategy in strategies:
             strategy.validate(password)
 
@@ -262,7 +262,7 @@ class StorageAdapter:
     Adapta diferentes servicios de almacenamiento.
     Permite cambiar entre local, S3, etc.
     """
-    
+
     @staticmethod
     def save_file(file, path):
         if settings.STORAGE_PROVIDER == 'local':
@@ -302,11 +302,11 @@ path('profile/delete/', views.delete_own_account_view, name='delete_own_account'
 def complex_business_method(user_id, action_type):
     """
     Descripción clara de qué hace el método.
-    
+
     Args:
         user_id (int): ID del usuario a procesar
         action_type (str): Tipo de acción ('create', 'update', 'delete')
-    
+
     Returns:
         dict: Resultado de la operación con estructura:
             {
@@ -314,11 +314,11 @@ def complex_business_method(user_id, action_type):
                 'message': str,
                 'data': dict
             }
-    
+
     Raises:
         ValidationError: Si los datos son inválidos
         PermissionError: Si el usuario no tiene permisos
-    
+
     Example:
         >>> result = complex_business_method(1, 'create')
         >>> print(result['success'])
@@ -336,25 +336,25 @@ class DeleteOwnAccountTestCase(TestCase):
     Tests organizados por funcionalidad.
     Cada test verifica UN comportamiento específico.
     """
-    
+
     def setUp(self):
         """Setup común para todos los tests"""
         self.user = self._create_test_user()
         self.client = APIClient()
-    
+
     def test_delete_own_account_success(self):
         """Test del caso feliz - eliminación exitosa"""
         # Given - Preparar datos
         self.client.force_authenticate(user=self.user)
         data = {'password': 'correct_password'}
-        
+
         # When - Ejecutar acción
         response = self.client.delete('/api/auth/profile/delete/', data)
-        
+
         # Then - Verificar resultado
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(id=self.user.id).exists())
-    
+
     def _create_test_user(self):
         """Helper para crear usuarios de test"""
         return User.objects.create_user(
@@ -380,17 +380,17 @@ class SecureView:
     3. Validation - ¿Los datos son válidos?
     4. Business Rules - ¿Es permitido por las reglas de negocio?
     """
-    
+
     @authentication_classes([TokenAuthentication])  # Capa 1
     @permission_classes([IsAuthenticated])          # Capa 2
     def post(self, request):
         serializer = SecureSerializer(data=request.data)  # Capa 3
-        
+
         if serializer.is_valid():
             # Capa 4 - Reglas de negocio
             if not BusinessRules.can_perform_action(request.user):
                 return Response({'error': 'Action not allowed'}, 403)
-            
+
             # Ejecutar acción
             return self.perform_action(serializer.validated_data)
 ```
@@ -404,12 +404,12 @@ class TokenSecurity:
     Manejo seguro de tokens y contraseñas.
     Nunca almacenar tokens en logs o respuestas.
     """
-    
+
     @staticmethod
     def generate_secure_token():
         """Genera tokens criptográficamente seguros"""
         return secrets.token_urlsafe(32)
-    
+
     @staticmethod
     def hash_sensitive_data(data):
         """Hashea datos sensibles antes de almacenar"""
@@ -426,7 +426,7 @@ class TokenSecurity:
 ```python
 # Optimized queries
 class OptimizedUserService:
-    
+
     @staticmethod
     def get_users_with_profiles():
         """
@@ -436,12 +436,12 @@ class OptimizedUserService:
         return User.objects.select_related('profile')\
                           .prefetch_related('notifications')\
                           .filter(is_active=True)
-    
+
     @staticmethod
     def bulk_update_users(user_updates):
         """Bulk operations para operaciones masivas"""
         User.objects.bulk_update(
-            user_updates, 
+            user_updates,
             ['is_verified', 'verified_at']
         )
 ```
@@ -457,16 +457,16 @@ class CacheService:
     Estrategia de cache por capas.
     Cache de consultas frecuentes y datos estáticos.
     """
-    
+
     @staticmethod
     def get_user_dashboard_data(user_id):
         cache_key = f'dashboard_data_{user_id}'
         data = cache.get(cache_key)
-        
+
         if data is None:
             data = DashboardService.calculate_user_data(user_id)
             cache.set(cache_key, data, timeout=300)  # 5 minutos
-        
+
         return data
 ```
 
@@ -487,7 +487,7 @@ class BusinessLogger:
     Logging estructurado para operaciones de negocio.
     Facilita debugging y monitoreo.
     """
-    
+
     @staticmethod
     def log_user_action(user, action, details=None):
         logger.info(
@@ -499,7 +499,7 @@ class BusinessLogger:
                 'timestamp': timezone.now().isoformat()
             }
         )
-    
+
     @staticmethod
     def log_security_event(event_type, user=None, details=None):
         logger.warning(
@@ -522,7 +522,7 @@ class HealthCheckView:
     Health checks comprehensivos para monitoreo.
     Verifica todos los componentes críticos.
     """
-    
+
     def get(self, request):
         health_status = {
             'status': 'healthy',
@@ -534,12 +534,12 @@ class HealthCheckView:
                 'storage': self._check_storage(),
             }
         }
-        
+
         # Si algún check falla, status general = unhealthy
         if any(not check['healthy'] for check in health_status['checks'].values()):
             health_status['status'] = 'unhealthy'
             return Response(health_status, status=503)
-        
+
         return Response(health_status, status=200)
 ```
 
@@ -578,7 +578,7 @@ def test_user_cannot_delete_account_with_wrong_password(self):
 def some_view(request):
     # NO hacer cálculos complejos aquí
     complex_calculation = user.income * 0.15  # ❌
-    
+
 # ❌ Queries N+1
 for user in User.objects.all():  # ❌
     print(user.profile.name)  # Query por cada user
@@ -600,7 +600,7 @@ def god_method(self):  # ❌ Dividir en métodos más pequeños
 Esta arquitectura te proporciona:
 
 - **🔧 Mantenibilidad:** Código fácil de entender y modificar
-- **🧪 Testabilidad:** Cada componente se puede testear independientemente  
+- **🧪 Testabilidad:** Cada componente se puede testear independientemente
 - **📈 Escalabilidad:** Fácil agregar nuevas funcionalidades
 - **🔒 Seguridad:** Múltiples capas de validación y autorización
 - **⚡ Performance:** Optimizaciones en queries y cache

@@ -2,8 +2,9 @@
 URLs para gestión de notificaciones y recordatorios personalizados
 """
 
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from . import views
 
 router = DefaultRouter()
@@ -17,6 +18,8 @@ router = DefaultRouter()
 # DELETE /api/notifications/notifications/{id}/         - Eliminar notificación
 # POST   /api/notifications/notifications/{id}/mark_as_read/  - Marcar como leída
 # POST   /api/notifications/notifications/mark_all_read/      - Marcar todas como leídas
+# POST   /api/notifications/notifications/{id}/dismiss/         - Descartar notificación
+# POST   /api/notifications/notifications/dismiss_all/        - Descartar todas
 # GET    /api/notifications/notifications/summary/      - Resumen de notificaciones
 router.register(r"notifications", views.NotificationViewSet, basename="notification")
 

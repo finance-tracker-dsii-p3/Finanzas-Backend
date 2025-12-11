@@ -10,34 +10,140 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
-        ('categories', '0002_alter_category_icon'),
+        ("users", "0001_initial"),
+        ("categories", "0002_alter_category_icon"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AutomaticRule',
+            name="AutomaticRule",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Nombre descriptivo para identificar la regla', max_length=100, verbose_name='Nombre de la regla')),
-                ('criteria_type', models.CharField(choices=[('description_contains', 'Descripción contiene texto'), ('transaction_type', 'Tipo de transacción')], help_text='Tipo de criterio para aplicar la regla', max_length=50, verbose_name='Tipo de criterio')),
-                ('keyword', models.CharField(blank=True, help_text='Texto que debe contener la descripción (insensible a mayúsculas)', max_length=100, null=True, verbose_name='Palabra clave')),
-                ('target_transaction_type', models.IntegerField(blank=True, choices=[(1, 'Ingresos'), (2, 'Gastos'), (3, 'Transferencias'), (4, 'Ahorros')], help_text='Tipo de transacción al que aplicar la regla', null=True, verbose_name='Tipo de transacción objetivo')),
-                ('action_type', models.CharField(choices=[('assign_category', 'Asignar categoría'), ('assign_tag', 'Asignar etiqueta')], help_text='Acción a realizar cuando se cumpla el criterio', max_length=50, verbose_name='Tipo de acción')),
-                ('target_tag', models.CharField(blank=True, help_text='Etiqueta a asignar cuando se aplique la regla', max_length=100, null=True, verbose_name='Etiqueta objetivo')),
-                ('is_active', models.BooleanField(default=True, help_text='Si la regla está activa y se puede aplicar', verbose_name='Activa')),
-                ('order', models.PositiveIntegerField(default=0, help_text='Orden de aplicación (menor número = mayor prioridad)', verbose_name='Orden')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Fecha de actualización')),
-                ('target_category', models.ForeignKey(blank=True, help_text='Categoría a asignar cuando se aplique la regla', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='rules', to='categories.category', verbose_name='Categoría objetivo')),
-                ('user', models.ForeignKey(help_text='Usuario propietario de la regla', on_delete=django.db.models.deletion.CASCADE, related_name='automatic_rules', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Nombre descriptivo para identificar la regla",
+                        max_length=100,
+                        verbose_name="Nombre de la regla",
+                    ),
+                ),
+                (
+                    "criteria_type",
+                    models.CharField(
+                        choices=[
+                            ("description_contains", "Descripción contiene texto"),
+                            ("transaction_type", "Tipo de transacción"),
+                        ],
+                        help_text="Tipo de criterio para aplicar la regla",
+                        max_length=50,
+                        verbose_name="Tipo de criterio",
+                    ),
+                ),
+                (
+                    "keyword",
+                    models.CharField(
+                        blank=True,
+                        help_text="Texto que debe contener la descripción (insensible a mayúsculas)",
+                        max_length=100,
+                        null=True,
+                        verbose_name="Palabra clave",
+                    ),
+                ),
+                (
+                    "target_transaction_type",
+                    models.IntegerField(
+                        blank=True,
+                        choices=[
+                            (1, "Ingresos"),
+                            (2, "Gastos"),
+                            (3, "Transferencias"),
+                            (4, "Ahorros"),
+                        ],
+                        help_text="Tipo de transacción al que aplicar la regla",
+                        null=True,
+                        verbose_name="Tipo de transacción objetivo",
+                    ),
+                ),
+                (
+                    "action_type",
+                    models.CharField(
+                        choices=[
+                            ("assign_category", "Asignar categoría"),
+                            ("assign_tag", "Asignar etiqueta"),
+                        ],
+                        help_text="Acción a realizar cuando se cumpla el criterio",
+                        max_length=50,
+                        verbose_name="Tipo de acción",
+                    ),
+                ),
+                (
+                    "target_tag",
+                    models.CharField(
+                        blank=True,
+                        help_text="Etiqueta a asignar cuando se aplique la regla",
+                        max_length=100,
+                        null=True,
+                        verbose_name="Etiqueta objetivo",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Si la regla está activa y se puede aplicar",
+                        verbose_name="Activa",
+                    ),
+                ),
+                (
+                    "order",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Orden de aplicación (menor número = mayor prioridad)",
+                        verbose_name="Orden",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización"),
+                ),
+                (
+                    "target_category",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Categoría a asignar cuando se aplique la regla",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rules",
+                        to="categories.category",
+                        verbose_name="Categoría objetivo",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Usuario propietario de la regla",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="automatic_rules",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Regla automática',
-                'verbose_name_plural': 'Reglas automáticas',
-                'ordering': ['order', 'created_at'],
-                'unique_together': {('user', 'name')},
+                "verbose_name": "Regla automática",
+                "verbose_name_plural": "Reglas automáticas",
+                "ordering": ["order", "created_at"],
+                "unique_together": {("user", "name")},
             },
         ),
     ]

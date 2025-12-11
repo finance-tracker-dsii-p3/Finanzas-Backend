@@ -13,36 +13,131 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('categories', '0001_initial'),
+        ("categories", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Budget',
+            name="Budget",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.DecimalField(decimal_places=2, help_text='Monto máximo permitido para esta categoría', max_digits=15, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='Límite de presupuesto')),
-                ('calculation_mode', models.CharField(choices=[('base', 'Base (sin impuestos)'), ('total', 'Total (con impuestos)')], default='base', help_text='Base: sin impuestos, Total: con impuestos', max_length=10, verbose_name='Modo de cálculo')),
-                ('period', models.CharField(choices=[('monthly', 'Mensual'), ('yearly', 'Anual')], default='monthly', help_text='Frecuencia del presupuesto', max_length=10, verbose_name='Período')),
-                ('start_date', models.DateField(default=datetime.date.today, help_text='Desde cuándo aplica este presupuesto', verbose_name='Fecha de inicio')),
-                ('is_active', models.BooleanField(default=True, help_text='Si está desactivado, no se calculan alertas', verbose_name='Activo')),
-                ('alert_threshold', models.DecimalField(decimal_places=2, default=Decimal('80.00'), help_text='Porcentaje al cual se genera alerta (por defecto 80%)', max_digits=5, validators=[django.core.validators.MinValueValidator(Decimal('0.00'))], verbose_name='Umbral de alerta (%)')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='budgets', to='categories.category', verbose_name='Categoría')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='budgets', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "amount",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="Monto máximo permitido para esta categoría",
+                        max_digits=15,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                        verbose_name="Límite de presupuesto",
+                    ),
+                ),
+                (
+                    "calculation_mode",
+                    models.CharField(
+                        choices=[
+                            ("base", "Base (sin impuestos)"),
+                            ("total", "Total (con impuestos)"),
+                        ],
+                        default="base",
+                        help_text="Base: sin impuestos, Total: con impuestos",
+                        max_length=10,
+                        verbose_name="Modo de cálculo",
+                    ),
+                ),
+                (
+                    "period",
+                    models.CharField(
+                        choices=[("monthly", "Mensual"), ("yearly", "Anual")],
+                        default="monthly",
+                        help_text="Frecuencia del presupuesto",
+                        max_length=10,
+                        verbose_name="Período",
+                    ),
+                ),
+                (
+                    "start_date",
+                    models.DateField(
+                        default=datetime.date.today,
+                        help_text="Desde cuándo aplica este presupuesto",
+                        verbose_name="Fecha de inicio",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Si está desactivado, no se calculan alertas",
+                        verbose_name="Activo",
+                    ),
+                ),
+                (
+                    "alert_threshold",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=Decimal("80.00"),
+                        help_text="Porcentaje al cual se genera alerta (por defecto 80%)",
+                        max_digits=5,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.00"))],
+                        verbose_name="Umbral de alerta (%)",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="budgets",
+                        to="categories.category",
+                        verbose_name="Categoría",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="budgets",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Presupuesto',
-                'verbose_name_plural': 'Presupuestos',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', 'is_active'], name='budgets_bud_user_id_cec771_idx'), models.Index(fields=['category', 'is_active'], name='budgets_bud_categor_c54e2d_idx'), models.Index(fields=['period', 'start_date'], name='budgets_bud_period_6e7f8a_idx')],
+                "verbose_name": "Presupuesto",
+                "verbose_name_plural": "Presupuestos",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["user", "is_active"], name="budgets_bud_user_id_cec771_idx"
+                    ),
+                    models.Index(
+                        fields=["category", "is_active"], name="budgets_bud_categor_c54e2d_idx"
+                    ),
+                    models.Index(
+                        fields=["period", "start_date"], name="budgets_bud_period_6e7f8a_idx"
+                    ),
+                ],
             },
         ),
         migrations.AddConstraint(
-            model_name='budget',
-            constraint=models.UniqueConstraint(fields=('user', 'category', 'period'), name='unique_budget_per_category_period', violation_error_message='Ya existe un presupuesto para esta categoría y período.'),
+            model_name="budget",
+            constraint=models.UniqueConstraint(
+                fields=("user", "category", "period"),
+                name="unique_budget_per_category_period",
+                violation_error_message="Ya existe un presupuesto para esta categoría y período.",
+            ),
         ),
     ]

@@ -3,8 +3,9 @@
 Script para probar el registro de entrada en salas
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_room_entry():

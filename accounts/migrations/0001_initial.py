@@ -11,30 +11,92 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Account',
+            name="Account",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='Nombre de la cuenta')),
-                ('description', models.TextField(blank=True, null=True, verbose_name='Descripción')),
-                ('account_type', models.CharField(choices=[('asset', 'Activo'), ('liability', 'Pasivo')], max_length=20, verbose_name='Tipo de cuenta')),
-                ('category', models.CharField(choices=[('bank_account', 'Cuenta Bancaria'), ('savings_account', 'Cuenta de Ahorros'), ('credit_card', 'Tarjeta de Crédito'), ('wallet', 'Billetera'), ('other', 'Otro')], max_length=30, verbose_name='Categoría')),
-                ('current_balance', models.DecimalField(decimal_places=2, default=Decimal('0.00'), max_digits=15, verbose_name='Saldo actual')),
-                ('currency', models.CharField(choices=[('COP', 'Pesos Colombianos'), ('USD', 'Dólares'), ('EUR', 'Euros')], default='COP', max_length=3, verbose_name='Moneda')),
-                ('is_active', models.BooleanField(default=True, verbose_name='Activa')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='accounts', to=settings.AUTH_USER_MODEL, verbose_name='Usuario propietario')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, verbose_name="Nombre de la cuenta")),
+                (
+                    "description",
+                    models.TextField(blank=True, null=True, verbose_name="Descripción"),
+                ),
+                (
+                    "account_type",
+                    models.CharField(
+                        choices=[("asset", "Activo"), ("liability", "Pasivo")],
+                        max_length=20,
+                        verbose_name="Tipo de cuenta",
+                    ),
+                ),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("bank_account", "Cuenta Bancaria"),
+                            ("savings_account", "Cuenta de Ahorros"),
+                            ("credit_card", "Tarjeta de Crédito"),
+                            ("wallet", "Billetera"),
+                            ("other", "Otro"),
+                        ],
+                        max_length=30,
+                        verbose_name="Categoría",
+                    ),
+                ),
+                (
+                    "current_balance",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=Decimal("0.00"),
+                        max_digits=15,
+                        verbose_name="Saldo actual",
+                    ),
+                ),
+                (
+                    "currency",
+                    models.CharField(
+                        choices=[
+                            ("COP", "Pesos Colombianos"),
+                            ("USD", "Dólares"),
+                            ("EUR", "Euros"),
+                        ],
+                        default="COP",
+                        max_length=3,
+                        verbose_name="Moneda",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True, verbose_name="Activa")),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Última actualización"),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="accounts",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuario propietario",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Cuenta',
-                'verbose_name_plural': 'Cuentas',
-                'ordering': ['name'],
+                "verbose_name": "Cuenta",
+                "verbose_name_plural": "Cuentas",
+                "ordering": ["name"],
             },
         ),
     ]

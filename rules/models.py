@@ -2,9 +2,9 @@
 Modelos para reglas automáticas de categorización (HU-12)
 """
 
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import models
 
 User = get_user_model()
 
@@ -161,13 +161,10 @@ class AutomaticRule(models.Model):
                         "target_category": 'La categoría objetivo es requerida para acción "asignar categoría"'
                     }
                 )
-        elif self.action_type == self.ASSIGN_TAG:
-            if not self.target_tag:
-                raise ValidationError(
-                    {
-                        "target_tag": 'La etiqueta objetivo es requerida para acción "asignar etiqueta"'
-                    }
-                )
+        elif self.action_type == self.ASSIGN_TAG and not self.target_tag:
+            raise ValidationError(
+                {"target_tag": 'La etiqueta objetivo es requerida para acción "asignar etiqueta"'}
+            )
 
         # Validar que la categoría objetivo pertenezca al usuario
         if self.target_category and self.target_category.user != self.user:
@@ -197,7 +194,7 @@ class AutomaticRule(models.Model):
                 return False
             return self.keyword.lower() in transaction.description.lower()
 
-        elif self.criteria_type == self.TRANSACTION_TYPE:
+        if self.criteria_type == self.TRANSACTION_TYPE:
             return transaction.type == self.target_transaction_type
 
         return False

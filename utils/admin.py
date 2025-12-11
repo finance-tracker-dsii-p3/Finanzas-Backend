@@ -3,6 +3,7 @@ Configuración del panel de administración para utils
 """
 
 from django.contrib import admin
+
 from utils.models import BaseCurrencySetting, ExchangeRate
 
 

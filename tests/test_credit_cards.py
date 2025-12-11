@@ -1,18 +1,18 @@
 from datetime import date
 from decimal import Decimal
 
+import pytest
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from accounts.models import Account
 from budgets.models import Budget
 from categories.models import Category
-from credit_cards.models import InstallmentPlan, InstallmentPayment
+from credit_cards.models import InstallmentPayment, InstallmentPlan
 from credit_cards.services import InstallmentPlanService
 from transactions.models import Transaction
 from transactions.services import TransactionService
-from django.contrib.auth import get_user_model
-
 
 User = get_user_model()
 
@@ -83,7 +83,7 @@ class CreditCardInstallmentsTests(TestCase):
             source_account=self.bank,
             notes="Pago prueba",
         )
-        self.assertEqual(payment1.status, InstallmentPayment.STATUS_COMPLETED)
+        assert payment1.status == InstallmentPayment.STATUS_COMPLETED
 
         # Guardar número de cuota pagada y monto
         paid_number = payment1.installment_number
@@ -94,12 +94,12 @@ class CreditCardInstallmentsTests(TestCase):
 
         # Verificar que la cuota pagada sigue igual
         paid_payment = updated_plan.payments.get(installment_number=paid_number)
-        self.assertEqual(paid_payment.status, InstallmentPayment.STATUS_COMPLETED)
-        self.assertEqual(paid_payment.installment_amount, paid_amount)
+        assert paid_payment.status == InstallmentPayment.STATUS_COMPLETED
+        assert paid_payment.installment_amount == paid_amount
 
         # Verificar que las cuotas futuras fueron recalculadas
         future_payments = updated_plan.payments.filter(status=InstallmentPayment.STATUS_PENDING)
-        self.assertGreater(future_payments.count(), 0)
+        assert future_payments.count() > 0
 
     def test_cannot_reduce_installments_below_paid(self):
         """Verificar que no se puede reducir cuotas por debajo de las ya pagadas"""
@@ -113,10 +113,10 @@ class CreditCardInstallmentsTests(TestCase):
             )
 
         # Intentar reducir a 2 cuotas (menos que las pagadas)
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as context:
             InstallmentPlanService.update_plan(self.plan, number_of_installments=2)
 
-        self.assertIn("ya pagadas", str(context.exception))
+        assert "ya pagadas" in str(context.value)
 
     def test_record_payment_creates_transfer_and_interest_expense(self):
         """Verificar que el registro de pago crea transferencia (capital) y gasto (interés)"""
@@ -129,18 +129,18 @@ class CreditCardInstallmentsTests(TestCase):
         )
 
         # Verificar transferencia de capital
-        self.assertIsNotNone(transfer_tx)
-        self.assertEqual(transfer_tx.type, TransactionService.TRANSFER)
-        self.assertEqual(transfer_tx.origin_account, self.bank)
-        self.assertEqual(transfer_tx.destination_account, self.credit_card)
-        self.assertIsNone(transfer_tx.category)  # Transferencias no tienen categoría
+        assert transfer_tx is not None
+        assert transfer_tx.type == TransactionService.TRANSFER
+        assert transfer_tx.origin_account == self.bank
+        assert transfer_tx.destination_account == self.credit_card
+        assert transfer_tx.category is None  # Transferencias no tienen categoría
 
         # Verificar gasto de interés
         if payment.interest_amount > 0:
-            self.assertIsNotNone(interest_tx)
-            self.assertEqual(interest_tx.type, TransactionService.EXPENSE)
-            self.assertEqual(interest_tx.category, self.financing_category)
-            self.assertEqual(interest_tx.origin_account, self.bank)
+            assert interest_tx is not None
+            assert interest_tx.type == TransactionService.EXPENSE
+            assert interest_tx.category == self.financing_category
+            assert interest_tx.origin_account == self.bank
 
     def test_budget_excludes_credit_card_transfers(self):
         """Verificar que los presupuestos NO incluyen transferencias de pago de tarjeta"""
@@ -154,7 +154,7 @@ class CreditCardInstallmentsTests(TestCase):
         )
 
         # Pagar una cuota (esto crea transferencia + gasto de interés)
-        payment, transfer_tx, interest_tx = InstallmentPlanService.record_payment(
+        _payment, _transfer_tx, interest_tx = InstallmentPlanService.record_payment(
             plan=self.plan,
             installment_number=1,
             payment_date=date.today(),
@@ -167,10 +167,10 @@ class CreditCardInstallmentsTests(TestCase):
         # El presupuesto solo debe incluir el gasto de interés, NO la transferencia
         if interest_tx:
             # El gasto de interés debe estar en el presupuesto
-            self.assertGreater(spent, Decimal("0"))
+            assert spent > Decimal(0)
         else:
             # Si no hay interés, el presupuesto debe estar en 0
-            self.assertEqual(spent, Decimal("0"))
+            assert spent == Decimal(0)
 
         # Verificar que la transferencia NO está en el presupuesto
         # (ya está validado porque get_spent_amount filtra por type=2, excluyendo TRANSFER=3)

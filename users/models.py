@@ -1,9 +1,10 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.utils import timezone
-from .managers import CustomUserManager
-from django.conf import settings
 import pytz
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.utils import timezone
+
+from .managers import CustomUserManager
 
 
 class User(AbstractUser):
