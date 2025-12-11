@@ -28,5 +28,7 @@ htmlcov/
 .coverage
 *.cover
 
-# Archivos de pre-commit
-.bandit
+# Archivos de reportes de seguridad
+bandit-report.json
+
+# Archivos de pre-commit (configuración .bandit debe estar en el repo)
