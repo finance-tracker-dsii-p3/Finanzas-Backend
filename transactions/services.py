@@ -71,8 +71,9 @@ class TransactionService:
                         )
 
             elif transaction_type == TransactionService.SAVING:
+                # SAVING debe RESTAR de la cuenta (el dinero se mueve a la meta)
                 TransactionService._update_account_balance(
-                    transaction.origin_account, amount * multiplier, transaction
+                    transaction.origin_account, -amount * multiplier, transaction
                 )
 
             logger.info(

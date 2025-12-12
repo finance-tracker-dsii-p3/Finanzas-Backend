@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     # Dashboard principal
     path("", views.dashboard_view, name="dashboard"),
+    # Dashboard financiero (HU-Principal)
+    path("financial/", views.financial_dashboard_view, name="financial_dashboard"),
     # Componentes del dashboard
     path("mini-cards/", views.mini_cards_view, name="mini_cards"),
     path("stats/", views.stats_view, name="stats"),
