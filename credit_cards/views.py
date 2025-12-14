@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -81,13 +82,18 @@ class InstallmentPlanViewSet(viewsets.GenericViewSet):
         )
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        payment, transfer_tx, interest_tx = InstallmentPlanService.record_payment(
-            plan=plan,
-            installment_number=data["installment_number"],
-            payment_date=data["payment_date"],
-            source_account=data["source_account"],
-            notes=data.get("notes", ""),
-        )
+        try:
+            payment, transfer_tx, interest_tx = InstallmentPlanService.record_payment(
+                plan=plan,
+                installment_number=data["installment_number"],
+                payment_date=data["payment_date"],
+                source_account=data["source_account"],
+                notes=data.get("notes", ""),
+            )
+        except DjangoValidationError as e:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError(str(e))
         return Response(
             {
                 "status": "success",

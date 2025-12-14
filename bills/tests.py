@@ -544,3 +544,266 @@ class BillServiceTimezoneTest(TestCase):
         user_tz = self.user.notification_preferences.timezone_object
         days = bill.days_until_due(user_tz=user_tz)
         assert days == 1
+
+    def test_bill_str(self):
+        """Test: __str__ de Bill"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Netflix",
+            amount=Decimal("45000.00"),
+            due_date=today + timedelta(days=10),
+        )
+
+        str_repr = str(bill)
+        assert "Netflix" in str_repr
+        assert "45000" in str_repr or "45,000" in str_repr
+
+    def test_bill_days_until_due_property(self):
+        """Test: days_until_due_property retorna días hasta vencimiento"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=5),
+        )
+
+        days = bill.days_until_due_property
+        assert 4 <= days <= 6  # Puede variar por timezone
+
+    def test_bill_is_overdue_property(self):
+        """Test: is_overdue_property retorna True para facturas vencidas"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today - timedelta(days=5),
+        )
+
+        assert bill.is_overdue_property is True
+
+    def test_bill_is_near_due_property(self):
+        """Test: is_near_due_property retorna True para facturas próximas"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=2),
+            reminder_days_before=3,
+        )
+
+        assert bill.is_near_due_property is True
+
+    def test_bill_clean_validates_account(self):
+        """Test: clean() valida que la cuenta sugerida pertenezca al usuario"""
+        other_user = User.objects.create_user(
+            identification="OTHER-001",
+            username="otheruser",
+            email="other@test.com",
+            password="testpass123",
+        )
+        other_account = Account.objects.create(
+            user=other_user,
+            name="Otra Cuenta",
+            account_type="asset",
+            category="bank_account",
+            currency="COP",
+            current_balance=Decimal("500000.00"),
+        )
+
+        bill = Bill(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=timezone.now().date() + timedelta(days=5),
+            suggested_account=other_account,
+        )
+
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            bill.clean()
+
+    def test_bill_clean_validates_category(self):
+        """Test: clean() valida que la categoría pertenezca al usuario"""
+        other_user = User.objects.create_user(
+            identification="OTHER-002",
+            username="otheruser2",
+            email="other2@test.com",
+            password="testpass123",
+        )
+        other_category = Category.objects.create(
+            user=other_user, name="Otra Categoría", type=Category.EXPENSE
+        )
+
+        bill = Bill(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=timezone.now().date() + timedelta(days=5),
+            category=other_category,
+        )
+
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            bill.clean()
+
+    def test_bill_clean_validates_amount_positive(self):
+        """Test: clean() valida que el monto sea positivo"""
+        bill = Bill(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("-1000.00"),
+            due_date=timezone.now().date() + timedelta(days=5),
+        )
+
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            bill.clean()
+
+    def test_bill_clean_validates_amount_zero(self):
+        """Test: clean() valida que el monto no sea cero"""
+        bill = Bill(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("0.00"),
+            due_date=timezone.now().date() + timedelta(days=5),
+        )
+
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            bill.clean()
+
+    def test_bill_get_user_timezone(self):
+        """Test: _get_user_timezone() obtiene timezone del usuario"""
+        UserNotificationPreferences.objects.create(user=self.user, timezone="America/Bogota")
+
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=5),
+        )
+
+        tz = bill._get_user_timezone()
+        assert tz is not None
+
+    def test_bill_get_user_timezone_default(self):
+        """Test: _get_user_timezone() usa timezone por defecto si no hay preferencias"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=5),
+        )
+
+        tz = bill._get_user_timezone()
+        assert tz is not None
+
+    def test_bill_is_paid_property(self):
+        """Test: is_paid property retorna True cuando está pagada"""
+        from transactions.models import Transaction
+
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=5),
+        )
+
+        # Sin transacción de pago
+        assert not bill.is_paid
+
+        # Con transacción de pago
+        account = Account.objects.create(
+            user=self.user,
+            name="Test Account",
+            account_type="asset",
+            category="bank_account",
+            currency="COP",
+            current_balance=Decimal("100000.00"),
+        )
+
+        transaction = Transaction.objects.create(
+            user=self.user,
+            origin_account=account,
+            type=2,
+            base_amount=1000000,
+            total_amount=1000000,
+            date=today,
+        )
+
+        bill.payment_transaction = transaction
+        bill.status = Bill.PAID
+        bill.save()
+
+        assert bill.is_paid
+
+    def test_bill_reminder_str(self):
+        """Test: __str__ de BillReminder"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Netflix",
+            amount=Decimal("45000.00"),
+            due_date=today + timedelta(days=2),
+        )
+
+        reminder = BillReminder.objects.create(
+            user=self.user,
+            bill=bill,
+            reminder_type=BillReminder.UPCOMING,
+            message="Test reminder",
+        )
+
+        str_repr = str(reminder)
+        assert "Netflix" in str_repr
+        assert "Próxima a vencer" in str_repr or "upcoming" in str_repr.lower()
+
+    def test_bill_reminder_can_create_reminder_no_existing(self):
+        """Test: can_create_reminder() retorna True si no existe recordatorio reciente"""
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=2),
+        )
+
+        can_create = BillReminder.can_create_reminder(bill, BillReminder.UPCOMING)
+        assert can_create
+
+    def test_bill_reminder_can_create_reminder_old_exists(self):
+        """Test: can_create_reminder() retorna True si existe recordatorio viejo (>24h)"""
+        from datetime import timedelta as dt_timedelta
+
+        today = timezone.now().date()
+        bill = Bill.objects.create(
+            user=self.user,
+            provider="Test",
+            amount=Decimal("10000.00"),
+            due_date=today + timedelta(days=2),
+        )
+
+        # Crear recordatorio viejo (más de 24 horas)
+        old_reminder = BillReminder.objects.create(
+            user=self.user,
+            bill=bill,
+            reminder_type=BillReminder.UPCOMING,
+            message="Old reminder",
+        )
+        # Simular que fue creado hace más de 24 horas
+        old_reminder.created_at = timezone.now() - dt_timedelta(hours=25)
+        old_reminder.save(update_fields=["created_at"])
+
+        can_create = BillReminder.can_create_reminder(bill, BillReminder.UPCOMING)
+        assert can_create

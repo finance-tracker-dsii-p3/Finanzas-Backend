@@ -108,7 +108,7 @@ class AccountCreateSerializer(serializers.ModelSerializer):
             "current_balance": {"required": False, "default": Decimal("0.00")},
             "description": {"required": False},
             "bank_name": {"required": False},
-            "account_number": {"required": True},  # Ahora es obligatorio
+            "account_number": {"required": False},  # Opcional, se valida según categoría
             "is_active": {"required": False, "default": True},
             "gmf_exempt": {"required": False, "default": False},
             "expiration_date": {"required": False},
@@ -124,32 +124,52 @@ class AccountCreateSerializer(serializers.ModelSerializer):
         account_number = attrs.get("account_number")
         currency = attrs.get("currency", "COP")
 
-        # Validar número de cuenta: obligatorio con mínimo de dígitos según moneda
-        if not account_number or not account_number.strip():
-            raise serializers.ValidationError(
-                {"account_number": "El número de cuenta es requerido."}
-            )
+        # Validar número de cuenta: obligatorio excepto para categoría "other" (efectivo)
+        # Si es "other", el número de cuenta es opcional
+        if category != Account.OTHER:
+            # Para todas las demás categorías, el número de cuenta es obligatorio
+            if not account_number or not account_number.strip():
+                raise serializers.ValidationError(
+                    {"account_number": "El número de cuenta es requerido."}
+                )
 
-        # Contar solo dígitos (ignorar espacios, guiones, etc.)
-        digits_only = "".join(filter(str.isdigit, account_number))
+            # Contar solo dígitos (ignorar espacios, guiones, etc.)
+            digits_only = "".join(filter(str.isdigit, account_number))
 
-        # Mínimo de dígitos según moneda
-        min_digits_by_currency = {
-            "COP": 10,
-            "USD": 7,
-            "EUR": 8,
-        }
-        min_digits = min_digits_by_currency.get(currency, 10)
+            # Mínimo de dígitos según moneda
+            min_digits_by_currency = {
+                "COP": 10,
+                "USD": 7,
+                "EUR": 8,
+            }
+            min_digits = min_digits_by_currency.get(currency, 10)
 
-        if len(digits_only) < min_digits:
-            raise serializers.ValidationError(
-                {
-                    "account_number": f"El número de cuenta debe tener al menos {min_digits} dígitos para cuentas en {currency}."
-                }
-            )
+            if len(digits_only) < min_digits:
+                raise serializers.ValidationError(
+                    {
+                        "account_number": f"El número de cuenta debe tener al menos {min_digits} dígitos para cuentas en {currency}."
+                    }
+                )
+        elif account_number and account_number.strip():
+            # Para categoría "other" (efectivo), el número de cuenta es opcional
+            # Si se proporciona, debe cumplir con el mínimo de dígitos
+            digits_only = "".join(filter(str.isdigit, account_number))
+            min_digits_by_currency = {
+                "COP": 10,
+                "USD": 7,
+                "EUR": 8,
+            }
+            min_digits = min_digits_by_currency.get(currency, 10)
+            if len(digits_only) < min_digits:
+                raise serializers.ValidationError(
+                    {
+                        "account_number": f"El número de cuenta debe tener al menos {min_digits} dígitos para cuentas en {currency}."
+                    }
+                )
 
         if category == Account.CREDIT_CARD:
             attrs["account_type"] = Account.LIABILITY
+            account_type = Account.LIABILITY  # Actualizar la variable local también
             if current_balance > 0:
                 raise serializers.ValidationError(
                     {"current_balance": "Las tarjetas de crédito no pueden tener saldo positivo."}
@@ -172,12 +192,14 @@ class AccountCreateSerializer(serializers.ModelSerializer):
                     {"credit_limit": "El límite de crédito solo aplica para tarjetas de crédito."}
                 )
 
-        if account_type == Account.LIABILITY and current_balance > 0:
+        # Usar el account_type actualizado (puede haber cambiado para tarjetas de crédito)
+        final_account_type = attrs.get("account_type", account_type)
+        if final_account_type == Account.LIABILITY and current_balance > 0:
             raise serializers.ValidationError(
                 {"current_balance": "Las cuentas de pasivo deben tener saldo negativo o cero."}
             )
 
-        if account_type == Account.ASSET and current_balance < 0:
+        if final_account_type == Account.ASSET and current_balance < 0:
             raise serializers.ValidationError(
                 {"current_balance": "Las cuentas de activo no pueden tener saldo negativo."}
             )

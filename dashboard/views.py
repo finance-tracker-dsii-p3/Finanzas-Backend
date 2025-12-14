@@ -27,8 +27,8 @@ def dashboard_view(request):
             # Dashboard para administradores
             dashboard_data = DashboardService.get_admin_dashboard_data(user)
         else:
-            # Dashboard para monitores
-            dashboard_data = DashboardService.get_monitor_dashboard_data(user)
+            # Dashboard para usuarios
+            dashboard_data = DashboardService.get_user_dashboard_data(user)
 
         # Serializar los datos
         serializer = DashboardDataSerializer(dashboard_data)
@@ -63,7 +63,7 @@ def mini_cards_view(request):
         if user.is_admin:
             dashboard_data = DashboardService.get_admin_dashboard_data(user)
         else:
-            dashboard_data = DashboardService.get_monitor_dashboard_data(user)
+            dashboard_data = DashboardService.get_user_dashboard_data(user)
 
         return Response(
             {
@@ -95,7 +95,7 @@ def stats_view(request):
         if user.is_admin:
             dashboard_data = DashboardService.get_admin_dashboard_data(user)
         else:
-            dashboard_data = DashboardService.get_monitor_dashboard_data(user)
+            dashboard_data = DashboardService.get_user_dashboard_data(user)
 
         return Response(
             {
@@ -127,7 +127,7 @@ def alerts_view(request):
         if user.is_admin:
             dashboard_data = DashboardService.get_admin_dashboard_data(user)
         else:
-            dashboard_data = DashboardService.get_monitor_dashboard_data(user)
+            dashboard_data = DashboardService.get_user_dashboard_data(user)
 
         return Response(
             {
@@ -159,7 +159,7 @@ def charts_data_view(request):
         if user.is_admin:
             dashboard_data = DashboardService.get_admin_dashboard_data(user)
         else:
-            dashboard_data = DashboardService.get_monitor_dashboard_data(user)
+            dashboard_data = DashboardService.get_user_dashboard_data(user)
 
         return Response(
             {
@@ -190,11 +190,11 @@ def admin_overview_view(request):
 
         # Filtrar solo información crítica para administradores
         critical_info = {
-            "pending_verifications": dashboard_data["stats"]["pending_verifications"],
-            "excessive_hours_alerts": dashboard_data["stats"]["excessive_hours_alerts"],
-            "critical_alerts": dashboard_data["stats"]["critical_alerts"],
-            "active_entries": dashboard_data["stats"]["active_entries"],
-            "alerts": dashboard_data["alerts"],
+            "pending_verifications": dashboard_data.get("stats", {}).get(
+                "pending_verifications", 0
+            ),
+            "alerts": dashboard_data.get("alerts", []),
+            "stats": dashboard_data.get("stats", {}),
         }
 
         return Response(
@@ -292,7 +292,7 @@ def financial_dashboard_view(request):
             if account_id:
                 account_id = int(account_id)
 
-        except ValueError as e:
+        except ValueError:
             return Response(
                 {
                     "success": False,
@@ -328,9 +328,11 @@ def financial_dashboard_view(request):
                     "error": dashboard_data["error"],
                     "has_data": False,
                 },
-                status=status.HTTP_400_BAD_REQUEST
-                if "no encontrada" in dashboard_data["error"]
-                else status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status=(
+                    status.HTTP_400_BAD_REQUEST
+                    if "no encontrada" in dashboard_data["error"]
+                    else status.HTTP_500_INTERNAL_SERVER_ERROR
+                ),
             )
 
         # Serializar respuesta

@@ -3,12 +3,18 @@ Tests para servicios del Dashboard (dashboard/services.py)
 Fase 1: Aumentar cobertura de tests
 """
 
+from datetime import date, timedelta
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from dashboard.services import DashboardService
+from accounts.models import Account
+from categories.models import Category
+from dashboard.services import DashboardService, FinancialDashboardService
 from notifications.models import Notification
+from transactions.models import Transaction
 
 User = get_user_model()
 
@@ -263,3 +269,329 @@ class DashboardServicesTests(TestCase):
         assert result["mini_cards"] == []
         assert result["recent_activities"] == []
         assert result["alerts"] == []
+
+
+class FinancialDashboardServiceTests(TestCase):
+    """Tests para servicios financieros del dashboard"""
+
+    def setUp(self):
+        """Configuración inicial para cada test"""
+        # Crear usuario
+        self.user = User.objects.create_user(
+            identification="12345678",
+            username="testuser",
+            email="test@example.com",
+            password="testpass123",
+            first_name="Test",
+            last_name="User",
+            is_verified=True,
+        )
+
+        # Crear cuenta
+        self.account = Account.objects.create(
+            user=self.user,
+            name="Cuenta Principal",
+            account_type="asset",
+            category="bank_account",
+            currency="COP",
+            current_balance=Decimal("1000000.00"),  # $10,000.00
+        )
+
+        # Crear categoría
+        self.category = Category.objects.create(
+            user=self.user,
+            name="Comida",
+            type="expense",
+            color="#FF0000",
+        )
+
+    def test_get_financial_summary_empty(self):
+        """Test: Resumen financiero sin transacciones"""
+        result = FinancialDashboardService.get_financial_summary(self.user)
+
+        assert isinstance(result, dict)
+        assert result["has_data"] is False
+        assert "error" not in result
+
+    def test_get_financial_summary_with_transactions(self):
+        """Test: Resumen financiero con transacciones"""
+        # Crear transacción de ingreso
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=None,
+            type=1,  # Income
+            description="Salario",
+            base_amount=5000000,  # $50,000.00 en centavos
+            total_amount=5000000,
+            date=date.today(),
+        )
+
+        # Crear transacción de gasto
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.category,
+            type=2,  # Expense
+            description="Almuerzo",
+            base_amount=30000,  # $300.00 en centavos
+            total_amount=30000,
+            date=date.today(),
+        )
+
+        result = FinancialDashboardService.get_financial_summary(self.user)
+
+        assert isinstance(result, dict)
+        assert result["has_data"] is True
+        assert "summary" in result
+        assert "recent_transactions" in result
+        assert "upcoming_bills" in result
+        assert "charts" in result
+
+    def test_get_financial_summary_with_year_filter(self):
+        """Test: Resumen financiero con filtro de año"""
+        # Crear transacción del año actual
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            type=1,
+            description="Ingreso",
+            base_amount=1000000,
+            total_amount=1000000,
+            date=date.today(),
+        )
+
+        result = FinancialDashboardService.get_financial_summary(self.user, year=date.today().year)
+
+        assert isinstance(result, dict)
+        assert result["has_data"] is True
+
+    def test_get_financial_summary_with_month_filter(self):
+        """Test: Resumen financiero con filtro de mes"""
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            type=1,
+            description="Ingreso",
+            base_amount=1000000,
+            total_amount=1000000,
+            date=date.today(),
+        )
+
+        result = FinancialDashboardService.get_financial_summary(
+            self.user, year=date.today().year, month=date.today().month
+        )
+
+        assert isinstance(result, dict)
+        assert result["has_data"] is True
+
+    def test_get_financial_summary_with_account_filter(self):
+        """Test: Resumen financiero con filtro de cuenta"""
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            type=1,
+            description="Ingreso",
+            base_amount=1000000,
+            total_amount=1000000,
+            date=date.today(),
+        )
+
+        result = FinancialDashboardService.get_financial_summary(
+            self.user, account_id=self.account.id
+        )
+
+        assert isinstance(result, dict)
+        assert result["has_data"] is True
+
+    def test_get_financial_summary_invalid_account(self):
+        """Test: Resumen financiero con cuenta inválida"""
+        result = FinancialDashboardService.get_financial_summary(self.user, account_id=99999)
+
+        assert isinstance(result, dict)
+        assert result["has_data"] is False
+        assert "error" in result
+
+    def test_calculate_totals(self):
+        """Test: Calcular totales de transacciones"""
+        # Crear transacciones
+        income_tx = Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            type=1,  # Income
+            description="Ingreso",
+            base_amount=1000000,
+            total_amount=1000000,
+            date=date.today(),
+        )
+
+        expense_tx = Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.category,
+            type=2,  # Expense
+            description="Gasto",
+            base_amount=200000,
+            total_amount=200000,
+            date=date.today(),
+        )
+
+        transactions = Transaction.objects.filter(user=self.user)
+        totals = FinancialDashboardService._calculate_totals(transactions, "COP", self.user)
+
+        assert isinstance(totals, dict)
+        assert "income" in totals
+        assert "expenses" in totals
+        assert "savings" in totals
+        assert "iva" in totals
+        assert "gmf" in totals
+
+    def test_get_recent_transactions(self):
+        """Test: Obtener transacciones recientes"""
+        # Crear transacciones
+        for i in range(3):
+            Transaction.objects.create(
+                user=self.user,
+                origin_account=self.account,
+                type=1,
+                description=f"Transacción {i}",
+                base_amount=100000 * (i + 1),
+                total_amount=100000 * (i + 1),
+                date=date.today() - timedelta(days=i),
+            )
+
+        recent = FinancialDashboardService._get_recent_transactions(self.user, limit=5)
+
+        assert isinstance(recent, list)
+        assert len(recent) <= 5
+        if recent:
+            assert "id" in recent[0]
+            assert "type" in recent[0]
+            assert "date" in recent[0]
+
+    def test_get_recent_transactions_with_account_filter(self):
+        """Test: Obtener transacciones recientes filtradas por cuenta"""
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            type=1,
+            description="Transacción",
+            base_amount=100000,
+            total_amount=100000,
+            date=date.today(),
+        )
+
+        recent = FinancialDashboardService._get_recent_transactions(
+            self.user, account_id=self.account.id, limit=5
+        )
+
+        assert isinstance(recent, list)
+
+    def test_get_expense_distribution(self):
+        """Test: Obtener distribución de gastos"""
+        # Crear gastos con diferentes categorías (usar color con buen contraste)
+        category2 = Category.objects.create(
+            user=self.user, name="Transporte", type="expense", color="#0066CC"
+        )
+
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.category,
+            type=2,
+            description="Gasto 1",
+            base_amount=50000,
+            total_amount=50000,
+            date=date.today(),
+        )
+
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=category2,
+            type=2,
+            description="Gasto 2",
+            base_amount=30000,
+            total_amount=30000,
+            date=date.today(),
+        )
+
+        transactions = Transaction.objects.filter(user=self.user, type=2)
+        distribution = FinancialDashboardService._get_expense_distribution(
+            transactions, "COP", self.user
+        )
+
+        assert isinstance(distribution, dict)
+        assert "categories" in distribution
+        assert "total" in distribution
+        assert "has_data" in distribution
+        assert distribution["has_data"] is True
+
+    def test_get_daily_income_expense(self):
+        """Test: Obtener flujo diario de ingresos y gastos"""
+        # Crear transacciones en diferentes fechas
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            type=1,
+            description="Ingreso",
+            base_amount=100000,
+            total_amount=100000,
+            date=date.today(),
+        )
+
+        Transaction.objects.create(
+            user=self.user,
+            origin_account=self.account,
+            category=self.category,
+            type=2,
+            description="Gasto",
+            base_amount=50000,
+            total_amount=50000,
+            date=date.today(),
+        )
+
+        transactions = Transaction.objects.filter(user=self.user)
+        daily_flow = FinancialDashboardService._get_daily_income_expense(
+            transactions, "COP", self.user, date.today().year, date.today().month
+        )
+
+        assert isinstance(daily_flow, dict)
+        assert "dates" in daily_flow
+        assert "income" in daily_flow
+        assert "expenses" in daily_flow
+        assert "has_data" in daily_flow
+
+    def test_get_empty_state(self):
+        """Test: Obtener estado vacío"""
+        empty_state = FinancialDashboardService._get_empty_state(
+            self.user, "COP", has_accounts=True
+        )
+
+        assert isinstance(empty_state, dict)
+        assert empty_state["has_data"] is False
+        assert "summary" in empty_state or "message" in empty_state
+
+    def test_get_period_label(self):
+        """Test: Obtener etiqueta de período"""
+        # Test con año y mes
+        label = FinancialDashboardService._get_period_label(2024, 3)
+        assert isinstance(label, str)
+        assert "2024" in label
+        assert "marzo" in label.lower() or "march" in label.lower()
+
+        # Test solo con año
+        label = FinancialDashboardService._get_period_label(2024, None)
+        assert isinstance(label, str)
+        assert "2024" in label
+
+        # Test sin parámetros
+        label = FinancialDashboardService._get_period_label(None, None)
+        assert isinstance(label, str)
+
+    def test_get_upcoming_bills(self):
+        """Test: Obtener facturas próximas a vencer"""
+        bills = FinancialDashboardService._get_upcoming_bills(self.user, limit=5)
+
+        assert isinstance(bills, list)
+        # Puede estar vacío si no hay facturas

@@ -82,31 +82,34 @@ class UserLoginSerializer(serializers.Serializer):
         username = attrs.get("username")
         password = attrs.get("password")
 
-        if username and password:
-            # Verificar si el usuario existe
-            try:
-                user = User.objects.get(username=username)
-            except User.DoesNotExist:
-                raise serializers.ValidationError({"username": ["Usuario no encontrado"]})
+        # Validar que ambos campos estén presentes
+        if not username:
+            raise serializers.ValidationError({"username": ["Este campo es requerido."]})
+        if not password:
+            raise serializers.ValidationError({"password": ["Este campo es requerido."]})
 
-            # Verificar si la cuenta está activa
-            if not user.is_active:
-                raise serializers.ValidationError({"username": ["Cuenta desactivada"]})
+        # Verificar si el usuario existe
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"non_field_errors": ["Credenciales inválidas."]})
 
-            # Verificar contraseña
-            if not user.check_password(password):
-                raise serializers.ValidationError({"password": ["Contraseña incorrecta"]})
+        # Verificar si la cuenta está activa
+        if not user.is_active:
+            raise serializers.ValidationError({"non_field_errors": ["Cuenta desactivada."]})
 
-            # Verificar verificación para usuarios regulares
-            if not user.is_verified and user.role == "user":
-                raise serializers.ValidationError(
-                    {"username": ["Tu cuenta aún no ha sido verificada por un administrador"]}
-                )
+        # Verificar contraseña
+        if not user.check_password(password):
+            raise serializers.ValidationError({"non_field_errors": ["Credenciales inválidas."]})
 
-            attrs["user"] = user
-            return attrs
-        msg = "Debe incluir username y password"
-        raise serializers.ValidationError(msg)
+        # Verificar verificación para usuarios regulares
+        if not user.is_verified and user.role == "user":
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Tu cuenta aún no ha sido verificada por un administrador."]}
+            )
+
+        attrs["user"] = user
+        return attrs
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
