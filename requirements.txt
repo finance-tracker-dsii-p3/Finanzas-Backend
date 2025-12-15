@@ -15,7 +15,7 @@ djangorestframework-simplejwt==5.3.0  # JWT authentication
 django-oauth-toolkit==1.7.1  # OAuth2 support
 
 # API Documentation
-drf-spectacular==0.26.5  # OpenAPI/Swagger generation
+drf-spectacular==0.29.0  # OpenAPI/Swagger generation
 
 # Testing Framework
 pytest==8.4.1
