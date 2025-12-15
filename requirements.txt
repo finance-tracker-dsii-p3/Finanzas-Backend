@@ -47,7 +47,7 @@ crispy-bootstrap4==2022.1
 
 # Additional Django packages
 django-filter==23.5  # Filtering support
-django-import-export==3.3.1  # Data import/export
+django-import-export==4.3.14  # Data import/export
 
 # Date utilities (relativedelta used in credit_cards)
 python-dateutil==2.9.0.post0
