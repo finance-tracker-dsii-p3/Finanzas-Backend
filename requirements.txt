@@ -38,7 +38,7 @@ gunicorn==21.2.0  # WSGI server
 whitenoise==6.6.0  # Static files serving
 
 # Email
-django-anymail==10.2  # Email backend
+django-anymail==13.1  # Email backend
 requests==2.31.0  # Para Resend API HTTP
 
 # Validation & Forms
