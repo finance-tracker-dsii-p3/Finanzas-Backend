@@ -19,7 +19,7 @@ drf-spectacular==0.26.5  # OpenAPI/Swagger generation
 
 # Testing Framework
 pytest==8.4.1
-pytest-django==4.8.0
+pytest-django==4.11.1
 pytest-cov==4.1.0  # Coverage reporting
 bandit[toml]==1.7.5  # Security linting
 
