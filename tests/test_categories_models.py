@@ -112,6 +112,46 @@ class CategoryModelTests(TestCase):
         assert "can_be_deleted" in data
         assert "usage_count" in data
 
+    def test_category_save_normalizes_name(self):
+        """Test: save() normaliza el nombre automáticamente"""
+        category = Category(
+            user=self.user,
+            name="  comida rápida  ",
+            type=Category.EXPENSE,
+            color="#DC2626",
+            icon="fa-utensils",
+        )
+        category.save()
+        # El nombre debe estar normalizado después de save()
+        assert category.name == "Comida Rápida"
+
+    def test_category_get_related_data_with_budget(self):
+        """Test: get_related_data retorna información correcta con presupuesto"""
+        category = Category.objects.create(
+            user=self.user,
+            name="Categoría Test",
+            type=Category.EXPENSE,
+            color="#DC2626",
+            icon="fa-utensils",
+        )
+
+        # Crear presupuesto asociado
+        Budget.objects.create(
+            user=self.user,
+            category=category,
+            amount=Decimal("100000.00"),
+            currency="COP",
+            period=Budget.MONTHLY,
+            start_date=date(2025, 1, 1),
+        )
+
+        related_data = category.get_related_data()
+        assert "transactions_count" in related_data
+        assert "budgets_count" in related_data
+        assert related_data["budgets_count"] == 1
+        assert related_data["can_be_deleted"] is False
+        assert related_data["usage_count"] == 1
+
 
 class CategoryValidatorsTests(TestCase):
     """Tests para validadores de Category"""

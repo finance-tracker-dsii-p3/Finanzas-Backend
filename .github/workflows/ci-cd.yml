@@ -54,7 +54,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: finanzas_back.settings
         run: |
           pip install pytest-cov
-          pytest --cov=. --cov-report=html --cov-report=term --cov-report=xml --cov-report=json --cov-fail-under=20 --cov-branch --verbosity=1
+          pytest --cov=. --cov-report=html --cov-report=term --cov-report=xml --cov-report=json --cov-fail-under=60 --cov-branch --verbosity=1
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4

@@ -102,11 +102,11 @@ class SOATViewSet(viewsets.ModelViewSet):
         """Validar que el vehículo pertenezca al usuario"""
         vehicle = serializer.validated_data["vehicle"]
         if vehicle.user != self.request.user:
-            return Response(
-                {"error": "El vehículo no te pertenece"}, status=status.HTTP_403_FORBIDDEN
-            )
+            from rest_framework.exceptions import PermissionDenied
+
+            error_message = "El vehículo no te pertenece"
+            raise PermissionDenied(error_message)
         serializer.save()
-        return None
 
     @action(detail=True, methods=["post"])
     def register_payment(self, request, pk=None):

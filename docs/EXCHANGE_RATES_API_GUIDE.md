@@ -381,13 +381,13 @@ async function getCurrentRate(currency) {
       headers: { 'Authorization': `Token ${token}` }
     }
   );
-  
+
   const data = await response.json();
-  
+
   if (data.warning) {
     console.warn(`⚠️ ${data.warning}`);
   }
-  
+
   return data.rate;
 }
 
@@ -408,16 +408,16 @@ async function convertAndDisplay(amountInCents, fromCurrency, toCurrency) {
       headers: { 'Authorization': `Token ${token}` }
     }
   );
-  
+
   const data = await response.json();
-  
+
   // Convertir centavos a pesos para mostrar
   const originalPesos = data.original_amount / 100;
   const convertedPesos = data.converted_amount / 100;
-  
+
   console.log(`${originalPesos} ${fromCurrency} = ${convertedPesos} ${toCurrency}`);
   console.log(`Tasa: ${data.rate}`);
-  
+
   return convertedPesos;
 }
 
@@ -447,7 +447,7 @@ async function updateExchangeRate(id, newRate) {
       })
     }
   );
-  
+
   if (response.ok) {
     const data = await response.json();
     console.log(`✅ Tasa actualizada: ${data.rate}`);
@@ -471,14 +471,14 @@ async function getYearlyRates(year, currency) {
       headers: { 'Authorization': `Token ${token}` }
     }
   );
-  
+
   const rates = await response.json();
-  
+
   console.log(`Tasas de ${currency} para ${year}:`);
   rates.forEach(rate => {
     console.log(`${rate.month}/${rate.year}: ${rate.rate}`);
   });
-  
+
   return rates;
 }
 
@@ -533,9 +533,9 @@ const ExchangeRatesManager = () => {
           'Authorization': `Token ${token}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Error al obtener tasas');
-      
+
       const data = await response.json();
       setRates(data);
     } catch (err) {
@@ -681,14 +681,14 @@ const error = ref<string | null>(null);
 const fetchRates = async () => {
   loading.value = true;
   error.value = null;
-  
+
   try {
     const response = await fetch(API_URL, {
       headers: { 'Authorization': `Token ${token}` }
     });
-    
+
     if (!response.ok) throw new Error('Error al obtener tasas');
-    
+
     rates.value = await response.json();
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Error desconocido';
@@ -707,9 +707,9 @@ const createRate = async (formData: Omit<ExchangeRate, 'id' | 'created_at' | 'up
       },
       body: JSON.stringify(formData)
     });
-    
+
     if (!response.ok) throw new Error('Error al crear tasa');
-    
+
     const newRate = await response.json();
     rates.value.push(newRate);
     return newRate;
@@ -727,10 +727,10 @@ onMounted(() => {
 <template>
   <div class="exchange-rates-manager">
     <h2>Gestión de Tipos de Cambio</h2>
-    
+
     <div v-if="loading">Cargando...</div>
     <div v-if="error" class="error">{{ error }}</div>
-    
+
     <table v-if="!loading && rates.length > 0">
       <thead>
         <tr>
@@ -865,14 +865,14 @@ const rateCache = new Map();
 
 async function getCachedRate(currency, date) {
   const key = `${currency}-${date}`;
-  
+
   if (rateCache.has(key)) {
     return rateCache.get(key);
   }
-  
+
   const data = await getCurrentRate(currency, date);
   rateCache.set(key, data);
-  
+
   return data;
 }
 ```
@@ -903,7 +903,7 @@ async function safeCreateRate(formData) {
       if (data.non_field_errors) {
         throw new Error(data.non_field_errors[0]);
       }
-      
+
       throw new Error('Error al crear tipo de cambio');
     }
 
@@ -1025,6 +1025,6 @@ Contacta al equipo de backend.
 
 ---
 
-**Última actualización:** 10 de diciembre de 2025  
-**Versión:** 1.0  
+**Última actualización:** 10 de diciembre de 2025
+**Versión:** 1.0
 **Autor:** Backend Team

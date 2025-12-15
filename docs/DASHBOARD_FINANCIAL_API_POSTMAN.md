@@ -37,7 +37,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Si no se especifican filtros, muestra datos del mes actual
 - Incluye todos los totales y movimientos recientes
 
@@ -166,7 +166,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/?year=2025
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Muestra todos los datos del año 2025
 - Agrupa transacciones de enero a diciembre
 
@@ -179,7 +179,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/?year=2025&month=11
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Muestra solo datos de noviembre 2025
 - Gráfico diario muestra del 1 al 30 de noviembre
 
@@ -194,7 +194,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/?account_id=5
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Muestra solo transacciones de la cuenta con ID 5
 - Aplica al mes actual si no se especifica year/month
 
@@ -207,7 +207,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/?year=2025&month=12&account_id
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Combina filtros: diciembre 2025 + cuenta ID 5
 - Ideal para análisis específico de una cuenta en un período
 
@@ -220,7 +220,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/?all=true
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Muestra todas las transacciones sin filtro de fecha
 - Útil para ver histórico completo
 
@@ -233,7 +233,7 @@ GET http://127.0.0.1:8000/api/dashboard/financial/?all=true&account_id=5
 Authorization: Token YOUR_AUTH_TOKEN
 ```
 
-**Comportamiento:** 
+**Comportamiento:**
 - Histórico completo filtrado por cuenta específica
 
 ---
@@ -791,7 +791,7 @@ if (!data.has_data) {
   // Mostrar empty_state
   console.log(data.empty_state.message);
   console.log(data.empty_state.suggestion);
-  
+
   if (data.empty_state.action === 'create_account') {
     // Mostrar botón "Crear Cuenta"
   } else if (data.empty_state.action === 'create_transaction') {
@@ -807,7 +807,7 @@ Los movimientos ya vienen con el campo `amount_formatted`:
 recent_transactions.forEach(tx => {
   // Opción 1: Usar el formato del backend
   console.log(tx.amount_formatted); // "$3.504"
-  
+
   // Opción 2: Formatear manualmente
   const amount = tx.amount / 100;
   console.log(`${tx.currency} ${amount.toLocaleString()}`);
@@ -879,6 +879,6 @@ Si encuentras problemas o comportamientos inesperados:
 
 ---
 
-**Última actualización:** 11 de diciembre de 2025  
-**Versión:** 1.0  
+**Última actualización:** 11 de diciembre de 2025
+**Versión:** 1.0
 **Autor:** Backend Team

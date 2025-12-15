@@ -107,9 +107,7 @@ class RecentTransactionSerializer(serializers.Serializer):
     currency = serializers.CharField(help_text="Moneda de la transacción")
     account = serializers.CharField(help_text="Nombre de la cuenta origen")
     category = serializers.CharField(allow_null=True, help_text="Nombre de la categoría")
-    category_color = serializers.CharField(
-        allow_null=True, help_text="Color de la categoría (hex)"
-    )
+    category_color = serializers.CharField(allow_null=True, help_text="Color de la categoría (hex)")
     category_icon = serializers.CharField(allow_null=True, help_text="Icono de la categoría")
 
 
@@ -137,9 +135,7 @@ class UpcomingBillSerializer(serializers.Serializer):
         allow_null=True, help_text="ID de la cuenta sugerida"
     )
     category = serializers.CharField(allow_null=True, help_text="Nombre de la categoría")
-    category_color = serializers.CharField(
-        allow_null=True, help_text="Color de la categoría (hex)"
-    )
+    category_color = serializers.CharField(allow_null=True, help_text="Color de la categoría (hex)")
     category_icon = serializers.CharField(allow_null=True, help_text="Icono de la categoría")
     description = serializers.CharField(help_text="Descripción adicional")
     is_recurring = serializers.BooleanField(help_text="Indica si es una factura recurrente")

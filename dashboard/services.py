@@ -339,12 +339,11 @@ class FinancialDashboardService:
         Returns:
             Dict con resumen financiero completo
         """
-        from datetime import date, datetime
-        from decimal import Decimal
 
-        from django.db.models import Q, Sum
-        from transactions.models import Transaction
+        from django.db.models import Q
+
         from accounts.models import Account
+        from transactions.models import Transaction
         from utils.currency_converter import FxService
 
         try:
@@ -384,9 +383,7 @@ class FinancialDashboardService:
                 )
 
             # Calcular totales por tipo de transacción
-            totals = FinancialDashboardService._calculate_totals(
-                transactions, base_currency, user
-            )
+            totals = FinancialDashboardService._calculate_totals(transactions, base_currency, user)
 
             # Obtener movimientos recientes (últimos 5)
             recent_transactions = FinancialDashboardService._get_recent_transactions(
@@ -438,7 +435,7 @@ class FinancialDashboardService:
         except Exception as e:
             logger.exception(f"Error obteniendo resumen financiero: {e}")
             return {
-                "error": f"Error al obtener resumen financiero: {str(e)}",
+                "error": f"Error al obtener resumen financiero: {e!s}",
                 "has_data": False,
             }
 
@@ -447,7 +444,6 @@ class FinancialDashboardService:
         """
         Calcula totales de ingresos, gastos, ahorros, IVA y GMF en moneda base
         """
-        from decimal import Decimal
         from utils.currency_converter import FxService
 
         totals = {
@@ -497,8 +493,9 @@ class FinancialDashboardService:
         """
         Obtiene los movimientos más recientes del usuario
         """
-        from transactions.models import Transaction
         from django.db.models import Q
+
+        from transactions.models import Transaction
 
         filters = Q(user=user)
         if account_id:
@@ -536,8 +533,6 @@ class FinancialDashboardService:
         """
         Calcula distribución de gastos por categoría (para gráfico de dona)
         """
-        from django.db.models import Sum, Count
-        from decimal import Decimal
         from utils.currency_converter import FxService
 
         # Filtrar solo gastos con categoría
@@ -603,8 +598,9 @@ class FinancialDashboardService:
         """
         Calcula ingresos y gastos diarios (para gráfico de líneas)
         """
-        from datetime import date, timedelta
         from collections import defaultdict
+        from datetime import date, timedelta
+
         from utils.currency_converter import FxService
 
         if not year or not month:
@@ -692,12 +688,16 @@ class FinancialDashboardService:
             },
             "accounts_info": {"total_accounts": 0, "has_accounts": has_accounts},
             "empty_state": {
-                "message": "No tienes movimientos registrados"
-                if has_accounts
-                else "No tienes cuentas creadas",
-                "suggestion": "Registra tu primer movimiento"
-                if has_accounts
-                else "Crea una cuenta para empezar",
+                "message": (
+                    "No tienes movimientos registrados"
+                    if has_accounts
+                    else "No tienes cuentas creadas"
+                ),
+                "suggestion": (
+                    "Registra tu primer movimiento"
+                    if has_accounts
+                    else "Crea una cuenta para empezar"
+                ),
                 "action": "create_transaction" if has_accounts else "create_account",
             },
         }
@@ -728,7 +728,7 @@ class FinancialDashboardService:
 
         if year and month:
             return f"{months_es[month]} {year}"
-        elif year:
+        if year:
             return f"Año {year}"
 
         return "Período personalizado"
@@ -737,41 +737,36 @@ class FinancialDashboardService:
     def _get_upcoming_bills(user, limit=5):
         """
         Obtiene las facturas próximas a vencer ordenadas por proximidad
-        
+
         Args:
             user: Usuario propietario de las facturas
             limit: Número máximo de facturas a retornar (default: 5)
-            
+
         Returns:
             list: Lista de diccionarios con información de facturas próximas a vencer
         """
+
         from bills.models import Bill
-        from django.db.models import Q
-        from django.utils import timezone
-        
+
         # Obtener timezone del usuario
         try:
             user_tz = user.notification_preferences.timezone_object
         except Exception:
             import pytz
+
             user_tz = pytz.timezone("America/Bogota")
-        
-        # Fecha actual en timezone del usuario
-        try:
-            today = timezone.now().astimezone(user_tz).date()
-        except Exception:
-            today = timezone.now().date()
-        
+
         # Filtrar facturas pendientes o atrasadas (no pagadas)
-        bills = Bill.objects.filter(
-            user=user,
-            status__in=[Bill.PENDING, Bill.OVERDUE]
-        ).select_related('suggested_account', 'category').order_by('due_date')[:limit]
-        
+        bills = (
+            Bill.objects.filter(user=user, status__in=[Bill.PENDING, Bill.OVERDUE])
+            .select_related("suggested_account", "category")
+            .order_by("due_date")[:limit]
+        )
+
         upcoming = []
         for bill in bills:
             days_until = bill.days_until_due(user_tz=user_tz)
-            
+
             # Determinar urgencia
             if days_until < 0:
                 urgency = "overdue"
@@ -793,28 +788,34 @@ class FinancialDashboardService:
                 urgency = "normal"
                 urgency_label = "Pendiente"
                 urgency_color = "#6B7280"  # Gris
-            
+
             # Formatear monto en centavos
             amount_cents = int(float(bill.amount) * 100)
-            
-            upcoming.append({
-                "id": bill.id,
-                "provider": bill.provider,
-                "amount": amount_cents,  # Centavos
-                "amount_formatted": f"${bill.amount:,.0f}",
-                "due_date": bill.due_date.isoformat(),
-                "days_until_due": days_until,
-                "status": bill.status,
-                "urgency": urgency,
-                "urgency_label": urgency_label,
-                "urgency_color": urgency_color,
-                "suggested_account": bill.suggested_account.name if bill.suggested_account else None,
-                "suggested_account_id": bill.suggested_account.id if bill.suggested_account else None,
-                "category": bill.category.name if bill.category else None,
-                "category_color": bill.category.color if bill.category else None,
-                "category_icon": bill.category.icon if bill.category else None,
-                "description": bill.description or "",
-                "is_recurring": bill.is_recurring,
-            })
-        
+
+            upcoming.append(
+                {
+                    "id": bill.id,
+                    "provider": bill.provider,
+                    "amount": amount_cents,  # Centavos
+                    "amount_formatted": f"${bill.amount:,.0f}",
+                    "due_date": bill.due_date.isoformat(),
+                    "days_until_due": days_until,
+                    "status": bill.status,
+                    "urgency": urgency,
+                    "urgency_label": urgency_label,
+                    "urgency_color": urgency_color,
+                    "suggested_account": (
+                        bill.suggested_account.name if bill.suggested_account else None
+                    ),
+                    "suggested_account_id": (
+                        bill.suggested_account.id if bill.suggested_account else None
+                    ),
+                    "category": bill.category.name if bill.category else None,
+                    "category_color": bill.category.color if bill.category else None,
+                    "category_icon": bill.category.icon if bill.category else None,
+                    "description": bill.description or "",
+                    "is_recurring": bill.is_recurring,
+                }
+            )
+
         return upcoming

@@ -81,6 +81,14 @@ class AccountModelTests(TestCase):
 
         assert account.can_be_deleted() is True
 
+    def test_account_option_str(self):
+        """Test: __str__ de AccountOption"""
+        option = AccountOption.objects.create(
+            option_type=AccountOptionType.BANK, name="Banco Test", is_active=True, order=1
+        )
+        str_repr = str(option)
+        assert "Banco Test" in str_repr or option.name in str_repr
+
 
 class AccountOptionModelTests(TestCase):
     """Tests para el modelo AccountOption"""

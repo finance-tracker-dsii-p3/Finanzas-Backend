@@ -486,6 +486,22 @@ class CategoriesServicesTests(TestCase):
         assert "requires_reassignment" in validation
         assert "related_data" in validation
 
+    def test_create_default_categories_with_existing_categories(self):
+        """Test: Crear categorías por defecto cuando ya existen algunas"""
+        # Crear una categoría existente
+        Category.objects.create(
+            user=self.user,
+            name="Categoría Existente",
+            type=Category.EXPENSE,
+            color="#DC2626",
+            icon="fa-utensils",
+        )
+
+        # Crear categorías por defecto
+        created = CategoryService.create_default_categories(self.user)
+        # Debe crear las categorías por defecto
+        assert len(created) > 0
+
     def test_bulk_update_order_partial_success(self):
         """Test: Actualizar orden parcialmente (algunas categorías válidas, otras no)"""
         # Crear otra categoría
@@ -509,3 +525,70 @@ class CategoriesServicesTests(TestCase):
         category3.refresh_from_db()
         assert self.category1.order == 10
         assert category3.order == 30
+
+    def test_delete_category_no_data_no_reassignment(self):
+        """Test: Eliminar categoría sin datos relacionados no requiere reasignación"""
+        # Crear categoría sin datos relacionados
+        empty_category = Category.objects.create(
+            user=self.user,
+            name="Categoría Vacía",
+            type=Category.EXPENSE,
+            color="#000000",
+            icon="fa-question-circle",
+        )
+
+        result = CategoryService.delete_category(empty_category)
+        assert result["reassigned_transactions"] == 0
+        assert result["reassigned_budgets"] == 0
+        assert not Category.objects.filter(id=empty_category.id).exists()
+
+    def test_validate_category_deletion_no_data(self):
+        """Test: Validar eliminación de categoría sin datos relacionados"""
+        empty_category = Category.objects.create(
+            user=self.user,
+            name="Categoría Vacía",
+            type=Category.EXPENSE,
+            color="#000000",
+            icon="fa-question-circle",
+        )
+
+        validation = CategoryService.validate_category_deletion(empty_category)
+        assert validation["can_delete"] is True
+        assert validation["requires_reassignment"] is False
+        assert len(validation["warnings"]) == 0
+        assert len(validation["errors"]) == 0
+
+    def test_toggle_active_inactive_to_active(self):
+        """Test: Activar categoría inactiva"""
+        self.inactive_category.is_active = False
+        self.inactive_category.save()
+
+        updated = CategoryService.toggle_active(self.inactive_category)
+        assert updated.is_active is True
+
+    def test_toggle_active_active_to_inactive(self):
+        """Test: Desactivar categoría activa"""
+        updated = CategoryService.toggle_active(self.category1)
+        assert updated.is_active is False
+
+    def test_bulk_update_order_empty_list(self):
+        """Test: Actualizar orden con lista vacía"""
+        updated_count = CategoryService.bulk_update_order(self.user, [])
+        assert updated_count == 0
+
+    def test_create_default_categories_creates_both_types(self):
+        """Test: create_default_categories crea categorías de ingresos y gastos"""
+        new_user = User.objects.create_user(
+            identification="11111111",
+            username="newuser2",
+            email="new2@example.com",
+            password="testpass123",
+            is_verified=True,
+        )
+
+        created = CategoryService.create_default_categories(new_user)
+        # Debe crear categorías de ambos tipos
+        income_count = sum(1 for cat in created if cat.type == Category.INCOME)
+        expense_count = sum(1 for cat in created if cat.type == Category.EXPENSE)
+        assert income_count > 0
+        assert expense_count > 0

@@ -18,10 +18,10 @@
 
 El dashboard financiero es la vista principal de la aplicación que muestra:
 
-✅ **Totales financieros**: Ingresos, Gastos, Ahorros, IVA, GMF  
-✅ **Filtros dinámicos**: Por mes, año y cuenta  
-✅ **Movimientos recientes**: Últimas 5 transacciones  
-✅ **Gráficos**: Distribución de gastos y flujo diario  
+✅ **Totales financieros**: Ingresos, Gastos, Ahorros, IVA, GMF
+✅ **Filtros dinámicos**: Por mes, año y cuenta
+✅ **Movimientos recientes**: Últimas 5 transacciones
+✅ **Gráficos**: Distribución de gastos y flujo diario
 ✅ **Estados vacíos**: Mensajes cuando no hay datos
 
 **Endpoint:** `GET /api/dashboard/financial/`
@@ -178,14 +178,14 @@ export const useFinancialDashboard = (initialFilters: DashboardFilters = {}) => 
 
     try {
       const params = new URLSearchParams();
-      
+
       if (filters.all) {
         params.append('all', 'true');
       } else {
         if (filters.year) params.append('year', filters.year.toString());
         if (filters.month) params.append('month', filters.month.toString());
       }
-      
+
       if (filters.accountId) {
         params.append('account_id', filters.accountId.toString());
       }
@@ -438,7 +438,7 @@ export const DashboardFilters: React.FC<Props> = ({
 }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
-  
+
   const months = [
     { value: 1, label: 'Enero' },
     { value: 2, label: 'Febrero' },
@@ -611,7 +611,7 @@ export const UpcomingBills: React.FC<Props> = ({ bills, currency }) => {
           {bills.length} {bills.length === 1 ? 'factura' : 'facturas'} pendiente{bills.length !== 1 ? 's' : ''}
         </span>
       </div>
-      
+
       <div className="space-y-3">
         {bills.map((bill) => (
           <div
@@ -634,9 +634,9 @@ export const UpcomingBills: React.FC<Props> = ({ bills, currency }) => {
                   {bill.category && (
                     <span
                       className="text-xs px-2 py-1 rounded"
-                      style={{ 
+                      style={{
                         backgroundColor: bill.category_color + '20',
-                        color: bill.category_color 
+                        color: bill.category_color
                       }}
                     >
                       {bill.category}
@@ -1148,14 +1148,14 @@ export function useFinancialDashboard(initialFilters: DashboardFilters = {}) {
 
     try {
       const params = new URLSearchParams();
-      
+
       if (filters.value.all) {
         params.append('all', 'true');
       } else {
         if (filters.value.year) params.append('year', filters.value.year.toString());
         if (filters.value.month) params.append('month', filters.value.month.toString());
       }
-      
+
       if (filters.value.accountId) {
         params.append('account_id', filters.value.accountId.toString());
       }
@@ -1440,6 +1440,6 @@ const { data, isLoading } = useQuery({
 
 ---
 
-**Última actualización:** 11 de diciembre de 2025  
-**Versión:** 1.0  
+**Última actualización:** 11 de diciembre de 2025
+**Versión:** 1.0
 **Autor:** Backend Team
