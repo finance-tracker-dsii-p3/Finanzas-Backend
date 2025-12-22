@@ -24,7 +24,7 @@ pytest-cov==4.1.0  # Coverage reporting
 bandit[toml]==1.7.5  # Security linting
 
 # Development Tools
-django-debug-toolbar==4.2.0  # Debug toolbar
+django-debug-toolbar==6.1.0  # Debug toolbar
 django-extensions==3.2.3  # Extended management commands
 
 # Utilities
