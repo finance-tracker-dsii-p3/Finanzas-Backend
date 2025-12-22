@@ -42,7 +42,7 @@ django-anymail==10.2  # Email backend
 requests==2.31.0  # Para Resend API HTTP
 
 # Validation & Forms
-django-crispy-forms==2.1  # Better forms
+django-crispy-forms==2.5  # Better forms
 crispy-bootstrap4==2022.1
 
 # Additional Django packages
