@@ -53,6 +53,6 @@ django-import-export==3.3.1  # Data import/export
 python-dateutil==2.9.0.post0
 
 # Export functionality
-reportlab==4.0.9  # PDF generation
+reportlab==4.4.7  # PDF generation
 openpyxl==3.1.2  # Excel file handling
 xlsxwriter==3.1.9  # Advanced Excel formatting
