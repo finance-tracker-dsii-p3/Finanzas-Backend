@@ -54,5 +54,5 @@ python-dateutil==2.9.0.post0
 
 # Export functionality
 reportlab==4.0.9  # PDF generation
-openpyxl==3.1.2  # Excel file handling
+openpyxl==3.1.5  # Excel file handling
 xlsxwriter==3.1.9  # Advanced Excel formatting
